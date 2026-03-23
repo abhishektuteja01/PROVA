@@ -302,7 +302,7 @@ Every agent output validated against Zod schema before passing to next stage. Sc
 ### 6.1 Stack
 | Layer | Technology |
 |-------|------------|
-| Framework | Next.js 14 (App Router) |
+| Framework | Next.js 16 (App Router) |
 | Language | TypeScript (strict mode) |
 | Database | Supabase (PostgreSQL) |
 | Authentication | Supabase Auth |
@@ -366,13 +366,16 @@ See `/docs/DATABASE.md` for exact SQL including RLS policies and indexes.
 
 ### 6.6 Environment Variables
 ```
-ANTHROPIC_API_KEY                   Server-side only. Never exposed to client.
-NEXT_PUBLIC_SUPABASE_URL            Public. Supabase project URL.
-NEXT_PUBLIC_SUPABASE_ANON_KEY       Public. Supabase anon key.
-SUPABASE_SERVICE_ROLE_KEY           Server-side only.
-SENTRY_DSN                          Error tracking.
-RATE_LIMIT_REQUESTS_PER_HOUR        Default: 10. Configurable for grading.
-NEXT_PUBLIC_APP_URL                 Production URL.
+ANTHROPIC_API_KEY                              Server-side only. Never exposed to client.
+NEXT_PUBLIC_SUPABASE_URL                       Public. Supabase project URL.
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY   Public. Supabase publishable key.
+SUPABASE_SECRET_KEY                            Server-side only.
+NEXT_PUBLIC_SENTRY_DSN                         Browser error tracking. sentry.client.config.ts only.
+SENTRY_DSN                                     Server/edge error tracking. instrumentation.ts only.
+SENTRY_ORG                                     Build-time only. Source map uploads via next.config.ts.
+SENTRY_PROJECT                                 Build-time only. Source map uploads via next.config.ts.
+RATE_LIMIT_REQUESTS_PER_HOUR                   Default: 10. Configurable for grading.
+NEXT_PUBLIC_APP_URL                            Production URL.
 ```
 
 ---
@@ -782,7 +785,7 @@ prova/
 │   │   ├── supabase/
 │   │   │   ├── client.ts                 Browser Supabase client
 │   │   │   ├── server.ts                 Server-side Supabase client (service role)
-│   │   │   └── middleware.ts             Auth session refresh middleware
+│   │   │   └── middleware.ts             Auth session refresh (used by proxy.ts)
 │   │   │
 │   │   └── anthropic/
 │   │       └── client.ts                 Anthropic SDK client — only file with API key
@@ -790,7 +793,7 @@ prova/
 │   ├── types/
 │   │   └── index.ts                      All shared TypeScript types
 │   │
-│   └── middleware.ts                     Next.js middleware — auth guard on dashboard routes
+│   └── proxy.ts                         Next.js proxy — auth guard on dashboard routes
 │
 ├── tests/
 │   ├── agents/
