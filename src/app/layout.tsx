@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, IBM_Plex_Mono } from "next/font/google";
+import { Playfair_Display, IBM_Plex_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/react";
 import Navbar from "@/components/layout/Navbar";
 import "./globals.css";
 
-const instrumentSerif = Instrument_Serif({
+const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
-  weight: "400",
-  variable: "--font-instrument-serif",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-playfair",
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -36,7 +36,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${instrumentSerif.variable} ${ibmPlexMono.variable} ${geist.variable}`}
+      className={`${playfairDisplay.variable} ${ibmPlexMono.variable} ${geist.variable}`}
       style={{
         backgroundColor: "var(--color-bg-primary)",
         color: "var(--color-text-primary)",

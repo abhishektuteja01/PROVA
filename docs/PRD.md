@@ -430,7 +430,7 @@ Reference: `/mnt/skills/user/frontend-design/SKILL.md` for implementation guidan
 ```
 
 ### 8.3 Typography
-- Display/headings: **Instrument Serif** — authoritative, editorial
+- Display/headings: **Playfair Display** — authoritative, editorial
 - Body/data: **IBM Plex Mono** — monospaced for scores and numbers
 - UI labels: **Geist** — clean, functional
 

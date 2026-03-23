@@ -86,7 +86,7 @@ Next.js 16 App Router · TypeScript strict · Supabase (PostgreSQL + Auth + RLS)
 
 ## Design (read `docs/PRD.md` Section 8 for full spec)
 - Banking-appropriate refined minimalism — data is the hero
-- All scores/numbers: IBM Plex Mono · Headings: Instrument Serif · Labels: Geist
+- All scores/numbers: IBM Plex Mono · Headings: Playfair Display · Labels: Geist
 - Colors defined as CSS variables in `globals.css` — do not hardcode hex values
 - Loading states: skeleton screens only, never spinners
 - Mobile-web responsiveness: fluid scaling via Tailwind (mobile-first)
