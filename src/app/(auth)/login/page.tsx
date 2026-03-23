@@ -1,3 +1,5 @@
 export default function LoginPage() {
-  return null;
+  return (
+    <div>Login</div>
+  )
 }
