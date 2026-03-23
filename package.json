@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "test": "jest",
+    "test:ai": "echo 'AI regression suite: wired in Sprint 3' && exit 0"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
@@ -25,6 +26,7 @@
     "react": "^18",
     "react-dom": "^18",
     "recharts": "^3.8.0",
+    "server-only": "^0.0.1",
     "zod": "^4.3.6"
   },
   "devDependencies": {
