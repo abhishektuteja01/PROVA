@@ -5,7 +5,7 @@
 
 ## 1. System Overview
 
-Prova is a well-architected Next.js 14 monolith deployed on Vercel. The frontend and backend coexist in a single repository. All AI logic runs server-side via Next.js API routes — the Anthropic API key is never exposed to the client.
+Prova is a well-architected Next.js 16 monolith deployed on Vercel. The frontend and backend coexist in a single repository. All AI logic runs server-side via Next.js API routes — the Anthropic API key is never exposed to the client.
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -125,7 +125,7 @@ Return ComplianceResponse to client
 User visits /dashboard
         │
         ▼
-Next.js middleware.ts
+Next.js proxy.ts
         │
         ├── Has valid Supabase session? ──YES──► Render page
         │
@@ -258,7 +258,7 @@ CLIENT
   │  HTTPS only (enforced by Vercel)
   │
   ▼
-NEXT.JS MIDDLEWARE (middleware.ts)
+NEXT.JS PROXY (proxy.ts)
   │  - Supabase session verification
   │  - Redirect unauthenticated requests
   │
