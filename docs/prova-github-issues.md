@@ -74,7 +74,7 @@ Prova is a Next.js 16 App Router monolith deployed on Vercel. Frontend and backe
 - [ ] Jest + `ts-jest` for testing
 
 **Fonts (self-hosted, not Google Fonts CDN):**
-- [ ] Instrument Serif (for headings)
+- [ ] Playfair Display (for headings)
 - [ ] IBM Plex Mono (for scores and numbers)
 - [ ] Geist (for UI labels)
 - [ ] All loaded in `src/app/layout.tsx` via `next/font/local`
@@ -736,7 +736,7 @@ Build the public landing page (`/`) and the shared layout for authenticated rout
 ### Context
 Prova's design direction from `PRD.md` Section 8: banking-appropriate refined minimalism. Data is the hero. Reference the color palette and typography from that section. Key rules:
 - All scores/numbers: IBM Plex Mono
-- Headings: Instrument Serif
+- Headings: Playfair Display
 - Labels/body: Geist
 - Colors: CSS variables only — never hardcode hex
 - Loading states: skeleton screens only (never spinners)
@@ -1330,6 +1330,8 @@ Behavior:
 - Display current email (read-only)
 - "Change password" → triggers Supabase password reset email (same flow as `/reset-password`)
 - "Delete account" → confirmation modal with typed confirmation ("DELETE") → delete all user data then delete Supabase Auth user
+
+> **Implementation note:** The `/reset-password` page sends the user a Supabase email that redirects to `/auth/callback?next=/settings`. When the user lands on `/settings` via that link, Supabase sets a temporary session that allows a one-time password update. The settings page must detect this state (check `supabase.auth.getSession()` for a session where the user arrived via a recovery token — Supabase sets `session.user.aud` or you can check `searchParams` for a `type=recovery` param passed through the callback) and surface a **"Set new password"** form inline. Use `supabase.auth.updateUser({ password: newPassword })` to commit the change. Without this form, the reset-password flow has no completion step.
 
 ### Acceptance Criteria
 - [ ] Four preference toggles read from and write to `user_preferences` table

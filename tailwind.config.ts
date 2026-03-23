@@ -23,7 +23,7 @@ const config: Config = {
         border: "var(--color-border)",
       },
       fontFamily: {
-        serif: ["Instrument Serif", "serif"],
+        serif: ["Playfair Display", "serif"],
         mono: ["IBM Plex Mono", "monospace"],
         sans: ["Geist", "sans-serif"],
       },

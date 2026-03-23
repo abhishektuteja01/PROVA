@@ -201,7 +201,7 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
-            style={{ fontFamily: "var(--font-instrument-serif)", fontSize: "clamp(42px, 5.2vw, 68px)", fontWeight: 400, lineHeight: 1.08, letterSpacing: "-0.5px", marginBottom: "22px" }}
+            style={{ fontFamily: "var(--font-playfair)", fontSize: "clamp(42px, 5.2vw, 68px)", fontWeight: 400, lineHeight: 1.08, letterSpacing: "-0.5px", marginBottom: "22px" }}
           >
             <span style={{ color: "var(--color-text-primary)" }}>Know what&apos;s missing</span>
             <br />
@@ -281,7 +281,7 @@ export default function HomePage() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "16px" }}>
                   <div>
                     <div style={{ fontFamily: "var(--font-ibm-plex-mono)", fontSize: "10px", letterSpacing: "0.12em", color: "var(--color-accent)", marginBottom: "7px", opacity: 0.65 }}>{pillar.code}</div>
-                    <div style={{ fontFamily: "var(--font-instrument-serif)", fontSize: "20px", color: "var(--color-text-primary)", lineHeight: 1.2 }}>{pillar.name}</div>
+                    <div style={{ fontFamily: "var(--font-playfair)", fontSize: "20px", color: "var(--color-text-primary)", lineHeight: 1.2 }}>{pillar.name}</div>
                   </div>
                   <div style={{ fontFamily: "var(--font-ibm-plex-mono)", fontSize: "11px", fontWeight: 600, color: "var(--color-accent)", background: "rgba(59,130,246,0.07)", padding: "4px 10px", borderRadius: "6px", border: "1px solid rgba(59,130,246,0.14)", flexShrink: 0, marginLeft: "14px" }}>
                     {pillar.weight}
