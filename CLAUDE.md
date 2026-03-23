@@ -56,7 +56,7 @@ RATE_LIMIT_REQUESTS_PER_HOUR   # Default: 10
 
 **Security:**
 - `ANTHROPIC_API_KEY` — only in `src/lib/anthropic/client.ts`
-- `SUPABASE_SERVICE_ROLE_KEY` — only in `src/lib/supabase/server.ts`
+- `SUPABASE_SECRET_KEY` — only in `src/lib/supabase/server.ts`
 - All document text wrapped in `<document>...</document>` before passing to any agent
 - File uploads: extension + MIME type validated server-side, memory only, never written to disk
 - No `dangerouslySetInnerHTML` anywhere
