@@ -86,11 +86,22 @@ Used Plan mode (`EnterPlanMode`) to design the approach before writing any code:
 
 #### Implement
 
-*(in progress)*
+Executed the plan on exactly the 2 files identified:
+
+- **`src/app/(auth)/login/page.tsx`** — Full UI: centered card with dot-grid background, email + password fields with focus states, inline error display, loading state (disabled button + label change, no spinner), Supabase `signInWithPassword`, redirect to `/dashboard` on success.
+- **`src/app/(auth)/signup/page.tsx`** — Mirrors login layout. Three fields with client-side password match validation. Calls `supabase.auth.signUp`. On success: switches to a confirmation state showing the user's email — no redirect (Supabase sends a verification email).
+
+Both pages use only CSS variables and inline styles (no stub UI components), matching the established pattern from `src/app/page.tsx`.
 
 #### Commits
 
-*(will be added as commits are made)*
+| # | Hash | Message |
+|---|------|---------|
+| 1 | `8619cfa` | `explore: audit auth stubs, design system, and Supabase client patterns` |
+| 2 | `73a9d00` | `feat: implement login page with Supabase email/password auth` |
+| 3 | `ac9c31e` | `feat: implement signup page with email confirmation flow` |
+
+The git history clearly shows the Explore → Plan → Implement progression. Commit 1 is pure exploration (no source changes), commits 2–3 are implementation only after the plan was approved.
 
 ---
 

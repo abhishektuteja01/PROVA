@@ -441,13 +441,14 @@ Reference: `/mnt/skills/user/frontend-design/SKILL.md` for implementation guidan
 - Sharp corners on data tables (no border-radius)
 - Loading states: skeleton screens only, never spinners
 - Animations: staggered fade-in on page load, subtle hover states only
+- Mobile-web responsiveness: fluid scaling via Tailwind (mobile-first)
 
 ### 8.5 Page Routes
 ```
 /                        Landing page
-/auth/login              Login
-/auth/signup             Signup
-/auth/reset-password     Password reset
+/login              Login
+/signup             Signup
+/reset-password     Password reset
 /dashboard               Main dashboard (authenticated)
 /check                   New compliance check
 /submissions             All submissions list

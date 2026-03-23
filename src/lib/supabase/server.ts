@@ -1,12 +1,14 @@
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient as createSupabaseServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-export async function createClient() {
+// Session-aware client — uses anon key, respects RLS
+// Use this in API routes and Server Components for user-scoped reads
+export async function createServerClient() {
   const cookieStore = await cookies();
 
-  return createServerClient(
+  return createSupabaseServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SECRET_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
     {
       cookies: {
         getAll() {
@@ -24,5 +26,16 @@ export async function createClient() {
         },
       },
     }
+  );
+}
+
+// Service role client — bypasses RLS
+// Use this ONLY for server-side writes (inserting submissions, gaps, evals)
+// SUPABASE_SECRET_KEY must never appear in any other file
+export function createServiceClient() {
+  return createSupabaseServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SECRET_KEY!,
+    { cookies: { getAll: () => [], setAll: () => {} } }
   );
 }
