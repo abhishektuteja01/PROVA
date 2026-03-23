@@ -7,7 +7,7 @@ Read this file completely before every task. If anything conflicts with a reques
 ## What is Prova?
 SR 11-7 model documentation compliance checker. Users submit model docs → three parallel AI agents assess against SR 11-7 pillars → judge agent validates → compliance score (0–100) + PDF report.
 
-Full spec: `docs/PRD.md` | Architecture: `docs/ARCHITECTURE.md`
+Full spec: @docs/PRD.md | Architecture: `docs/ARCHITECTURE.md`
 
 ---
 
@@ -89,7 +89,30 @@ Next.js 16 App Router · TypeScript strict · Supabase (PostgreSQL + Auth + RLS)
 - All scores/numbers: IBM Plex Mono · Headings: Instrument Serif · Labels: Geist
 - Colors defined as CSS variables in `globals.css` — do not hardcode hex values
 - Loading states: skeleton screens only, never spinners
+- Mobile-web responsiveness: fluid scaling via Tailwind (mobile-first)
 - Never use: Inter, Roboto, Arial, purple gradients, generic AI aesthetics
+
+---
+
+## Testing Strategy
+
+- **Unit tests** (`npm test`): Zod schema validation, scoring logic, utility functions — pure functions only, no mocks of internal code
+- **AI regression tests** (`npm run test:ai`): Run after every agent/prompt/scoring change; flag any score drift > 10 points
+- **TDD approach**: Write failing tests first, implement minimum code to pass, then refactor — red → green → refactor commit pattern
+- **No mocking internal modules**: Test against real logic; only mock at system boundaries (Supabase client, Anthropic API)
+- **Test files**: Co-located with source at `*.test.ts` — never in a separate top-level `tests/` folder
+
+---
+
+## Architecture Decisions
+
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| AI orchestration | Three parallel agents + judge | Reduces single-agent hallucination risk; judge catches conflicting scores |
+| Auth | Supabase Auth + RLS | Eliminates manual row-level security; session token never touches client |
+| Document processing | Memory only, never disk | Regulatory requirement — no PII/model docs persisted outside DB |
+| PDF generation | `@react-pdf/renderer` server-side | Avoids headless browser; deterministic output |
+| Validation | Zod at every API boundary | Runtime safety on top of TypeScript; single source of truth in `schemas.ts` |
 
 ---
 

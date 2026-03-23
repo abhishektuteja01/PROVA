@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Instrument_Serif, IBM_Plex_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/react";
+import Navbar from "@/components/layout/Navbar";
 import "./globals.css";
 
 const instrumentSerif = Instrument_Serif({
@@ -42,6 +43,7 @@ export default function RootLayout({
       }}
     >
       <body className="antialiased">
+        <Navbar />
         {children}
         <Analytics />
       </body>

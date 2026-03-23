@@ -285,27 +285,27 @@ export function createClient() {
 Implement full authentication: email/password login, Google OAuth, password reset, Next.js middleware route guard, and the three auth pages. Users must be authenticated to access anything in `/(dashboard)`.
 
 ### Context
-Auth is via Supabase Auth with JWT sessions. The middleware in `src/proxy.ts` (called `middleware.ts` at root) must redirect unauthenticated users to `/auth/login` before any dashboard page renders. All API routes also re-verify session server-side (defense in depth — this is handled in each API route, not here). Read `ARCHITECTURE.md` Section 3 (Authentication Flow).
+Auth is via Supabase Auth with JWT sessions. The middleware in `src/proxy.ts` (called `middleware.ts` at root) must redirect unauthenticated users to `/login` before any dashboard page renders. All API routes also re-verify session server-side (defense in depth — this is handled in each API route, not here). Read `ARCHITECTURE.md` Section 3 (Authentication Flow).
 
 ### Pages to Build
 
-**`/auth/login`** (`src/app/(auth)/login/page.tsx`):
+**`/login`** (`src/app/(auth)/login/page.tsx`):
 - Email + password fields
 - "Sign in with Google" button
-- Link to `/auth/signup`
-- Link to `/auth/reset-password`
+- Link to `/signup`
+- Link to `/reset-password`
 - On success → redirect to `/dashboard`
 - Error states: invalid credentials, email not confirmed, network error
 - No navbar (auth route group has no layout with navbar)
 
-**`/auth/signup`** (`src/app/(auth)/signup/page.tsx`):
+**`/signup`** (`src/app/(auth)/signup/page.tsx`):
 - Email + password + confirm password fields
 - "Sign up with Google" button
-- Link back to `/auth/login`
+- Link back to `/login`
 - On success → redirect to `/dashboard` (Supabase auto-confirms for OAuth; email signup may require confirmation depending on Supabase project settings)
 - Error states: email already in use, passwords don't match, weak password
 
-**`/auth/reset-password`** (`src/app/(auth)/reset-password/page.tsx`):
+**`/reset-password`** (`src/app/(auth)/reset-password/page.tsx`):
 - Email field only
 - "Send reset link" button
 - On success → show confirmation message (do not redirect)
@@ -314,11 +314,11 @@ Auth is via Supabase Auth with JWT sessions. The middleware in `src/proxy.ts` (c
 ### Middleware (`src/proxy.ts` — Next.js reads this as `middleware.ts`):
 ```typescript
 // Protected routes: all routes under /(dashboard)
-// Public routes: /, /auth/login, /auth/signup, /auth/reset-password, /api/health
+// Public routes: /, /login, /signup, /reset-password, /api/health
 // Logic:
 //   - Refresh Supabase session on every request (use src/lib/supabase/middleware.ts)
-//   - If accessing a protected route without a valid session → redirect to /auth/login
-//   - If accessing /auth/login or /auth/signup with a valid session → redirect to /dashboard
+//   - If accessing a protected route without a valid session → redirect to /login
+//   - If accessing /login or /signup with a valid session → redirect to /dashboard
 ```
 
 ### Design Requirements
@@ -331,11 +331,11 @@ Auth is via Supabase Auth with JWT sessions. The middleware in `src/proxy.ts` (c
 - No `dangerouslySetInnerHTML` anywhere
 
 ### Acceptance Criteria
-- [ ] `/auth/login` renders and functions (email/password + Google OAuth)
-- [ ] `/auth/signup` renders and functions
-- [ ] `/auth/reset-password` renders and functions
-- [ ] Middleware redirects unauthenticated users from any `/dashboard*` route to `/auth/login`
-- [ ] Middleware redirects authenticated users away from `/auth/login` and `/auth/signup` to `/dashboard`
+- [ ] `/login` renders and functions (email/password + Google OAuth)
+- [ ] `/signup` renders and functions
+- [ ] `/reset-password` renders and functions
+- [ ] Middleware redirects unauthenticated users from any `/dashboard*` route to `/login`
+- [ ] Middleware redirects authenticated users away from `/login` and `/signup` to `/dashboard`
 - [ ] Supabase session is refreshed on every middleware invocation (prevents stale JWT)
 - [ ] All error states handled with user-visible messages (no silent failures)
 - [ ] `npm run build` passes with zero TypeScript errors
@@ -747,7 +747,7 @@ Prova's design direction from `PRD.md` Section 8: banking-appropriate refined mi
 Content:
 - Hero: "Know what's missing before regulators do." + brief description of Prova
 - What it does: 3-pillar explanation (Conceptual Soundness, Outcomes Analysis, Ongoing Monitoring)
-- CTA: "Get started" → `/auth/signup`, "Sign in" → `/auth/login`
+- CTA: "Get started" → `/signup`, "Sign in" → `/login`
 - Footer: tagline + "For training and synthetic model documents only"
 
 Visual requirements:
@@ -758,7 +758,7 @@ Visual requirements:
 
 ### Authenticated Layout (`src/app/(dashboard)/layout.tsx`)
 - Renders navbar at top
-- Auth guard: if no Supabase session → redirect to `/auth/login` (server-side check in layout, as backup to middleware)
+- Auth guard: if no Supabase session → redirect to `/login` (server-side check in layout, as backup to middleware)
 - Renders `{children}` below navbar
 
 ### Navbar (`src/components/layout/Navbar.tsx`)
@@ -1328,7 +1328,7 @@ Behavior:
 
 ### Account Section
 - Display current email (read-only)
-- "Change password" → triggers Supabase password reset email (same flow as `/auth/reset-password`)
+- "Change password" → triggers Supabase password reset email (same flow as `/reset-password`)
 - "Delete account" → confirmation modal with typed confirmation ("DELETE") → delete all user data then delete Supabase Auth user
 
 ### Acceptance Criteria

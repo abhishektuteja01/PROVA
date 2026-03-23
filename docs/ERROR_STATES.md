@@ -34,8 +34,8 @@ Implement all error states exactly as defined here — do not invent error messa
 ### AUTH_REQUIRED
 **Trigger:** User accesses `/dashboard`, `/check`, `/submissions`, `/settings`, `/help` without a valid session.
 **HTTP:** 401
-**User-facing message:** Not shown — middleware redirects to `/auth/login` before any UI renders.
-**UI behavior:** Silent redirect to `/auth/login`. After login, redirect back to originally requested URL.
+**User-facing message:** Not shown — middleware redirects to `/login` before any UI renders.
+**UI behavior:** Silent redirect to `/login`. After login, redirect back to originally requested URL.
 **Recovery:** Log in.
 
 ---
@@ -52,7 +52,7 @@ Implement all error states exactly as defined here — do not invent error messa
 }
 ```
 **User-facing message:** "Your session has expired. Please log in again."
-**UI behavior:** Toast notification (amber). Redirect to `/auth/login` after 2 seconds.
+**UI behavior:** Toast notification (amber). Redirect to `/login` after 2 seconds.
 **Recovery:** Log in again.
 
 ---

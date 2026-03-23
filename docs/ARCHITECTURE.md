@@ -129,7 +129,7 @@ Next.js proxy.ts
         │
         ├── Has valid Supabase session? ──YES──► Render page
         │
-        └── NO ──► Redirect to /auth/login
+        └── NO ──► Redirect to /login
                          │
                          ▼
                    Login with email/password
