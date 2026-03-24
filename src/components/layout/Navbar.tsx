@@ -81,6 +81,10 @@ export default function Navbar() {
   // Show skeleton on dashboard paths while session resolves — prevents layout shift
   const showSkeleton = !ready && isDashboardPath(pathname);
 
+  const displayName = user?.user_metadata?.full_name
+    ? `Hi, ${user.user_metadata.full_name.split(" ")[0]}`
+    : `Hi, ${user?.email?.split("@")[0] || "there"}`;
+
   const handleSignOut = async () => {
     setSigningOut(true);
     try {
@@ -122,8 +126,8 @@ export default function Navbar() {
               borderBottom: vertical
                 ? "none"
                 : active
-                ? "2px solid var(--color-accent)"
-                : "2px solid transparent",
+                  ? "2px solid var(--color-accent)"
+                  : "2px solid transparent",
               borderLeft: vertical && active ? "2px solid var(--color-accent)" : vertical ? "2px solid transparent" : "none",
               transition: "color 0.15s ease, border-color 0.15s ease",
               whiteSpace: "nowrap",
@@ -199,13 +203,34 @@ export default function Navbar() {
         >
           {/* Logo */}
           <Link
-            href={isAuthenticated ? "/dashboard" : "/"}
+            href="/"
             style={{
               textDecoration: "none",
               flexShrink: 0,
               marginRight: "24px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
             }}
           >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="var(--color-text-primary)"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <path d="M9 16.5V9h4.5a2.5 2.5 0 0 1 0 5H9" />
+              <line x1="6" y1="11.5" x2="9" y2="11.5" />
+              <line x1="6" y1="14" x2="13.5" y2="14" />
+              <line x1="9" y1="20" x2="9" y2="16.5" />
+              <line x1="13.5" y1="16.5" x2="13.5" y2="20" />
+            </svg>
             <span
               style={{
                 fontFamily: "var(--font-ibm-plex-mono)",
@@ -264,7 +289,7 @@ export default function Navbar() {
                   whiteSpace: "nowrap",
                 }}
               >
-                {user.email}
+                {displayName}
               </span>
               <SignOutButton />
             </div>
@@ -335,7 +360,7 @@ export default function Navbar() {
                 opacity: 0.55,
               }}
             >
-              {user.email}
+              {displayName}
             </span>
             <SignOutButton fullWidth />
           </div>
