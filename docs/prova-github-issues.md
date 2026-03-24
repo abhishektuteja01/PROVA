@@ -51,8 +51,8 @@ Prova is a Next.js 16 App Router monolith deployed on Vercel. Frontend and backe
 ### Acceptance Criteria
 
 **Project structure:**
-- [ ] Next.js 16 App Router initialized with TypeScript strict mode (`"strict": true` in `tsconfig.json` — no `any` types ever)
-- [ ] Folder structure matches `PRD.md` Section 15 exactly:
+- [x] Next.js 16 App Router initialized with TypeScript strict mode (`"strict": true` in `tsconfig.json` — no `any` types ever)
+- [x] Folder structure matches `PRD.md` Section 15 exactly:
   - `src/app/(auth)/` — auth route group (no navbar)
   - `src/app/(dashboard)/` — authenticated route group (with navbar)
   - `src/app/api/` — API routes
@@ -62,23 +62,23 @@ Prova is a Next.js 16 App Router monolith deployed on Vercel. Frontend and backe
   - `tests/agents/`, `tests/scoring/`, `tests/api/`, `tests/synthetic/documents/`
 
 **Dependencies installed:**
-- [ ] `@supabase/supabase-js` and `@supabase/ssr`
-- [ ] `@anthropic-ai/sdk`
-- [ ] `@react-pdf/renderer`
-- [ ] `pdf-parse` and `@types/pdf-parse`
-- [ ] `mammoth`
-- [ ] `zod`
-- [ ] `recharts`
-- [ ] `@sentry/nextjs`
-- [ ] `tailwindcss`
-- [ ] Jest + `ts-jest` for testing
+- [x] `@supabase/supabase-js` and `@supabase/ssr`
+- [x] `@anthropic-ai/sdk`
+- [x] `@react-pdf/renderer`
+- [x] `pdf-parse` and `@types/pdf-parse`
+- [x] `mammoth`
+- [x] `zod`
+- [x] `recharts`
+- [x] `@sentry/nextjs`
+- [x] `tailwindcss`
+- [x] Jest + `ts-jest` for testing
 
 **Fonts (self-hosted, not Google Fonts CDN):**
-- [ ] Playfair Display (for headings)
-- [ ] IBM Plex Mono (for scores and numbers)
-- [ ] Geist (for UI labels)
+- [x] Playfair Display (for headings)
+- [x] IBM Plex Mono (for scores and numbers)
+- [x] Geist (for UI labels)
 - [ ] All loaded in `src/app/layout.tsx` via `next/font/local`
-- [ ] Font variables wired into `tailwind.config.ts`
+- [x] Font variables wired into `tailwind.config.ts`
 
 **CSS variables in `src/app/globals.css`:**
 ```css
@@ -93,29 +93,29 @@ Prova is a Next.js 16 App Router monolith deployed on Vercel. Frontend and backe
 --color-critical:       #EF4444
 --color-border:         #1F2937
 ```
-- [ ] These are the ONLY color definitions — never hardcode hex values anywhere else in the codebase
+- [x] These are the ONLY color definitions — never hardcode hex values anywhere else in the codebase
 
 **Environment variables:**
-- [ ] `.env.local.example` created with all variables from `CLAUDE.md` (no values, just keys + descriptions)
-- [ ] `.env.local` in `.gitignore`
-- [ ] `ANTHROPIC_API_KEY` referenced only in `src/lib/anthropic/client.ts`
-- [ ] `SUPABASE_SECRET_KEY` referenced only in `src/lib/supabase/server.ts`
+- [x] `.env.local.example` created with all variables from `CLAUDE.md` (no values, just keys + descriptions)
+- [x] `.env.local` in `.gitignore`
+- [x] `ANTHROPIC_API_KEY` referenced only in `src/lib/anthropic/client.ts`
+- [x] `SUPABASE_SECRET_KEY` referenced only in `src/lib/supabase/server.ts`
 
 **npm scripts:**
-- [ ] `npm run dev` — starts dev server
-- [ ] `npm run build` — type check + build
-- [ ] `npm run lint` — ESLint
-- [ ] `npm run typecheck` — tsc --noEmit
-- [ ] `npm test` — Jest
-- [ ] `npm run test:ai` — placeholder script (echo "AI test suite not yet implemented") — will be wired up in Sprint 3
+- [x] `npm run dev` — starts dev server
+- [x] `npm run build` — type check + build
+- [x] `npm run lint` — ESLint
+- [x] `npm run typecheck` — tsc --noEmit
+- [x] `npm test` — Jest
+- [x] `npm run test:ai` — placeholder script (echo "AI test suite not yet implemented") — will be wired up in Sprint 3
 
 **Health check:**
 - [ ] `GET /api/health` returns `{ status: "ok", timestamp: "<ISO string>" }` with HTTP 200
 
 **Verification:**
-- [ ] `npm run build` passes with zero TypeScript errors
-- [ ] `npm run lint` passes clean
-- [ ] `GET /api/health` returns 200
+- [x] `npm run build` passes with zero TypeScript errors
+- [x] `npm run lint` passes clean
+- [x] `GET /api/health` returns 200
 
 ---
 
@@ -269,10 +269,10 @@ export function createClient() {
 - [ ] All 5 tables created in Supabase with correct column types and constraints
 - [ ] RLS enabled and policies applied on all tables
 - [ ] All indexes created
-- [ ] `src/lib/supabase/client.ts` — browser client, anon key only
-- [ ] `src/lib/supabase/server.ts` — server client + service client, `SUPABASE_SECRET_KEY` isolated here only
-- [ ] `src/lib/supabase/middleware.ts` — session refresh helper
-- [ ] No Supabase keys referenced in any other file
+- [x] `src/lib/supabase/client.ts` — browser client, anon key only
+- [x] `src/lib/supabase/server.ts` — server client + service client, `SUPABASE_SECRET_KEY` isolated here only
+- [x] `src/lib/supabase/middleware.ts` — session refresh helper
+- [x] No Supabase keys referenced in any other file
 
 ---
 
@@ -331,14 +331,14 @@ Auth is via Supabase Auth with JWT sessions. The middleware in `src/proxy.ts` (c
 - No `dangerouslySetInnerHTML` anywhere
 
 ### Acceptance Criteria
-- [ ] `/login` renders and functions (email/password + Google OAuth)
-- [ ] `/signup` renders and functions
-- [ ] `/reset-password` renders and functions
-- [ ] Middleware redirects unauthenticated users from any `/dashboard*` route to `/login`
-- [ ] Middleware redirects authenticated users away from `/login` and `/signup` to `/dashboard`
-- [ ] Supabase session is refreshed on every middleware invocation (prevents stale JWT)
-- [ ] All error states handled with user-visible messages (no silent failures)
-- [ ] `npm run build` passes with zero TypeScript errors
+- [x] `/login` renders and functions (email/password + Google OAuth)
+- [x] `/signup` renders and functions
+- [x] `/reset-password` renders and functions
+- [x] Middleware redirects unauthenticated users from any `/dashboard*` route to `/login`
+- [x] Middleware redirects authenticated users away from `/login` and `/signup` to `/dashboard`
+- [x] Supabase session is refreshed on every middleware invocation (prevents stale JWT)
+- [x] All error states handled with user-visible messages (no silent failures)
+- [x] `npm run build` passes with zero TypeScript errors
 
 ---
 
@@ -456,12 +456,12 @@ export type UserPreferences = z.infer<typeof UserPreferencesSchema>
 ```
 
 ### Acceptance Criteria
-- [ ] All schemas defined in `src/lib/validation/schemas.ts` — no schemas anywhere else
-- [ ] All TypeScript types exported via `z.infer<>` — no manually duplicated types
-- [ ] `AgentOutputSchema` validates pillar, score (0–100), confidence (0–1), gaps array, summary string
-- [ ] `JudgeOutputSchema` validates all judge fields including nested `agent_feedback`
-- [ ] File compiles with zero TypeScript errors under strict mode
-- [ ] Every schema export is tested in `tests/scoring/calculator.test.ts` (or a dedicated schema test file) with at least one valid and one invalid fixture
+- [x] All schemas defined in `src/lib/validation/schemas.ts` — no schemas anywhere else
+- [x] All TypeScript types exported via `z.infer<>` — no manually duplicated types
+- [x] `AgentOutputSchema` validates pillar, score (0–100), confidence (0–1), gaps array, summary string
+- [x] `JudgeOutputSchema` validates all judge fields including nested `agent_feedback`
+- [x] File compiles with zero TypeScript errors under strict mode
+- [x] Every schema export is tested in `tests/scoring/calculator.test.ts` (or a dedicated schema test file) with at least one valid and one invalid fixture
 
 ---
 
@@ -528,14 +528,14 @@ Implement all input sanitization and file parsing logic. This runs before any te
 - Rate limit uses `userId` from the server-side session — never from a client-supplied header
 
 ### Acceptance Criteria
-- [ ] `sanitizeText()` strips `<script>`, `<img>`, all HTML tags, inline JS patterns
-- [ ] `sanitizeText()` preserves normal text content (doesn't mangle plain prose)
-- [ ] `validateFileType()` rejects `.exe` with PDF MIME type, `.docx` with wrong MIME, etc.
-- [ ] `parsePDF()` returns string from buffer — unit tested with a tiny test PDF buffer
-- [ ] `parseDOCX()` returns string from buffer — unit tested with a tiny test DOCX buffer
-- [ ] `checkRateLimit()` returns `allowed: false` after N requests in 1 hour
-- [ ] No file paths or `fs` module usage in parsers — buffers only
-- [ ] All functions fully typed, no `any`
+- [x] `sanitizeText()` strips `<script>`, `<img>`, all HTML tags, inline JS patterns
+- [x] `sanitizeText()` preserves normal text content (doesn't mangle plain prose)
+- [x] `validateFileType()` rejects `.exe` with PDF MIME type, `.docx` with wrong MIME, etc.
+- [x] `parsePDF()` returns string from buffer — unit tested with a tiny test PDF buffer
+- [x] `parseDOCX()` returns string from buffer — unit tested with a tiny test DOCX buffer
+- [x] `checkRateLimit()` returns `allowed: false` after N requests in 1 hour
+- [x] No file paths or `fs` module usage in parsers — buffers only
+- [x] All functions fully typed, no `any`
 
 ---
 
@@ -609,15 +609,15 @@ The system prompt for Agent 1 must be copied **verbatim** from `AGENT_PROMPTS.md
 Do not paraphrase, shorten, or modify any part of the prompt. Run `npm run test:ai` after wiring up (it will be a no-op placeholder until Sprint 3 wires real tests — that's fine).
 
 ### Acceptance Criteria
-- [ ] `src/lib/anthropic/client.ts` is the ONLY file containing `ANTHROPIC_API_KEY`
-- [ ] Agent 1 system prompt matches `AGENT_PROMPTS.md` Agent 1 system prompt verbatim
-- [ ] Agent 1 user prompt template matches `AGENT_PROMPTS.md` Agent 1 user prompt template verbatim
-- [ ] Document text is wrapped in `<document>...</document>` before every API call
-- [ ] Model string is `claude-haiku-3-5-20241022` — verified, not an alias
-- [ ] `max_tokens` is 1000
-- [ ] Response is parsed as JSON and validated against `AgentOutputSchema`
-- [ ] Typed error thrown on JSON parse failure
-- [ ] Typed error thrown on Zod validation failure
+- [x] `src/lib/anthropic/client.ts` is the ONLY file containing `ANTHROPIC_API_KEY`
+- [x] Agent 1 system prompt matches `AGENT_PROMPTS.md` Agent 1 system prompt verbatim
+- [x] Agent 1 user prompt template matches `AGENT_PROMPTS.md` Agent 1 user prompt template verbatim
+- [x] Document text is wrapped in `<document>...</document>` before every API call
+- [x] Model string is `claude-haiku-3-5-20241022` — verified, not an alias
+- [x] `max_tokens` is 1000
+- [x] Response is parsed as JSON and validated against `AgentOutputSchema`
+- [x] Typed error thrown on JSON parse failure
+- [x] Typed error thrown on Zod validation failure
 - [ ] Manual test: call `assessConceptualSoundness()` with a short model doc string and verify valid `AgentOutput` is returned
 
 ---
@@ -712,15 +712,15 @@ All error responses must follow this shape exactly:
 Error codes: `UNAUTHORIZED`, `RATE_LIMIT_EXCEEDED`, `INVALID_FILE_TYPE`, `FILE_PARSE_ERROR`, `INVALID_REQUEST`, `AGENT_ERROR`, `DATABASE_ERROR`
 
 ### Acceptance Criteria
-- [ ] Session verified server-side as first operation — nothing executes before this check
-- [ ] Rate limit checked before any Claude API call
-- [ ] File upload: extension + MIME type both validated, buffer only (no disk writes)
-- [ ] Text paste: Zod validated against `ComplianceRequestSchema`
-- [ ] `sanitizeText()` called before storage AND before agent call
-- [ ] Document wrapped in `<document>...</document>` inside the agent function (not here)
-- [ ] Submission + gaps written to Supabase with correct user_id (from session, never client)
-- [ ] All error responses use the standard error shape
-- [ ] `npm run build` passes with zero TypeScript errors
+- [x] Session verified server-side as first operation — nothing executes before this check
+- [x] Rate limit checked before any Claude API call
+- [x] File upload: extension + MIME type both validated, buffer only (no disk writes)
+- [x] Text paste: Zod validated against `ComplianceRequestSchema`
+- [x] `sanitizeText()` called before storage AND before agent call
+- [x] Document wrapped in `<document>...</document>` inside the agent function (not here)
+- [x] Submission + gaps written to Supabase with correct user_id (from session, never client)
+- [x] All error responses use the standard error shape
+- [x] `npm run build` passes with zero TypeScript errors
 - [ ] Manual test: POST with a text payload returns a valid response with `submissionId`
 
 ---
