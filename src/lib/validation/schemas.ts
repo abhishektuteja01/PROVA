@@ -184,7 +184,7 @@ export const ComplianceRequestSchema = z.object({
     .min(1, "Model name is required")
     .max(200, "Model name must be under 200 characters")
     .regex(
-      /^[a-zA-Z0-9\s\-_().]+$/,
+      /^[a-zA-Z0-9 \-_().]+$/,
       "Model name contains invalid characters"
     ),
   // file is handled as multipart/form-data — not in this schema
