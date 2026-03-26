@@ -1,0 +1,6 @@
+node_modules/
+.next/
+supabase/migrations/
+public/fonts/
+*.lock
+.git/

@@ -9,8 +9,6 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
         "bg-primary": "var(--color-bg-primary)",
         "bg-secondary": "var(--color-bg-secondary)",
         "bg-tertiary": "var(--color-bg-tertiary)",
@@ -23,9 +21,9 @@ const config: Config = {
         border: "var(--color-border)",
       },
       fontFamily: {
-        serif: ["Playfair Display", "serif"],
-        mono: ["IBM Plex Mono", "monospace"],
-        sans: ["Geist", "sans-serif"],
+        serif: ["var(--font-playfair)", "serif"],
+        mono: ["var(--font-ibm-plex-mono)", "monospace"],
+        sans: ["var(--font-geist)", "sans-serif"],
       },
     },
   },

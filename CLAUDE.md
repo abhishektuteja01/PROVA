@@ -7,19 +7,29 @@ Read this file completely before every task. If anything conflicts with a reques
 ## What is Prova?
 SR 11-7 model documentation compliance checker. Users submit model docs → three parallel AI agents assess against SR 11-7 pillars → judge agent validates → compliance score (0–100) + PDF report.
 
-Full spec: @docs/PRD.md | Architecture: `docs/ARCHITECTURE.md`
+Full spec: `docs/PRD.md` | Architecture: `docs/ARCHITECTURE.md`
+
+---
+
+## Folder-Level CLAUDE.md Rule
+
+**When creating a new folder under `src/`, create a CLAUDE.md in that folder first** — before writing any code. The CLAUDE.md should contain the domain-specific rules, relevant PRD line references, and doc links for that folder's responsibility. Follow the pattern of existing folder CLAUDE.md files.
 
 ---
 
 ## Before You Start Any Task
 
+Each folder has its own CLAUDE.md with domain-specific rules. The relevant one loads automatically when you work in that folder. If you need broader context, read the referenced docs on-demand:
+
 | Task type | Read first |
 |-----------|-----------|
-| Any agent work | `docs/AGENT_PROMPTS.md` |
-| Any API route | `docs/SCHEMAS.md` + `docs/ERROR_STATES.md` |
+| Any agent work | `src/lib/agents/CLAUDE.md` + `docs/AGENT_PROMPTS.md` |
+| Any API route | `src/app/api/CLAUDE.md` + `docs/SCHEMAS.md` + `docs/ERROR_STATES.md` |
 | Any database work | `docs/DATABASE.md` |
-| Any UI component | `docs/PRD.md` Section 8 |
-| Any scoring logic | `docs/PRD.md` Section 14.3 |
+| Any UI component | `src/components/CLAUDE.md` |
+| Any scoring logic | `src/lib/scoring/CLAUDE.md` |
+| Any validation work | `src/lib/validation/CLAUDE.md` + `docs/SCHEMAS.md` |
+| Any security work | `src/lib/security/CLAUDE.md` |
 | Modifying agent prompts | Run `npm run test:ai` after |
 
 ---
@@ -54,43 +64,19 @@ RATE_LIMIT_REQUESTS_PER_HOUR   # Default: 10
 
 ## Non-Negotiable Rules
 
-**Security:**
-- `ANTHROPIC_API_KEY` — only in `src/lib/anthropic/client.ts`
-- `SUPABASE_SECRET_KEY` — only in `src/lib/supabase/server.ts`
-- All document text wrapped in `<document>...</document>` before passing to any agent
-- File uploads: extension + MIME type validated server-side, memory only, never written to disk
-- No `dangerouslySetInnerHTML` anywhere
-- All API routes verify session server-side before any processing
-
-**Code:**
+- TypeScript strict mode — no `any` types
+- No direct commits to main — all changes via pull requests
 - All Zod schemas in `src/lib/validation/schemas.ts` only — never inline
 - Never skip validation on any API boundary
-- All error messages from `docs/ERROR_STATES.md` exactly — never invented inline
-- TypeScript strict mode — no `any` types
-
-**AI:**
-- Claude model string: `claude-haiku-3-5-20241022` — exact, no aliases
-- Max tokens per agent: 1000
-- Never remove bias mitigation instructions from agent prompts (verbosity, position, self-enhancement, confidence)
-- Run `npm run test:ai` after any change to agents or scoring — flag if any score drifts > 10 points
-
-**Git:**
-- No direct commits to main — all changes via pull requests
+- All error codes/messages from `src/lib/errors/messages.ts` — never hardcode inline
+- `ANTHROPIC_API_KEY` — only in `src/lib/anthropic/client.ts`
+- `SUPABASE_SECRET_KEY` — only in `src/lib/supabase/server.ts`
+- No `dangerouslySetInnerHTML` anywhere
 
 ---
 
 ## Stack at a Glance
 Next.js 16 App Router · TypeScript strict · Supabase (PostgreSQL + Auth + RLS) · Anthropic Claude Haiku 3.5 · `@react-pdf/renderer` · `pdf-parse` · `mammoth` · Zod · Tailwind CSS · Recharts · Sentry · Vercel
-
----
-
-## Design (read `docs/PRD.md` Section 8 for full spec)
-- Banking-appropriate refined minimalism — data is the hero
-- All scores/numbers: IBM Plex Mono · Headings: Playfair Display · Labels: Geist
-- Colors defined as CSS variables in `globals.css` — do not hardcode hex values
-- Loading states: skeleton screens only, never spinners
-- Mobile-web responsiveness: fluid scaling via Tailwind (mobile-first)
-- Never use: Inter, Roboto, Arial, purple gradients, generic AI aesthetics
 
 ---
 
@@ -101,18 +87,6 @@ Next.js 16 App Router · TypeScript strict · Supabase (PostgreSQL + Auth + RLS)
 - **TDD approach**: Write failing tests first, implement minimum code to pass, then refactor — red → green → refactor commit pattern
 - **No mocking internal modules**: Test against real logic; only mock at system boundaries (Supabase client, Anthropic API)
 - **Test files**: Co-located with source at `*.test.ts` — never in a separate top-level `tests/` folder
-
----
-
-## Architecture Decisions
-
-| Decision | Choice | Rationale |
-|----------|--------|-----------|
-| AI orchestration | Three parallel agents + judge | Reduces single-agent hallucination risk; judge catches conflicting scores |
-| Auth | Supabase Auth + RLS | Eliminates manual row-level security; session token never touches client |
-| Document processing | Memory only, never disk | Regulatory requirement — no PII/model docs persisted outside DB |
-| PDF generation | `@react-pdf/renderer` server-side | Avoids headless browser; deterministic output |
-| Validation | Zod at every API boundary | Runtime safety on top of TypeScript; single source of truth in `schemas.ts` |
 
 ---
 

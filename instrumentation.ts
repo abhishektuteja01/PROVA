@@ -3,7 +3,7 @@ export async function register() {
     const { init } = await import("@sentry/nextjs");
     init({
       dsn: process.env.SENTRY_DSN,
-      tracesSampleRate: 1.0,
+      tracesSampleRate: 0.2,
       debug: false,
     });
   }
@@ -12,7 +12,7 @@ export async function register() {
     const { init } = await import("@sentry/nextjs");
     init({
       dsn: process.env.SENTRY_DSN,
-      tracesSampleRate: 1.0,
+      tracesSampleRate: 0.2,
       debug: false,
     });
   }

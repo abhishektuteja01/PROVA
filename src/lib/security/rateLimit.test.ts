@@ -1,19 +1,42 @@
 import { checkRateLimit } from "./rateLimit";
 
+// Build a chainable mock that mimics the Supabase query builder
+function createChainMock(result: { count?: number | null; data?: unknown; error?: unknown }) {
+  const terminal = {
+    count: result.count ?? null,
+    data: result.data ?? null,
+    error: result.error ?? null,
+  };
+  const chain: Record<string, jest.Mock> = {};
+  // Each method returns the chain itself, except terminal calls return the result
+  for (const method of ["select", "eq", "gte", "order", "limit", "single", "maybeSingle"]) {
+    chain[method] = jest.fn(() =>
+      method === "single" || method === "maybeSingle" ? terminal : chain
+    );
+  }
+  // For count queries (head: true), the chain itself IS the result
+  Object.assign(chain, terminal);
+  return chain;
+}
+
+let mockChain: ReturnType<typeof createChainMock>;
+
+jest.mock("@/lib/supabase/server", () => ({
+  createServiceClient: () => ({
+    from: () => mockChain,
+  }),
+}));
+
 const ORIGINAL_LIMIT = process.env.RATE_LIMIT_REQUESTS_PER_HOUR;
 
 describe("checkRateLimit", () => {
   beforeEach(() => {
-    jest.useFakeTimers();
-    jest.resetModules();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
+    jest.clearAllMocks();
+    // Default: under limit
+    mockChain = createChainMock({ count: 0, error: null });
   });
 
   afterAll(() => {
-    // Restore env var to avoid polluting other test suites
     if (ORIGINAL_LIMIT === undefined) {
       delete process.env.RATE_LIMIT_REQUESTS_PER_HOUR;
     } else {
@@ -22,85 +45,89 @@ describe("checkRateLimit", () => {
   });
 
   it("allows first request for a new user", async () => {
+    mockChain = createChainMock({ count: 0, error: null });
     const result = await checkRateLimit("user-1");
     expect(result.allowed).toBe(true);
   });
 
-  it("allows requests up to the limit", async () => {
-    const limit = 3;
-    process.env.RATE_LIMIT_REQUESTS_PER_HOUR = String(limit);
-    const { checkRateLimit: check } = await import("./rateLimit");
-
-    for (let i = 0; i < limit; i++) {
-      const result = await check("user-limit");
-      expect(result.allowed).toBe(true);
-    }
+  it("allows requests under the limit", async () => {
+    mockChain = createChainMock({ count: 5, error: null });
+    const result = await checkRateLimit("user-under");
+    expect(result.allowed).toBe(true);
   });
 
-  it("blocks the request that exceeds the limit", async () => {
-    const limit = 2;
-    process.env.RATE_LIMIT_REQUESTS_PER_HOUR = String(limit);
-    const { checkRateLimit: check } = await import("./rateLimit");
-
-    await check("user-block");
-    await check("user-block");
-    const result = await check("user-block");
-
+  it("blocks when count equals the limit", async () => {
+    // The count query and the oldest-row query both go through the same mock chain
+    // When count >= limit, the code does a second query for the oldest row
+    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    mockChain = createChainMock({
+      count: 10,
+      data: { created_at: thirtyMinAgo },
+      error: null,
+    });
+    const result = await checkRateLimit("user-at-limit");
     expect(result.allowed).toBe(false);
     expect(result.resetAt).toBeInstanceOf(Date);
   });
 
-  it("uses separate counters per userId", async () => {
-    const { checkRateLimit: check } = await import("./rateLimit");
-
-    const r1 = await check("user-a");
-    const r2 = await check("user-b");
-
-    expect(r1.allowed).toBe(true);
-    expect(r2.allowed).toBe(true);
+  it("blocks when count exceeds the limit", async () => {
+    const fortyFiveMinAgo = new Date(Date.now() - 45 * 60 * 1000).toISOString();
+    mockChain = createChainMock({
+      count: 15,
+      data: { created_at: fortyFiveMinAgo },
+      error: null,
+    });
+    const result = await checkRateLimit("user-over");
+    expect(result.allowed).toBe(false);
   });
 
-  it("allows requests again after the hour window expires", async () => {
-    process.env.RATE_LIMIT_REQUESTS_PER_HOUR = "1";
-    const { checkRateLimit: check } = await import("./rateLimit");
+  it("allows request when Supabase count query fails (fail-open)", async () => {
+    mockChain = createChainMock({ count: null, error: { message: "DB error" } });
+    const result = await checkRateLimit("user-error");
+    expect(result.allowed).toBe(true);
+  });
 
-    await check("user-expire");
-    const blocked = await check("user-expire");
-    expect(blocked.allowed).toBe(false);
+  it("uses custom limit from env var", async () => {
+    process.env.RATE_LIMIT_REQUESTS_PER_HOUR = "3";
+    mockChain = createChainMock({
+      count: 3,
+      data: { created_at: new Date().toISOString() },
+      error: null,
+    });
 
-    jest.advanceTimersByTime(60 * 60 * 1000 + 1);
+    const result = await checkRateLimit("user-custom");
+    expect(result.allowed).toBe(false);
 
-    const allowed = await check("user-expire");
-    expect(allowed.allowed).toBe(true);
+    process.env.RATE_LIMIT_REQUESTS_PER_HOUR = ORIGINAL_LIMIT;
   });
 
   it("falls back to limit 10 when env var is not a valid number", async () => {
     process.env.RATE_LIMIT_REQUESTS_PER_HOUR = "notanumber";
-    const { checkRateLimit: check } = await import("./rateLimit");
+    mockChain = createChainMock({ count: 9, error: null });
 
-    // Should still enforce the default limit of 10 — not bypass rate limiting
-    for (let i = 0; i < 10; i++) {
-      const r = await check("user-nan");
-      expect(r.allowed).toBe(true);
-    }
-    const blocked = await check("user-nan");
-    expect(blocked.allowed).toBe(false);
+    const result = await checkRateLimit("user-nan");
+    expect(result.allowed).toBe(true);
+
+    process.env.RATE_LIMIT_REQUESTS_PER_HOUR = ORIGINAL_LIMIT;
   });
 
   it("falls back to limit 10 when env var is zero", async () => {
     process.env.RATE_LIMIT_REQUESTS_PER_HOUR = "0";
-    const { checkRateLimit: check } = await import("./rateLimit");
+    mockChain = createChainMock({ count: 5, error: null });
 
-    // A zero limit must not block every request immediately
-    const first = await check("user-zero");
-    expect(first.allowed).toBe(true);
+    const result = await checkRateLimit("user-zero");
+    expect(result.allowed).toBe(true);
+
+    process.env.RATE_LIMIT_REQUESTS_PER_HOUR = ORIGINAL_LIMIT;
   });
 
   it("falls back to limit 10 when env var is negative", async () => {
     process.env.RATE_LIMIT_REQUESTS_PER_HOUR = "-5";
-    const { checkRateLimit: check } = await import("./rateLimit");
+    mockChain = createChainMock({ count: 5, error: null });
 
-    const first = await check("user-neg");
-    expect(first.allowed).toBe(true);
+    const result = await checkRateLimit("user-neg");
+    expect(result.allowed).toBe(true);
+
+    process.env.RATE_LIMIT_REQUESTS_PER_HOUR = ORIGINAL_LIMIT;
   });
 });

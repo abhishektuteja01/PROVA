@@ -3,9 +3,6 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-
   --color-bg-primary: #0A0F1E;
   --color-bg-secondary: #111827;
   --color-bg-tertiary: #1F2937;
@@ -16,19 +13,42 @@
   --color-warning: #F59E0B;
   --color-critical: #EF4444;
   --color-border: #1F2937;
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* Opacity variants — used in gradients, glows, and muted text */
+  --color-accent-light: rgba(59, 130, 246, 0.1);
+  --color-accent-medium: rgba(59, 130, 246, 0.35);
+  --color-accent-glow: rgba(59, 130, 246, 0.15);
+  --color-accent-muted: rgba(59, 130, 246, 0.5);
+  --color-accent-faint: rgba(59, 130, 246, 0.07);
+  --color-accent-border: rgba(59, 130, 246, 0.14);
+  --color-accent-border-light: rgba(59, 130, 246, 0.2);
+  --color-accent-subtle: rgba(59, 130, 246, 0.06);
+  --color-accent-hint: rgba(59, 130, 246, 0.04);
+  --color-accent-line: rgba(59, 130, 246, 0.16);
+  --color-text-primary-muted: rgba(249, 250, 251, 0.6);
+  --color-text-secondary-muted: rgba(156, 163, 175, 0.3);
+  --color-text-secondary-faint: rgba(156, 163, 175, 0.45);
+  --color-text-secondary-ghost: rgba(156, 163, 175, 0.38);
+  --color-text-secondary-dim: rgba(156, 163, 175, 0.28);
+  --color-white-faint: rgba(255, 255, 255, 0.03);
+  --color-white-hint: rgba(255, 255, 255, 0.02);
+  --color-white-border: rgba(255, 255, 255, 0.06);
+  --color-white-divider: rgba(255, 255, 255, 0.05);
+  --color-white-rule: rgba(255, 255, 255, 0.07);
+  --color-compliant-bg: rgba(16, 185, 129, 0.1);
+  --color-compliant-border: rgba(16, 185, 129, 0.25);
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  color: var(--color-text-primary);
+  background: var(--color-bg-primary);
   font-family: var(--font-geist), system-ui, sans-serif;
+}
+
+/* Global focus-visible styles for keyboard accessibility */
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 @layer utilities {

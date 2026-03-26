@@ -269,7 +269,7 @@ export const SubmissionRowSchema = z.object({
   outcomes_score: z.number(),
   monitoring_score: z.number(),
   final_score: z.number(),
-  gap_analysis: z.any(), // JSONB — use GapSchema array for typed access
+  gap_analysis: z.array(GapSchema).nullable(),
   judge_confidence: z.number(),
   assessment_confidence_label: ConfidenceLabelEnum,
   created_at: z.string().datetime(),

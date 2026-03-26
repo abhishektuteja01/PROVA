@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import GoogleIcon from "@/components/ui/GoogleIcon";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -55,8 +56,8 @@ export default function LoginPage() {
 
       {/* Background */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
-        <div style={{ position: "absolute", top: "-20%", right: "-10%", width: "500px", height: "500px", borderRadius: "50%", background: "radial-gradient(circle, rgba(59,130,246,0.07) 0%, transparent 65%)", filter: "blur(60px)" }} />
-        <div style={{ position: "absolute", bottom: "-20%", left: "-10%", width: "400px", height: "400px", borderRadius: "50%", background: "radial-gradient(circle, rgba(59,130,246,0.04) 0%, transparent 65%)", filter: "blur(72px)" }} />
+        <div style={{ position: "absolute", top: "-20%", right: "-10%", width: "500px", height: "500px", borderRadius: "50%", background: `radial-gradient(circle, var(--color-accent-faint) 0%, transparent 65%)`, filter: "blur(60px)" }} />
+        <div style={{ position: "absolute", bottom: "-20%", left: "-10%", width: "400px", height: "400px", borderRadius: "50%", background: `radial-gradient(circle, var(--color-accent-hint) 0%, transparent 65%)`, filter: "blur(72px)" }} />
         <div style={{ position: "absolute", inset: 0, backgroundImage: "radial-gradient(circle, var(--color-text-secondary) 1px, transparent 1px)", backgroundSize: "30px 30px", opacity: 0.07, maskImage: "radial-gradient(ellipse 80% 70% at 50% 40%, black 20%, transparent 100%)" }} />
       </div>
 
@@ -64,7 +65,7 @@ export default function LoginPage() {
       <div style={{ position: "relative", zIndex: 1, width: "100%", maxWidth: "420px", background: "var(--color-bg-secondary)", border: "1px solid var(--color-border)", borderRadius: "2px", padding: "40px 44px" }}>
 
         {/* Top accent line */}
-        <div style={{ position: "absolute", top: 0, left: "15%", right: "15%", height: "1px", background: "linear-gradient(90deg,transparent,rgba(59,130,246,0.35),transparent)" }} />
+        <div style={{ position: "absolute", top: 0, left: "15%", right: "15%", height: "1px", background: `linear-gradient(90deg,transparent,var(--color-accent-medium),transparent)` }} />
 
         {/* Wordmark */}
         <div style={{ textAlign: "center", marginBottom: "36px" }}>
@@ -104,6 +105,7 @@ export default function LoginPage() {
           type="button"
           onClick={handleGoogleSignIn}
           disabled={isDisabled}
+          className="focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-secondary"
           style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: "10px", fontFamily: "var(--font-geist)", fontSize: "14px", fontWeight: 500, color: "var(--color-text-primary)", background: "transparent", border: "1px solid var(--color-border)", borderRadius: "2px", padding: "11px", cursor: isDisabled ? "not-allowed" : "pointer", opacity: isDisabled ? 0.5 : 1, transition: "border-color 0.15s ease, opacity 0.15s ease", marginBottom: "20px" }}
           onMouseEnter={e => { if (!isDisabled) e.currentTarget.style.borderColor = "var(--color-text-secondary)"; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--color-border)"; }}
@@ -123,10 +125,11 @@ export default function LoginPage() {
 
           {/* Email */}
           <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-            <label style={{ fontFamily: "var(--font-geist)", fontSize: "12px", fontWeight: 500, color: "var(--color-text-secondary)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+            <label htmlFor="email" style={{ fontFamily: "var(--font-geist)", fontSize: "12px", fontWeight: 500, color: "var(--color-text-secondary)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
               Email
             </label>
             <input
+              id="email"
               type="email"
               required
               value={email}
@@ -142,10 +145,10 @@ export default function LoginPage() {
           {/* Password */}
           <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <label style={{ fontFamily: "var(--font-geist)", fontSize: "12px", fontWeight: 500, color: "var(--color-text-secondary)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+              <label htmlFor="password" style={{ fontFamily: "var(--font-geist)", fontSize: "12px", fontWeight: 500, color: "var(--color-text-secondary)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
                 Password
               </label>
-              <Link href="/reset-password" style={{ fontFamily: "var(--font-geist)", fontSize: "12px", color: "var(--color-text-secondary)", textDecoration: "none", transition: "color 0.15s ease" }}
+              <Link href="/reset-password" className="focus-visible:ring-2 focus-visible:ring-accent" style={{ fontFamily: "var(--font-geist)", fontSize: "12px", color: "var(--color-text-secondary)", textDecoration: "none", transition: "color 0.15s ease" }}
                 onMouseEnter={e => (e.currentTarget.style.color = "var(--color-text-primary)")}
                 onMouseLeave={e => (e.currentTarget.style.color = "var(--color-text-secondary)")}
               >
@@ -153,6 +156,7 @@ export default function LoginPage() {
               </Link>
             </div>
             <input
+              id="password"
               type="password"
               required
               value={password}
@@ -176,7 +180,8 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isDisabled}
-            style={{ fontFamily: "var(--font-geist)", fontSize: "14px", fontWeight: 500, color: "var(--color-bg-primary)", background: isDisabled ? "rgba(59,130,246,0.5)" : "var(--color-accent)", border: "none", borderRadius: "0px", padding: "13px", cursor: isDisabled ? "not-allowed" : "pointer", transition: "opacity 0.15s ease", marginTop: "4px" }}
+            className="focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-bg-secondary"
+            style={{ fontFamily: "var(--font-geist)", fontSize: "14px", fontWeight: 500, color: "var(--color-bg-primary)", background: isDisabled ? "var(--color-accent-muted)" : "var(--color-accent)", border: "none", borderRadius: "0px", padding: "13px", cursor: isDisabled ? "not-allowed" : "pointer", transition: "opacity 0.15s ease", marginTop: "4px" }}
             onMouseEnter={e => { if (!isDisabled) e.currentTarget.style.opacity = "0.85"; }}
             onMouseLeave={e => { e.currentTarget.style.opacity = "1"; }}
           >
@@ -187,22 +192,11 @@ export default function LoginPage() {
         {/* Footer */}
         <p style={{ fontFamily: "var(--font-geist)", fontSize: "13px", color: "var(--color-text-secondary)", margin: "28px 0 0 0", textAlign: "center" }}>
           Don&apos;t have an account?{" "}
-          <Link href="/signup" style={{ color: "var(--color-accent)", textDecoration: "none", fontWeight: 500 }}>
+          <Link href="/signup" className="focus-visible:ring-2 focus-visible:ring-accent" style={{ color: "var(--color-accent)", textDecoration: "none", fontWeight: 500 }}>
             Sign up
           </Link>
         </p>
       </div>
     </div>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-    </svg>
   );
 }

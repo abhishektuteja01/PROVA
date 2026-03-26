@@ -16,7 +16,7 @@ export async function parsePDF(buffer: Buffer): Promise<string> {
     throw new PDFParseError("parsePDF requires a Buffer, not a file path");
   }
 
-  let parser: InstanceType<typeof PDFParse> | undefined;
+  let parser: PDFParse | undefined;
   try {
     parser = new PDFParse({ data: buffer });
     const result = await parser.getText();
@@ -26,6 +26,6 @@ export async function parsePDF(buffer: Buffer): Promise<string> {
       `Failed to parse PDF: ${err instanceof Error ? err.message : String(err)}`
     );
   } finally {
-    await parser?.destroy?.();
+    await parser?.destroy();
   }
 }

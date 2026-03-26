@@ -52,3 +52,26 @@ export function validateFileType(filename: string, mimeType: string): boolean {
   if (!matchedExt) return false;
   return EXTENSION_TO_MIME[matchedExt] === mimeType;
 }
+
+/**
+ * Magic byte signatures for supported file types.
+ * PDF starts with "%PDF-" and DOCX (ZIP archive) starts with "PK\x03\x04".
+ */
+const MAGIC_BYTES: Record<"pdf" | "docx", number[]> = {
+  pdf: [0x25, 0x50, 0x44, 0x46, 0x2d], // %PDF-
+  docx: [0x50, 0x4b, 0x03, 0x04],       // PK\x03\x04
+};
+
+/**
+ * Validates that the file buffer begins with the expected magic bytes
+ * for the given file type. This is an additional layer on top of
+ * extension + MIME type validation to prevent content-type spoofing.
+ */
+export function validateFileMagicBytes(
+  buffer: Buffer,
+  expectedType: "pdf" | "docx"
+): boolean {
+  const expected = MAGIC_BYTES[expectedType];
+  if (buffer.length < expected.length) return false;
+  return expected.every((byte, i) => buffer[i] === byte);
+}
