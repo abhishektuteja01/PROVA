@@ -15,7 +15,7 @@ Rules for all AI agent code in this folder.
 
 **Model configuration:**
 - Claude model string: `claude-haiku-3-5-20241022` — exact, no aliases
-- Max tokens per agent: 1000
+- Max tokens per agent: 1500
 - API key only in `src/lib/anthropic/client.ts` — never import or reference it here
 
 **Bias mitigation (never remove from prompts):**

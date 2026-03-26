@@ -76,7 +76,7 @@ Upload / paste model documentation
 | PDF | `@react-pdf/renderer` |
 | Document parsing | `pdf-parse` (PDF) · `mammoth` (DOCX) |
 | Validation | Zod — all schemas in `src/lib/validation/schemas.ts` |
-| Styling | Tailwind CSS · Instrument Serif · IBM Plex Mono · Geist |
+| Styling | Tailwind CSS · Playfair Display · IBM Plex Mono · Geist |
 | Charts | Recharts |
 | Monitoring | Sentry · Vercel Analytics |
 | Deployment | Vercel |
@@ -162,13 +162,16 @@ prova/
 │   │   ├── (auth)/               # Login, signup pages
 │   │   ├── (dashboard)/          # Protected app pages
 │   │   └── api/                  # compliance · submissions · report · health
-│   ├── components/               # Shared React components
+│   ├── components/
+│   │   ├── home/                 # Landing page animations
+│   │   └── ...                   # Shared React components
 │   ├── lib/
 │   │   ├── anthropic/            # SDK client — API key lives here only
 │   │   ├── agents/               # Three assessment agents + judge + orchestrator
 │   │   ├── scoring/              # Weighted scoring calculator
 │   │   ├── parsers/              # PDF and DOCX extraction
 │   │   ├── security/             # Sanitization, rate limiting
+│   │   ├── errors/               # Centralized error codes and messages
 │   │   ├── supabase/             # Browser, server, and middleware clients
 │   │   └── validation/           # All Zod schemas (schemas.ts only)
 │   ├── types/                    # Shared TypeScript types
@@ -179,9 +182,14 @@ prova/
 │   ├── DATABASE.md               # Schema, indexes, RLS policies + setup SQL
 │   ├── SCHEMAS.md                # API Zod schema reference
 │   ├── ERROR_STATES.md           # All user-facing error messages
-│   └── AGENT_PROMPTS.md          # SR 11-7 agent prompt specifications
+│   ├── AGENT_PROMPTS.md          # SR 11-7 agent prompt specifications
+│   ├── AGENT_ARCHITECTURE.md     # Agent design, schemas, element codes, bias mitigation
+│   ├── SCORING.md                # Scoring formula, weights, gap deductions
+│   ├── DASHBOARD.md              # Dashboard sections, versioning, settings
+│   └── UI_DESIGN.md              # Colors, typography, UI principles
 ├── tests/                        # Jest unit + AI regression tests
 ├── CLAUDE.md                     # AI assistant instructions
+├── .claudeignore                 # Claude Code ignore rules
 └── .env.local.example            # Environment variable reference
 ```
 
@@ -195,8 +203,13 @@ prova/
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System architecture, data flow, agent orchestration |
 | [`docs/DATABASE.md`](docs/DATABASE.md) | Schema, RLS policies, setup SQL |
 | [`docs/SCHEMAS.md`](docs/SCHEMAS.md) | API request/response Zod schemas |
-| [`docs/ERROR_STATES.md`](docs/ERROR_STATES.md) | All user-facing error messages (source of truth) |
+| [`docs/ERROR_STATES.md`](docs/ERROR_STATES.md) | Error UI behavior and recovery actions (human reference) |
+| [`src/lib/errors/messages.ts`](src/lib/errors/messages.ts) | All error codes, HTTP statuses, and messages (source of truth) |
 | [`docs/AGENT_PROMPTS.md`](docs/AGENT_PROMPTS.md) | SR 11-7 agent prompt specifications |
+| [`docs/AGENT_ARCHITECTURE.md`](docs/AGENT_ARCHITECTURE.md) | Agent design, schemas, element codes, bias mitigation |
+| [`docs/SCORING.md`](docs/SCORING.md) | Scoring formula, weights, gap deductions |
+| [`docs/DASHBOARD.md`](docs/DASHBOARD.md) | Dashboard sections, versioning, settings |
+| [`docs/UI_DESIGN.md`](docs/UI_DESIGN.md) | Colors, typography, UI principles |
 
 ---
 
@@ -208,6 +221,10 @@ prova/
 - RLS policies enforce strict `user_id` isolation at the database level
 - Every API route re-verifies the session server-side (defense in depth)
 - `dangerouslySetInnerHTML` is banned across the entire codebase
+- File uploads validated by magic bytes (PDF/DOCX headers verified, not just MIME type)
+- CSRF protection via Origin header validation on state-changing API requests
+- Security headers: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- Database-backed rate limiting (durable across serverless instances)
 
 ---
 
