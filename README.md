@@ -50,7 +50,7 @@ Upload / paste model documentation
   CS×0.40 + OA×0.35 + OM×0.25
 ```
 
-**Compliance statuses:** `Compliant` · `Needs Improvement` · `Critical`
+**Compliance statuses:** `Compliant` · `Needs Improvement` · `Critical Gaps`
 **Gap severities:** `Critical` · `Major` · `Minor`
 
 ---
@@ -94,7 +94,7 @@ Upload / paste model documentation
 ### 1. Clone and install
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/abhishektuteja01/PROVA.git
 cd prova
 npm install
 ```
@@ -201,11 +201,16 @@ prova/
 |---|---|
 | [`docs/PRD.md`](docs/PRD.md) | Full product spec, UI design system, scoring rules |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System architecture, data flow, agent orchestration |
-| [`docs/DATABASE.md`](docs/DATABASE.md) | Schema, RLS policies, setup SQL |
+| [`docs/DATABASE.md`](docs/DATABASE.md) | Schema, indexes, RLS policies, setup SQL |
 | [`docs/SCHEMAS.md`](docs/SCHEMAS.md) | API request/response Zod schemas |
-| [`docs/ERROR_STATES.md`](docs/ERROR_STATES.md) | Error UI behavior and recovery actions (human reference) |
-| [`src/lib/errors/messages.ts`](src/lib/errors/messages.ts) | All error codes, HTTP statuses, and messages (source of truth) |
 | [`docs/AGENT_PROMPTS.md`](docs/AGENT_PROMPTS.md) | SR 11-7 agent prompt specifications |
+| [`docs/ERROR_STATES.md`](docs/ERROR_STATES.md) | Error UI behavior and recovery actions |
+| [`src/lib/errors/messages.ts`](src/lib/errors/messages.ts) | Error codes, HTTP statuses, messages (code-level source of truth) |
+
+Focused reference docs (extracted from PRD for efficient lookup):
+
+| Doc | Contents |
+|---|---|
 | [`docs/AGENT_ARCHITECTURE.md`](docs/AGENT_ARCHITECTURE.md) | Agent design, schemas, element codes, bias mitigation |
 | [`docs/SCORING.md`](docs/SCORING.md) | Scoring formula, weights, gap deductions |
 | [`docs/DASHBOARD.md`](docs/DASHBOARD.md) | Dashboard sections, versioning, settings |
