@@ -77,7 +77,7 @@ Prova is a Next.js 16 App Router monolith deployed on Vercel. Frontend and backe
 - [x] Playfair Display (for headings)
 - [x] IBM Plex Mono (for scores and numbers)
 - [x] Geist (for UI labels)
-- [ ] All loaded in `src/app/layout.tsx` via `next/font/local`
+- [x] All loaded in `src/app/layout.tsx` via `next/font/local`
 - [x] Font variables wired into `tailwind.config.ts`
 
 **CSS variables in `src/app/globals.css`:**
@@ -110,7 +110,7 @@ Prova is a Next.js 16 App Router monolith deployed on Vercel. Frontend and backe
 - [x] `npm run test:ai` — placeholder script (echo "AI test suite not yet implemented") — will be wired up in Sprint 3
 
 **Health check:**
-- [ ] `GET /api/health` returns `{ status: "ok", timestamp: "<ISO string>" }` with HTTP 200
+- [x] `GET /api/health` returns `{ status: "ok", timestamp: "<ISO string>" }` with HTTP 200
 
 **Verification:**
 - [x] `npm run build` passes with zero TypeScript errors
@@ -266,9 +266,9 @@ export function createClient() {
 **`src/lib/supabase/middleware.ts`** — session refresh helper for Next.js middleware
 
 ### Acceptance Criteria
-- [ ] All 5 tables created in Supabase with correct column types and constraints
-- [ ] RLS enabled and policies applied on all tables
-- [ ] All indexes created
+- [x] All 5 tables created in Supabase with correct column types and constraints
+- [x] RLS enabled and policies applied on all tables
+- [x] All indexes created
 - [x] `src/lib/supabase/client.ts` — browser client, anon key only
 - [x] `src/lib/supabase/server.ts` — server client + service client, `SUPABASE_SECRET_KEY` isolated here only
 - [x] `src/lib/supabase/middleware.ts` — session refresh helper
@@ -618,7 +618,7 @@ Do not paraphrase, shorten, or modify any part of the prompt. Run `npm run test:
 - [x] Response is parsed as JSON and validated against `AgentOutputSchema`
 - [x] Typed error thrown on JSON parse failure
 - [x] Typed error thrown on Zod validation failure
-- [ ] Manual test: call `assessConceptualSoundness()` with a short model doc string and verify valid `AgentOutput` is returned
+- [x] Manual test: call `assessConceptualSoundness()` with a short model doc string and verify valid `AgentOutput` is returned
 
 ---
 
@@ -721,7 +721,7 @@ Error codes: `UNAUTHORIZED`, `RATE_LIMIT_EXCEEDED`, `INVALID_FILE_TYPE`, `FILE_P
 - [x] Submission + gaps written to Supabase with correct user_id (from session, never client)
 - [x] All error responses use the standard error shape
 - [x] `npm run build` passes with zero TypeScript errors
-- [ ] Manual test: POST with a text payload returns a valid response with `submissionId`
+- [x] Manual test: POST with a text payload returns a valid response with `submissionId`
 
 ---
 
@@ -776,12 +776,12 @@ Right side:
 Active link styling: `var(--color-accent)` underline or highlight
 
 ### Acceptance Criteria
-- [ ] Landing page renders at `/` with hero, 3-pillar section, and CTAs
-- [ ] Landing page uses correct fonts, colors (CSS variables), and design system
-- [ ] Navbar renders on all authenticated pages with correct links
-- [ ] Active link highlighted correctly
-- [ ] Sign out works and redirects to `/`
-- [ ] `npm run build` passes with zero TypeScript errors
+- [x] Landing page renders at `/` with hero, 3-pillar section, and CTAs
+- [x] Landing page uses correct fonts, colors (CSS variables), and design system
+- [x] Navbar renders on all authenticated pages with correct links
+- [x] Active link highlighted correctly
+- [x] Sign out works and redirects to `/`
+- [x] `npm run build` passes with zero TypeScript errors
 
 ---
 

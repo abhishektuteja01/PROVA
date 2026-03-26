@@ -10,5 +10,9 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code);
   }
 
-  return NextResponse.redirect(new URL("/dashboard", origin));
+  // Use NEXT_PUBLIC_APP_URL to prevent open-redirect via Host header spoofing.
+  // Fall back to origin only in dev when the env var is not set.
+  const safeBase = process.env.NEXT_PUBLIC_APP_URL || origin;
+
+  return NextResponse.redirect(new URL("/dashboard", safeBase));
 }

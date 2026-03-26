@@ -5,19 +5,14 @@ import {
 } from '@/lib/agents/conceptualSoundness';
 
 // Mock the Anthropic client at the system boundary
+const mockCreate = jest.fn();
 jest.mock('@/lib/anthropic/client', () => ({
-  anthropic: {
+  getAnthropicClient: () => ({
     messages: {
-      create: jest.fn(),
+      create: mockCreate,
     },
-  },
+  }),
 }));
-
-import { anthropic } from '@/lib/anthropic/client';
-
-const mockCreate = anthropic.messages.create as jest.MockedFunction<
-  typeof anthropic.messages.create
->;
 
 const VALID_AGENT_OUTPUT = {
   pillar: 'conceptual_soundness',
@@ -35,10 +30,11 @@ const VALID_AGENT_OUTPUT = {
   summary: 'The document covers most elements. CS-04 is absent.',
 };
 
-function mockApiResponse(text: string) {
+function mockApiResponse(text: string, stopReason = 'end_turn') {
   mockCreate.mockResolvedValueOnce({
     content: [{ type: 'text', text }],
-  } as Awaited<ReturnType<typeof anthropic.messages.create>>);
+    stop_reason: stopReason,
+  });
 }
 
 afterEach(() => {
@@ -85,7 +81,7 @@ describe('assessConceptualSoundness — API call parameters', () => {
     await assessConceptualSoundness('doc', 'ModelX');
 
     const callArgs = mockCreate.mock.calls[0][0];
-    expect(callArgs.max_tokens).toBe(1000);
+    expect(callArgs.max_tokens).toBe(1500);
   });
 
   it('passes the system prompt to the API call', async () => {
@@ -210,18 +206,18 @@ describe('assessConceptualSoundness — error handling', () => {
     ).rejects.toThrow(AgentParseError);
   });
 
-  it('throws AgentParseError when the API returns markdown-wrapped JSON', async () => {
+  it('handles markdown-wrapped JSON by stripping fences before parsing', async () => {
     mockApiResponse('```json\n' + JSON.stringify(VALID_AGENT_OUTPUT) + '\n```');
 
-    await expect(
-      assessConceptualSoundness('doc', 'ModelX')
-    ).rejects.toThrow(AgentParseError);
+    const result = await assessConceptualSoundness('doc', 'ModelX');
+
+    expect(result).toEqual(VALID_AGENT_OUTPUT);
   });
 
   it('throws AgentParseError when response content array is empty', async () => {
     mockCreate.mockResolvedValueOnce({
       content: [],
-    } as unknown as Awaited<ReturnType<typeof anthropic.messages.create>>);
+    } as never);
 
     await expect(
       assessConceptualSoundness('doc', 'ModelX')
@@ -231,7 +227,7 @@ describe('assessConceptualSoundness — error handling', () => {
   it('throws AgentParseError when first content block is not a text block', async () => {
     mockCreate.mockResolvedValueOnce({
       content: [{ type: 'tool_use', id: 'x', name: 'y', input: {} }],
-    } as unknown as Awaited<ReturnType<typeof anthropic.messages.create>>);
+    } as never);
 
     await expect(
       assessConceptualSoundness('doc', 'ModelX')

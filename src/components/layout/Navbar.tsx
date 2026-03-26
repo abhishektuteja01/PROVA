@@ -6,8 +6,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import type { User } from "@supabase/supabase-js";
 
-const AUTH_PATHS = ["/login", "/signup", "/reset-password"];
-
 const NAV_LINKS = [
   { label: "Dashboard", href: "/dashboard" },
   { label: "New Check", href: "/check" },
@@ -72,9 +70,6 @@ export default function Navbar() {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  // Never render on auth pages
-  if (AUTH_PATHS.some((p) => pathname.startsWith(p))) return null;
 
   const isAuthenticated = ready && user !== null;
 

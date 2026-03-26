@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Playfair_Display, IBM_Plex_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import { Analytics } from "@vercel/analytics/react";
-import Navbar from "@/components/layout/Navbar";
 import "./globals.css";
 
 const playfairDisplay = Playfair_Display({
@@ -43,7 +42,6 @@ export default function RootLayout({
       }}
     >
       <body className="antialiased">
-        <Navbar />
         {children}
         <Analytics />
       </body>

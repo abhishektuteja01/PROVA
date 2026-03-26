@@ -427,7 +427,7 @@ const userPrompt = AGENT_1_USER_TEMPLATE
 // Call Claude
 const response = await anthropic.messages.create({
   model: 'claude-haiku-3-5-20241022',
-  max_tokens: 1000,
+  max_tokens: 1500,
   system: AGENT_1_SYSTEM_PROMPT,
   messages: [{ role: 'user', content: userPrompt }]
 });
@@ -443,7 +443,7 @@ claude-haiku-3-5-20241022
 Always use this exact string. Do not use aliases.
 
 ### Token budget per agent
-- Max tokens: 1000 (sufficient for full gap analysis)
+- Max tokens: 1500 (sufficient for full gap analysis)
 - Do not increase without testing cost impact
 
 ---
