@@ -30,6 +30,7 @@ Each folder has its own CLAUDE.md with domain-specific rules. The relevant one l
 | Any scoring logic | `src/lib/scoring/CLAUDE.md` |
 | Any validation work | `src/lib/validation/CLAUDE.md` + `docs/SCHEMAS.md` |
 | Any security work | `src/lib/security/CLAUDE.md` |
+| File structure / tech specs | `docs/TECHNICAL_SPECS.md` |
 | Modifying agent prompts | Run `npm run test:ai` after |
 
 ---
@@ -90,11 +91,6 @@ Next.js 16 App Router · TypeScript strict · Supabase (PostgreSQL + Auth + RLS)
 
 ---
 
-## Sprint Context
-| Sprint | Dates | Focus |
-|--------|-------|-------|
-| 1 | Mar 19–29 | Auth, document input, single agent end-to-end |
-| 2 | Mar 30–Apr 9 | All three agents, judge, scoring, dashboard, PDF |
-| 3 | Apr 10–19 | CI/CD, monitoring, security, test suite, polish |
-
-Check with me for current sprint before starting work.
+## Current Sprint
+**Sprint 2** (Mar 30–Apr 9) — All three agents, judge, scoring, dashboard, PDF.
+Full schedule: `docs/PRD.md` section 10. Check with me before starting work.

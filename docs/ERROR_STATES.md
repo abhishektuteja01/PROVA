@@ -1,6 +1,10 @@
 # Prova — Error States
 **Version:** 1.0 | **Date:** March 19, 2026
 
+<!-- SUMMARY: 16 error codes. Quick reference table (code, HTTP status, trigger): §1.
+Full detail per error (trigger, message, UI behavior, recovery): §2.
+Toast specs: §3 | API response format: §4 | errorResponse() pattern: §5 -->
+
 Every error in Prova has a defined code, user-facing message, UI behavior, and recovery action.
 Implement all error states exactly as defined here — do not invent error messages inline.
 

@@ -365,18 +365,7 @@ See `/docs/DATABASE.md` for exact SQL including RLS policies and indexes.
 **RLS:** All tables restricted to `auth.uid() = user_id`
 
 ### 6.6 Environment Variables
-```
-ANTHROPIC_API_KEY                              Server-side only. Never exposed to client.
-NEXT_PUBLIC_SUPABASE_URL                       Public. Supabase project URL.
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY   Public. Supabase publishable key.
-SUPABASE_SECRET_KEY                            Server-side only.
-NEXT_PUBLIC_SENTRY_DSN                         Browser error tracking. sentry.client.config.ts only.
-SENTRY_DSN                                     Server/edge error tracking. instrumentation.ts only.
-SENTRY_ORG                                     Build-time only. Source map uploads via next.config.ts.
-SENTRY_PROJECT                                 Build-time only. Source map uploads via next.config.ts.
-RATE_LIMIT_REQUESTS_PER_HOUR                   Default: 10. Configurable for grading.
-NEXT_PUBLIC_APP_URL                            Production URL.
-```
+See `CLAUDE.md` — Environment Variables section.
 
 ---
 
@@ -568,51 +557,10 @@ On Merge to main:
 ## 14. Technical Specifications
 
 ### 14.1 Agent JSON Output Schema
-Each of the three pillar agents returns exactly this structure. See `/docs/SCHEMAS.md` for Zod implementation.
-
-```typescript
-{
-  pillar: "conceptual_soundness" | "outcomes_analysis" | "ongoing_monitoring",
-  score: number,           // 0-100, after deductions applied
-  confidence: number,      // 0.0-1.0
-  gaps: [
-    {
-      element_code: string,    // e.g. "CS-01", "OA-03", "OM-02"
-      element_name: string,    // Human readable element name
-      severity: "Critical" | "Major" | "Minor",
-      description: string,     // What is missing or incomplete
-      recommendation: string   // Category-level remediation action
-    }
-  ],
-  summary: string          // 2-3 sentence pillar assessment summary
-}
-```
+See `docs/SCHEMAS.md` → `AgentOutputSchema` for the authoritative Zod definition and type.
 
 ### 14.2 Judge Agent Output Schema
-```typescript
-{
-  confidence: number,          // 0.0-1.0 overall assessment confidence
-  confidence_label: "High" | "Medium" | "Low",
-  is_consistent: boolean,      // Do the three agents agree where they overlap?
-  anomaly_detected: boolean,   // Suspicious scoring pattern detected?
-  anomaly_description: string | null,
-  agent_feedback: {
-    conceptual_soundness: {
-      complete: boolean,
-      issues: string[]         // Specific completeness issues if any
-    },
-    outcomes_analysis: {
-      complete: boolean,
-      issues: string[]
-    },
-    ongoing_monitoring: {
-      complete: boolean,
-      issues: string[]
-    }
-  },
-  retry_recommended: boolean   // True if confidence < 0.6
-}
-```
+See `docs/SCHEMAS.md` → `JudgeOutputSchema` for the authoritative Zod definition and type.
 
 ### 14.3 Scoring Calculation
 ```
@@ -640,196 +588,12 @@ Four dashboard section toggles stored in user preferences (Supabase `user_prefer
 ```
 
 ### 14.5 SR 11-7 Element Code Reference
-
-**Conceptual Soundness (CS):**
-- CS-01: Model Purpose and Intended Use
-- CS-02: Theoretical and Mathematical Framework
-- CS-03: Key Assumptions Documentation
-- CS-04: Assumption Limitations and Boundaries
-- CS-05: Data Inputs and Sources
-- CS-06: Model Scope and Applicability
-- CS-07: Known Model Weaknesses
-
-**Outcomes Analysis (OA):**
-- OA-01: Backtesting Methodology
-- OA-02: Performance Metrics Definition and Reporting
-- OA-03: Benchmarking Against Alternative Models
-- OA-04: Sensitivity Analysis
-- OA-05: Stress Testing
-- OA-06: Out-of-Sample Testing
-- OA-07: Statistical Validation Results
-
-**Ongoing Monitoring (OM):**
-- OM-01: KPIs and Performance Thresholds
-- OM-02: Monitoring Frequency
-- OM-03: Escalation Procedures
-- OM-04: Trigger Conditions for Model Review
-- OM-05: Data Quality Monitoring
-- OM-06: Change Management Process
+See `docs/AGENT_PROMPTS.md` — SR 11-7 Element Code Reference section (all 20 codes with names and pillar weights).
 
 ---
 
 ## 15. File Structure
-
-```
-prova/
-├── .github/
-│   └── workflows/
-│       ├── pr.yml                        PR checks: lint, typecheck, tests, build
-│       └── deploy.yml                    Deploy to Vercel on merge to main
-│
-├── docs/
-│   ├── PRD.md                            This document
-│   ├── ARCHITECTURE.md                   System architecture and data flow diagrams
-│   ├── AGENT_PROMPTS.md                  All four agent prompt templates (exact text)
-│   ├── SCHEMAS.md                        All Zod schemas for agent I/O and API
-│   ├── DATABASE.md                       Supabase schema SQL + RLS policies SQL
-│   ├── ERROR_STATES.md                   All error states, codes, UI copy, recovery
-│   └── TEST_DOCUMENTS.md                 Synthetic test document specs + expected outputs
-│
-├── src/
-│   ├── app/
-│   │   ├── (auth)/                       Auth route group (no navbar)
-│   │   │   ├── login/
-│   │   │   │   └── page.tsx
-│   │   │   ├── signup/
-│   │   │   │   └── page.tsx
-│   │   │   └── reset-password/
-│   │   │       └── page.tsx
-│   │   │
-│   │   ├── (dashboard)/                  Authenticated route group (with navbar)
-│   │   │   ├── layout.tsx                Navbar + auth guard
-│   │   │   ├── dashboard/
-│   │   │   │   └── page.tsx
-│   │   │   ├── check/
-│   │   │   │   └── page.tsx
-│   │   │   ├── submissions/
-│   │   │   │   ├── page.tsx              Submissions list
-│   │   │   │   └── [id]/
-│   │   │   │       └── page.tsx          Single submission results
-│   │   │   ├── settings/
-│   │   │   │   └── page.tsx
-│   │   │   └── help/
-│   │   │       └── page.tsx
-│   │   │
-│   │   ├── api/
-│   │   │   ├── compliance/
-│   │   │   │   └── route.ts              POST — run compliance check
-│   │   │   ├── submissions/
-│   │   │   │   ├── route.ts              GET all, DELETE all
-│   │   │   │   └── [id]/
-│   │   │   │       └── route.ts          GET one, DELETE one
-│   │   │   ├── report/
-│   │   │   │   └── route.ts              POST — generate PDF
-│   │   │   └── health/
-│   │   │       └── route.ts              GET — health check
-│   │   │
-│   │   ├── layout.tsx                    Root layout (fonts, Sentry, Analytics)
-│   │   ├── page.tsx                      Landing page
-│   │   └── globals.css                   CSS variables, base styles
-│   │
-│   ├── components/
-│   │   ├── ui/                           Reusable primitives
-│   │   │   ├── Button.tsx
-│   │   │   ├── Card.tsx
-│   │   │   ├── Badge.tsx                 Severity badges (Critical/Major/Minor)
-│   │   │   ├── Input.tsx
-│   │   │   ├── TextArea.tsx
-│   │   │   ├── Table.tsx
-│   │   │   ├── Modal.tsx
-│   │   │   ├── Skeleton.tsx              Loading skeleton
-│   │   │   └── Toast.tsx                 Error/success notifications
-│   │   │
-│   │   ├── dashboard/
-│   │   │   ├── OverviewPanel.tsx         Stats summary cards
-│   │   │   ├── ModelInventoryTable.tsx   Sortable/filterable submissions table
-│   │   │   ├── ScoreProgressionChart.tsx Recharts line chart
-│   │   │   └── RecentActivityFeed.tsx    Last 10 checks
-│   │   │
-│   │   ├── compliance/
-│   │   │   ├── DocumentInput.tsx         Text/file input toggle
-│   │   │   ├── FileUpload.tsx            Drag-and-drop file upload
-│   │   │   ├── ComplianceResults.tsx     Full results view
-│   │   │   ├── PillarScoreCard.tsx       Score + breakdown per pillar
-│   │   │   ├── GapAnalysisTable.tsx      Gaps sorted by severity
-│   │   │   └── RemediationList.tsx       Recommendations list
-│   │   │
-│   │   ├── layout/
-│   │   │   ├── Navbar.tsx                Top navigation
-│   │   │   └── Footer.tsx
-│   │   │
-│   │   └── report/
-│   │       └── ReportDocument.tsx        React-PDF document component
-│   │
-│   ├── lib/
-│   │   ├── agents/
-│   │   │   ├── conceptualSoundness.ts    CS agent — calls Claude, returns AgentOutput
-│   │   │   ├── outcomesAnalysis.ts       OA agent
-│   │   │   ├── ongoingMonitoring.ts      OM agent
-│   │   │   ├── judge.ts                  Judge agent — evaluates three outputs
-│   │   │   └── orchestrator.ts           Promise.all + retry loop logic
-│   │   │
-│   │   ├── scoring/
-│   │   │   └── calculator.ts             Scoring math — pillar scores + final weighted score
-│   │   │
-│   │   ├── parsers/
-│   │   │   ├── pdf.ts                    pdf-parse wrapper
-│   │   │   └── docx.ts                   mammoth wrapper
-│   │   │
-│   │   ├── validation/
-│   │   │   └── schemas.ts                All Zod schemas (see SCHEMAS.md)
-│   │   │
-│   │   ├── security/
-│   │   │   ├── sanitize.ts               Input sanitization (strip HTML, scripts)
-│   │   │   └── rateLimit.ts              Rate limiting middleware
-│   │   │
-│   │   ├── supabase/
-│   │   │   ├── client.ts                 Browser Supabase client
-│   │   │   ├── server.ts                 Server-side Supabase client (service role)
-│   │   │   └── middleware.ts             Auth session refresh (used by proxy.ts)
-│   │   │
-│   │   └── anthropic/
-│   │       └── client.ts                 Anthropic SDK client — only file with API key
-│   │
-│   ├── types/
-│   │   └── index.ts                      All shared TypeScript types
-│   │
-│   └── proxy.ts                         Next.js proxy — auth guard on dashboard routes
-│
-├── tests/
-│   ├── agents/
-│   │   ├── conceptualSoundness.test.ts
-│   │   ├── outcomesAnalysis.test.ts
-│   │   ├── ongoingMonitoring.test.ts
-│   │   └── judge.test.ts
-│   ├── scoring/
-│   │   └── calculator.test.ts
-│   ├── api/
-│   │   └── compliance.test.ts
-│   └── synthetic/
-│       ├── documents/
-│       │   ├── test_fully_compliant.txt
-│       │   ├── test_missing_conceptual.txt
-│       │   ├── test_missing_outcomes.txt
-│       │   ├── test_missing_monitoring.txt
-│       │   ├── test_all_critical_gaps.txt
-│       │   ├── test_prompt_injection.txt
-│       │   └── test_verbose_low_quality.txt
-│       └── runner.test.ts                Runs all 7 docs, asserts expected score ranges
-│
-├── public/
-│   └── fonts/                            Self-hosted font files
-│
-├── .env.local.example                    All env vars with descriptions, no values
-├── .env.test                             Test environment variables
-├── .gitignore                            Includes .env.local, node_modules
-├── CLAUDE.md                             Claude Code instructions (generated via init, then updated)
-├── next.config.ts
-├── tailwind.config.ts
-├── tsconfig.json                         Strict mode enabled
-├── jest.config.ts
-└── package.json
-```
+See `docs/TECHNICAL_SPECS.md` for the complete annotated file tree.
 
 ---
 
