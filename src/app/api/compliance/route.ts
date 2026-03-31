@@ -5,11 +5,8 @@ import { checkRateLimit } from '@/lib/security/rateLimit';
 import { sanitizeText, validateFileType } from '@/lib/security/sanitize';
 import { parsePDF } from '@/lib/parsers/pdf';
 import { parseDOCX } from '@/lib/parsers/docx';
-import {
-  assessConceptualSoundness,
-  AgentParseError,
-  AgentSchemaError,
-} from '@/lib/agents/conceptualSoundness';
+import { assessConceptualSoundness } from '@/lib/agents/conceptualSoundness';
+import { AgentParseError, AgentSchemaError } from '@/lib/agents/errors';
 import { ComplianceRequestSchema, MAX_FILE_SIZE_BYTES } from '@/lib/validation/schemas';
 import type { Gap } from '@/lib/validation/schemas';
 import { errorResponse } from '@/lib/errors/messages';
