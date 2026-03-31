@@ -1,8 +1,5 @@
-import {
-  assessConceptualSoundness,
-  AgentParseError,
-  AgentSchemaError,
-} from '@/lib/agents/conceptualSoundness';
+import { assessConceptualSoundness } from '@/lib/agents/conceptualSoundness';
+import { AgentParseError, AgentSchemaError } from '@/lib/agents/errors';
 
 // Mock the Anthropic client at the system boundary
 const mockCreate = jest.fn();
