@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { createServerClient, createServiceClient } from '@/lib/supabase/server';
@@ -5,18 +6,14 @@ import { checkRateLimit } from '@/lib/security/rateLimit';
 import { sanitizeText, validateFileType } from '@/lib/security/sanitize';
 import { parsePDF } from '@/lib/parsers/pdf';
 import { parseDOCX } from '@/lib/parsers/docx';
-import { assessConceptualSoundness } from '@/lib/agents/conceptualSoundness';
+import { runCompliance } from '@/lib/agents/orchestrator';
+import { calculateScores } from '@/lib/scoring/calculator';
 import { AgentParseError, AgentSchemaError } from '@/lib/agents/errors';
 import { ComplianceRequestSchema, MAX_FILE_SIZE_BYTES } from '@/lib/validation/schemas';
 import type { Gap } from '@/lib/validation/schemas';
 import { errorResponse } from '@/lib/errors/messages';
 
-function deriveStatus(score: number): 'Compliant' | 'Needs Improvement' | 'Critical Gaps' {
-  const rounded = Math.round(score);
-  if (rounded >= 80) return 'Compliant';
-  if (rounded >= 60) return 'Needs Improvement';
-  return 'Critical Gaps';
-}
+const MODEL_USED = 'claude-haiku-3-5-20241022';
 
 /** Type guard for Supabase row with an `id` field */
 function hasStringId(row: unknown): row is { id: string } {
@@ -34,6 +31,8 @@ function isUniqueViolation(error: { code?: string } | null): boolean {
 }
 
 export async function POST(request: Request) {
+  const requestStartTime = Date.now();
+
   // 1. Verify session server-side — nothing executes before this check
   const supabase = await createServerClient();
   const {
@@ -163,11 +162,18 @@ export async function POST(request: Request) {
     return errorResponse('DOCUMENT_TOO_LONG');
   }
 
-  // 5. Run Conceptual Soundness agent (Sprint 1 — single agent)
-  // Document wrapped in <document> tags inside assessConceptualSoundness
-  let csOutput: Awaited<ReturnType<typeof assessConceptualSoundness>>;
+  // 5. Run full orchestration: 3 parallel agents + judge + retry loop
+  let csOutput: Awaited<ReturnType<typeof runCompliance>>['csOutput'];
+  let oaOutput: Awaited<ReturnType<typeof runCompliance>>['oaOutput'];
+  let omOutput: Awaited<ReturnType<typeof runCompliance>>['omOutput'];
+  let judgeOutput: Awaited<ReturnType<typeof runCompliance>>['judgeOutput'];
+  let retryCount: number;
+
   try {
-    csOutput = await assessConceptualSoundness(sanitizedText, modelName);
+    ({ csOutput, oaOutput, omOutput, judgeOutput, retryCount } = await runCompliance(
+      sanitizedText,
+      modelName
+    ));
   } catch (err) {
     if (err instanceof AgentParseError || err instanceof AgentSchemaError) {
       Sentry.captureException(err);
@@ -177,11 +183,14 @@ export async function POST(request: Request) {
     return errorResponse('AI_UNAVAILABLE');
   }
 
-  // 6–8. Database writes via service client (user_id always from verified session)
+  // 6. Calculate scores from the three agent outputs (always uses canonical formula)
+  const scoring = calculateScores(csOutput, oaOutput, omOutput);
+
+  // 7–10. Database writes via service client (user_id always from verified session)
   const db = createServiceClient();
 
   try {
-    // 6. Find or create model record; determine version number
+    // 7. Find or create model record; determine version number
     const { data: existingModel, error: lookupError } = await db
       .from('models')
       .select('id')
@@ -212,12 +221,12 @@ export async function POST(request: Request) {
       modelId = newModel.id;
     }
 
-    // Insert submission with version number retry (handles race condition on concurrent requests)
+    // 8. Insert submission — retry on version number race condition
+    const allGaps: Gap[] = [...csOutput.gaps, ...oaOutput.gaps, ...omOutput.gaps];
     const MAX_VERSION_RETRIES = 2;
     let submission: { id: string; created_at: string; version_number: number } | null = null;
 
     for (let attempt = 0; attempt < MAX_VERSION_RETRIES; attempt++) {
-      // Count existing submissions for this model to derive version number
       const { count, error: countError } = await db
         .from('submissions')
         .select('id', { count: 'exact', head: true })
@@ -231,9 +240,6 @@ export async function POST(request: Request) {
 
       const versionNumber = (count ?? 0) + 1;
 
-      // 7. Insert submission
-      // Sprint 1 placeholders: outcomes/monitoring scores = 0, judge_confidence = 0,
-      // assessment_confidence_label = 'Low' (DB NOT NULL constraints; Sprint 2 will populate)
       const { data: insertedSubmission, error: submissionError } = await db
         .from('submissions')
         .insert({
@@ -241,21 +247,20 @@ export async function POST(request: Request) {
           user_id: userId,
           version_number: versionNumber,
           document_text: sanitizedText,
-          conceptual_score: csOutput.score,
-          outcomes_score: 0,
-          monitoring_score: 0,
-          final_score: csOutput.score,
-          gap_analysis: csOutput.gaps,
-          judge_confidence: 0,
-          assessment_confidence_label: 'Low',
-          retry_count: 0,
+          conceptual_score: scoring.pillar_scores.conceptual_soundness,
+          outcomes_score: scoring.pillar_scores.outcomes_analysis,
+          monitoring_score: scoring.pillar_scores.ongoing_monitoring,
+          final_score: scoring.final_score,
+          gap_analysis: allGaps,
+          judge_confidence: judgeOutput.confidence,
+          assessment_confidence_label: judgeOutput.confidence_label,
+          retry_count: retryCount,
         })
         .select('id, created_at')
         .single();
 
       if (submissionError) {
         if (isUniqueViolation(submissionError) && attempt < MAX_VERSION_RETRIES - 1) {
-          // Version number race condition — retry with recalculated version
           continue;
         }
         Sentry.captureException(submissionError);
@@ -285,20 +290,42 @@ export async function POST(request: Request) {
 
     const submissionId = submission.id;
 
-    // 8. Insert gaps (one row per gap) with compensating delete on failure
-    if (csOutput.gaps.length > 0) {
-      const gapRows = csOutput.gaps.map((gap: Gap) => ({
+    // 9. Insert gaps from all three pillars (one row per gap, labelled by pillar)
+    const allGapRows = [
+      ...csOutput.gaps.map((gap: Gap) => ({
         submission_id: submissionId,
         user_id: userId,
-        pillar: 'conceptual_soundness',
+        pillar: 'conceptual_soundness' as const,
         element_code: gap.element_code,
         element_name: gap.element_name,
         severity: gap.severity,
         description: gap.description,
         recommendation: gap.recommendation,
-      }));
+      })),
+      ...oaOutput.gaps.map((gap: Gap) => ({
+        submission_id: submissionId,
+        user_id: userId,
+        pillar: 'outcomes_analysis' as const,
+        element_code: gap.element_code,
+        element_name: gap.element_name,
+        severity: gap.severity,
+        description: gap.description,
+        recommendation: gap.recommendation,
+      })),
+      ...omOutput.gaps.map((gap: Gap) => ({
+        submission_id: submissionId,
+        user_id: userId,
+        pillar: 'ongoing_monitoring' as const,
+        element_code: gap.element_code,
+        element_name: gap.element_name,
+        severity: gap.severity,
+        description: gap.description,
+        recommendation: gap.recommendation,
+      })),
+    ];
 
-      const { error: gapsError } = await db.from('gaps').insert(gapRows);
+    if (allGapRows.length > 0) {
+      const { error: gapsError } = await db.from('gaps').insert(allGapRows);
       if (gapsError) {
         // Compensating transaction: delete the orphaned submission row
         Sentry.captureException(gapsError);
@@ -307,21 +334,39 @@ export async function POST(request: Request) {
       }
     }
 
-    // 9. Return Sprint 1 response
+    // 10. Insert eval record for observability / AI regression tracking
+    const inputTextHash = createHash('sha256').update(sanitizedText).digest('hex');
+    const { error: evalError } = await db.from('evals').insert({
+      submission_id: submissionId,
+      input_text_hash: inputTextHash,
+      agent_outputs: { cs: csOutput, oa: oaOutput, om: omOutput },
+      judge_output: judgeOutput,
+      retry_count: retryCount,
+      total_latency_ms: Date.now() - requestStartTime,
+      model_used: MODEL_USED,
+    });
+
+    if (evalError) {
+      // Eval failure is non-fatal — log and continue so the user still gets their result
+      Sentry.captureException(evalError);
+    }
+
+    // 11. Return 200 ComplianceResponse with all fields populated
     return NextResponse.json(
       {
-        submissionId,
-        modelName,
-        versionNumber: submission.version_number,
-        conceptualScore: csOutput.score,
-        outcomesScore: null,
-        monitoringScore: null,
-        finalScore: csOutput.score,
-        status: deriveStatus(csOutput.score),
-        gaps: csOutput.gaps,
-        judgeConfidence: null,
-        assessmentConfidenceLabel: null,
-        retryCount: 0,
+        submission_id: submissionId,
+        model_name: modelName,
+        version: submission.version_number,
+        scoring,
+        pillar_outputs: {
+          conceptual_soundness: csOutput,
+          outcomes_analysis: oaOutput,
+          ongoing_monitoring: omOutput,
+        },
+        judge: judgeOutput,
+        all_gaps: allGaps,
+        retry_count: retryCount,
+        created_at: submission.created_at,
       },
       { status: 200 }
     );
