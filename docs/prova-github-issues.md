@@ -22,7 +22,7 @@
 | S2-04 | Dashboard Page — Overview, Model Inventory, Score Chart, Activity Feed | 2 | ✅ Done |
 | S2-05 | New Compliance Check Page (`/check`) | 2 | ✅ Done |
 | S2-06 | Submission History and Single Submission View | 2 | 🔲 Pending |
-| S2-07 | PDF Report Generation (`POST /api/report`) | 2 | 🔲 Pending |
+| S2-07 | PDF Report Generation (`POST /api/report`) | 2 | ✅ Done |
 | S2-08 | Settings Page (Dashboard Preferences) | 2 | ✅ Done |
 | S3-01 | GitHub Actions CI/CD Pipeline | 3 | 🔲 Pending |
 | S3-02 | AI Regression Test Suite (Synthetic Documents) | 3 | 🔲 Pending |
@@ -372,7 +372,7 @@ Build the submissions list page (`/submissions`) and single submission detail pa
 
 ---
 
-## Issue S2-07 🔲 PENDING: PDF Report Generation (`POST /api/report`)
+## Issue S2-07 ✅ DONE: PDF Report Generation (`POST /api/report`)
 
 **Labels:** `sprint-2` `backend` `frontend`
 **Milestone:** Sprint 2 (Mar 30–Apr 9)
