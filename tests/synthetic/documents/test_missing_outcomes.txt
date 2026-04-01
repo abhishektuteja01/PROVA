@@ -1,0 +1,215 @@
+MORTGAGE PREPAYMENT MODEL
+Model Validation Documentation
+Version 1.4 | January 2026
+
+================================================================================
+CONCEPTUAL SOUNDNESS
+================================================================================
+
+1. MODEL PURPOSE AND INTENDED USE (CS-01)
+
+The Mortgage Prepayment Model ("the Model") predicts the conditional probability of voluntary prepayment for residential mortgage loans in the bank's held-for-investment portfolio. The Model is used for:
+
+- Interest rate risk management: Forecasting cash flow timing for the mortgage portfolio under various rate scenarios to calculate portfolio duration and convexity
+- Mortgage-backed securities (MBS) valuation: Providing prepayment speed assumptions (CPR — Conditional Prepayment Rate) for the pricing and risk management of agency MBS positions
+- Asset-liability management: Estimating the expected maturity profile of mortgage assets for liquidity planning and funds transfer pricing
+
+The Model is approved for use with:
+- 30-year and 15-year fixed-rate conforming residential mortgages
+- Agency MBS (Fannie Mae, Freddie Mac, Ginnie Mae) backed by conforming fixed-rate collateral
+
+The Model must NOT be used for:
+- Adjustable-rate mortgages (ARMs) — rate reset dynamics require a separate model
+- Non-conforming or jumbo mortgages — different borrower behavior patterns
+- Commercial real estate mortgages
+- Home equity lines of credit (HELOCs)
+- Involuntary prepayments (defaults) — modeled separately by the Credit Loss Model
+
+2. THEORETICAL AND MATHEMATICAL FRAMEWORK (CS-02)
+
+The Model uses a two-stage framework combining logistic regression for the prepayment probability with a Cox proportional hazards model for the timing component.
+
+Stage 1 — Prepayment Probability (Logistic Regression):
+
+The monthly conditional prepayment probability for loan i in month t is modeled as:
+
+    P(prepay_it = 1 | X_it) = 1 / (1 + exp(-beta' * X_it))
+
+where X_it is the vector of covariates for loan i at time t, and beta is the parameter vector estimated via maximum likelihood on the development sample.
+
+The linear predictor beta' * X_it includes the following terms:
+
+    beta_0 + beta_1 * INCENTIVE_it + beta_2 * INCENTIVE_it^2
+    + beta_3 * AGE_it + beta_4 * log(AGE_it)
+    + beta_5 * FICO_i + beta_6 * LTV_i
+    + beta_7 * LOAN_SIZE_i + beta_8 * BURNOUT_it
+    + beta_9 * SEASON_t + beta_10 * HPI_it
+
+where:
+- INCENTIVE = (note_rate - current_market_rate) / current_market_rate — the refinancing incentive
+- AGE = loan age in months (seasoning)
+- FICO = origination FICO score
+- LTV = current loan-to-value ratio (updated with HPI)
+- LOAN_SIZE = original loan balance (log-transformed)
+- BURNOUT = cumulative exposure to refinancing incentive without prepaying (heterogeneity proxy)
+- SEASON = seasonal dummy variables (Jan-Dec) capturing housing market seasonality
+- HPI = local house price index (FHFA, MSA-level)
+
+Stage 2 — Timing Component (Cox Proportional Hazards):
+
+The baseline hazard function h_0(t) captures the age-dependent prepayment pattern — the well-documented "S-curve" where prepayment rates ramp up over the first 30 months and plateau:
+
+    h(t | X_it) = h_0(t) * exp(gamma' * Z_it)
+
+where h_0(t) is estimated non-parametrically using the Breslow estimator on the development sample, and Z_it includes the time-varying covariates that affect the timing of prepayment conditional on the decision to prepay.
+
+The combined model produces a monthly CPR (Conditional Prepayment Rate) for each loan or cohort, which is aggregated to the pool level for MBS valuation.
+
+Parameter estimation: All parameters were estimated on a development sample of 1.2 million loans originated between 2010 and 2020, observed through December 2024. Maximum likelihood estimation was performed using the R glm() and coxph() functions. Standard errors are clustered at the MSA level to account for geographic correlation.
+
+3. KEY ASSUMPTIONS (CS-03)
+
+Assumption 1 — Rational refinancing behavior: Borrowers are assumed to refinance when the interest rate incentive exceeds their transaction costs. The incentive threshold varies by borrower characteristics (captured through the FICO and loan size variables). In reality, many borrowers do not refinance even when it is financially optimal — this "sub-optimal" behavior is captured partially by the burnout variable.
+
+Assumption 2 — Borrower heterogeneity captured by observables: The model assumes that differences in prepayment behavior across borrowers can be explained by the observable covariates (FICO, LTV, loan size, etc.). Unobserved heterogeneity (e.g., financial sophistication, personal circumstances) is approximated by the burnout variable, which captures the revealed preference of borrowers who have not prepaid despite incentive.
+
+Assumption 3 — Stable prepayment-rate relationship: The model assumes that the relationship between interest rate incentive and prepayment probability is stable over time. This is the critical assumption — structural changes in the mortgage market (e.g., changes in refinancing costs, fintech lenders lowering barriers) could shift this relationship.
+
+Assumption 4 — House price appreciation follows historical patterns: The LTV update uses FHFA house price indices, assuming that historical geographic house price patterns are representative of future paths. The model does not predict house prices — it uses external HPI scenarios provided by the Economics team.
+
+Assumption 5 — No interaction between voluntary and involuntary prepayment: The model treats voluntary prepayment (refinancing, home sale) as independent of default. In reality, borrowers with negative equity are less likely to voluntarily prepay (the "lock-in" effect), which is partially captured through the LTV variable.
+
+Assumption 6 — Proportional hazards: The Cox model assumes that the effect of covariates on the hazard rate is multiplicative and constant over time. This means the ratio of prepayment hazards between two borrowers with different characteristics is assumed to be the same regardless of loan age.
+
+4. ASSUMPTION LIMITATIONS AND BOUNDARIES (CS-04)
+
+Refinancing incentive threshold shift: The rational refinancing assumption was calibrated during a period of relatively stable mortgage origination costs (2010-2020). The emergence of fintech mortgage lenders (Rocket Mortgage, Better.com) has reduced refinancing friction costs by an estimated 50-75 basis points. This means the current model may underestimate prepayment rates in a falling-rate environment, as the effective incentive threshold has decreased. The model should be recalibrated when sufficient post-2020 rate cycle data is available.
+
+Burnout variable limitations: The burnout variable captures one dimension of borrower heterogeneity but cannot distinguish between borrowers who are genuinely unable to refinance (low FICO, insufficient documentation) and those who simply have not acted. During COVID-19, government forbearance programs reduced the effective FICO constraint, causing the burnout variable to overestimate prepayment suppression for previously-constrained borrowers.
+
+Geographic concentration risk: The model was estimated on a nationally diversified sample, but the bank's actual portfolio may have geographic concentrations. MSA-level clustering partially addresses this, but the model may perform differently in regions with unusual housing market dynamics (e.g., oil-dependent economies, resort communities).
+
+Interest rate path dependency: The model uses the current-period rate incentive but does not fully capture path dependency — the historical trajectory of rates affects borrower expectations and behavior. A borrower who has experienced a gradual rate decline may behave differently from one facing a sudden rate drop, even if the current incentive is identical.
+
+Extreme rate environments: The model was estimated on data where the 30-year fixed rate ranged from 2.65% to 7.79%. Model behavior outside this range is extrapolated and unreliable. In particular, if rates fall below 2.5% (a scenario not observed in the estimation period), the model's quadratic incentive term may produce implausible prepayment speeds.
+
+5. DATA INPUTS AND SOURCES (CS-05)
+
+Loan-level characteristics (origination data):
+- Note rate, original balance, origination date, term: Sourced from the Loan Origination System (LOS) and verified against the servicing system (Black Knight MSP). Updated at loan boarding.
+- Origination FICO: Sourced from credit bureau pulls at origination, stored in the LOS. Not updated after origination (static characteristic).
+- Original LTV: Calculated from appraised value at origination (LOS) and original loan balance.
+
+Time-varying inputs (updated monthly):
+- Current market rate: 30-year fixed mortgage rate from Freddie Mac Primary Mortgage Market Survey (PMMS). Updated weekly, monthly average used for model input.
+- House Price Index: FHFA All-Transactions HPI at the MSA level. Updated quarterly with a 1-quarter lag. Used to update current LTV.
+- Loan age: Calculated as months since origination date. Automated.
+- Burnout variable: Computed internally from the loan's history of exposure to refinancing incentive. Updated monthly from the bank's analytical data warehouse.
+
+Macroeconomic scenarios (for forecasting):
+- Interest rate paths: Provided by the Treasury/ALM team using the bank's interest rate model. Scenarios include base, up-100, up-200, down-100, down-200.
+- HPI paths: Provided by the Economics team using the bank's housing market model.
+
+Data quality: All loan-level inputs pass automated validation at boarding and monthly refresh. Validation includes range checks (note rate 1%-15%, FICO 300-850, LTV 0%-200%), missing value checks (zero tolerance for critical fields), and cross-field consistency checks (e.g., loan age consistent with origination date).
+
+6. MODEL SCOPE AND APPLICABILITY (CS-06)
+
+The Model is validated and approved for the following scope:
+
+Loan types: 30-year and 15-year fixed-rate conforming mortgages. The model has separate parameter vectors for 30-year and 15-year products (estimated jointly with product interaction terms).
+
+Origination vintage: Loans originated 2010 and later. Pre-2010 loans have fundamentally different underwriting characteristics (pre-crisis standards) and are excluded.
+
+Portfolio: The bank's held-for-investment residential mortgage portfolio and agency MBS positions. Not approved for trading book positions or non-agency securities.
+
+Geographic scope: Nationwide, with MSA-level granularity for house price effects. Alaska, Hawaii, and territories are included but have limited estimation data — predictions for these regions carry higher uncertainty.
+
+The Model is NOT appropriate for:
+- ARMs or hybrid products (5/1, 7/1) — rate reset timing dominates prepayment behavior
+- Jumbo loans (> conforming limit) — different borrower demographics and refinancing behavior
+- Government loans (FHA, VA) with streamline refinancing programs — different incentive dynamics
+- Seasoned loans originated before 2010 — different underwriting era
+- Commercial mortgages — entirely different prepayment dynamics
+
+7. KNOWN MODEL WEAKNESSES (CS-07)
+
+Weakness 1 — Media effect not modeled: Major media coverage of low mortgage rates (e.g., "rates hit record low" headlines) triggers prepayment spikes that exceed the model's rate-incentive prediction. The model captures the steady-state relationship between incentive and prepayment but not the impulse response to media attention. This can cause 1-2 month forecast errors of 20-30% during media-driven prepayment waves.
+
+Weakness 2 — Burnout heterogeneity: The single-dimensional burnout variable cannot capture the full distribution of borrower heterogeneity. In particular, it cannot distinguish between borrowers constrained by credit quality and those constrained by appraisal or documentation issues. This leads to forecast errors during periods when specific constraint types are relaxed (e.g., appraisal waivers).
+
+Weakness 3 — Seasonal pattern instability: The seasonal dummy variables were estimated on historical data and assume stable seasonal patterns. COVID-19 disrupted the normal spring/summer home-buying seasonality, and it is unclear whether pre-COVID seasonal patterns have fully reasserted. The model may over- or under-predict seasonal prepayment variation.
+
+Weakness 4 — Non-refinancing voluntary prepayments: Home sales (the other major source of voluntary prepayment) are driven by life events (job change, divorce, family size change) that are not captured by the model's financial variables. Home sale prepayments represent approximately 30% of total voluntary prepayments and are essentially modeled as noise around the baseline hazard. This contributes to forecast uncertainty, particularly in strong housing markets where turnover is elevated.
+
+Weakness 5 — Parameter stability: The model parameters were estimated on a specific historical period and assume structural stability. Major mortgage market reforms (e.g., GSE reform, QM rule changes) could alter the prepayment-incentive relationship in ways the model cannot anticipate.
+
+================================================================================
+ONGOING MONITORING
+================================================================================
+
+1. KPIs AND PERFORMANCE THRESHOLDS (OM-01)
+
+KPI 1 — CPR Forecast Error: Mean absolute percentage error of monthly CPR forecasts vs. actual CPR. Threshold: MAPE < 20% for 1-month forecasts, < 30% for 12-month forecasts. Current: 14% (1-month), 22% (12-month).
+
+KPI 2 — Discrimination (AUC): Area under the ROC curve for the binary prepayment prediction. Threshold: AUC > 0.75. Current: 0.82.
+
+KPI 3 — Calibration: Ratio of predicted aggregate CPR to actual aggregate CPR. Threshold: between 0.85 and 1.15. Current: 1.03.
+
+KPI 4 — Parameter Stability: Estimated parameters must be within 2 standard errors of the development sample estimates when re-estimated on rolling 3-year windows. Current: all parameters within bounds.
+
+KPI 5 — Population Stability: PSI of the score distribution. Threshold: < 0.25. Current: 0.07.
+
+2. MONITORING FREQUENCY (OM-02)
+
+Monthly: CPR forecast error calculation, actual vs. predicted at pool and cohort level, data quality checks, score distribution stability (PSI).
+
+Quarterly: Full performance metrics (AUC, calibration, parameter stability), seasonal pattern review, benchmarking against dealer prepayment models (JP Morgan, Goldman Sachs published CPR forecasts).
+
+Semi-annually: Comprehensive model performance report presented to ALM Committee and Model Risk Committee. Includes rolling backtesting results, stress scenario updates, and recommendations.
+
+Annually: Full model revalidation by independent Model Validation team, including re-estimation of parameters on updated data and evaluation of model structure adequacy.
+
+3. ESCALATION PROCEDURES (OM-03)
+
+Level 1 — Monitoring Analyst: Monthly CPR forecast error exceeds 20% MAPE for two consecutive months, or any single-month error exceeds 40%. Analyst investigates within 5 business days. Common causes: rate environment change, seasonal anomaly, data issue.
+
+Level 2 — Model Risk Team Lead: Confirmed performance degradation (not a data issue). Team lead reviews within 3 business days and decides: (a) enhanced monitoring, (b) parameter recalibration, or (c) escalation.
+
+Level 3 — Model Risk Committee: AUC drops below 0.75, calibration ratio outside 0.85-1.15 for two consecutive quarters, or PSI exceeds 0.25. Committee review at next scheduled meeting (quarterly) or emergency session. Committee may mandate recalibration, redevelopment, or interim model overlay.
+
+Level 4 — ALM Committee / CRO: If prepayment model error materially impacts interest rate risk measurement (EVE or NII impact exceeding $50M), the ALM Committee and CRO are notified. Potential actions: interim prepayment assumption override, increased hedging, or portfolio action.
+
+4. TRIGGER CONDITIONS FOR MODEL REVIEW (OM-04)
+
+Trigger 1 — Sustained forecast error: MAPE > 20% for three consecutive months.
+Trigger 2 — Discrimination degradation: AUC drops below 0.75.
+Trigger 3 — Population shift: PSI > 0.25.
+Trigger 4 — Rate regime change: 30-year fixed rate moves outside the 2.65%-7.79% estimation range.
+Trigger 5 — Regulatory change: Changes to QM rules, GSE pricing, or other regulations affecting refinancing behavior.
+Trigger 6 — Market structure change: Significant changes in mortgage origination channels (e.g., fintech market share exceeds 50%).
+Trigger 7 — Annual calendar: Mandatory annual revalidation.
+Trigger 8 — Portfolio change: Acquisition integration adding > 20% of portfolio balance from a different origination channel or geography.
+
+5. DATA QUALITY MONITORING (OM-05)
+
+Loan-level data completeness: Automated daily checks. Zero tolerance for missing critical fields (note rate, origination date, FICO, LTV). Non-critical fields (MSA code): < 1% missing rate. Current compliance: 99.97% completeness.
+
+Market data timeliness: PMMS rate updated weekly (stale threshold: 10 business days). FHFA HPI updated quarterly (stale threshold: 2 quarters). Automated alerts for stale data.
+
+Data reconciliation: Monthly reconciliation between LOS, servicing system, and analytical data warehouse. Discrepancy threshold: 0.05% of records. Current: 0.02%.
+
+Vintage drift detection: Monthly comparison of origination characteristic distributions (FICO, LTV, DTI) for new originations vs. development sample. If any characteristic PSI > 0.25, investigate whether model re-estimation is warranted.
+
+Historical data corrections: Any retroactive corrections to the historical prepayment database require Model Risk team lead approval and documentation of the correction in the Data Quality Log.
+
+6. CHANGE MANAGEMENT (OM-06)
+
+Category A — Minor (documentation, threshold adjustments): Approved by Model Risk team lead. Implemented within standard release cycle.
+
+Category B — Moderate (parameter recalibration, variable transformation changes): Approved by Model Risk Committee. Requires 60-day parallel run. Results reviewed by Model Validation team before production deployment.
+
+Category C — Material (new variables, methodology changes, complete redevelopment): Approved by Model Risk Committee and CRO. Requires 90-day parallel run, independent validation report, and impact assessment on EVE/NII and regulatory capital.
+
+Emergency changes: CRO authorization for immediate changes (e.g., interim prepayment speed override during market dislocation). Retroactive documentation and validation within 30 business days.
+
+Change log: All changes recorded in the Model Change Registry (ServiceNow) with unique change ID, description, rationale, impact assessment, approval chain, implementation date, and post-implementation monitoring results.

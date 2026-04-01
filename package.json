@@ -9,7 +9,7 @@
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "test:ai": "echo 'AI regression suite: wired in Sprint 3' && exit 0"
+    "test:ai": "jest --config jest.ai.config.ts --verbose"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",

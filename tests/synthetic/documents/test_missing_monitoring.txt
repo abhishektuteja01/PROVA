@@ -1,0 +1,263 @@
+INTEREST RATE SWAP VALUATION MODEL
+Model Validation Documentation
+Version 2.0 | December 2025
+
+================================================================================
+CONCEPTUAL SOUNDNESS
+================================================================================
+
+1. MODEL PURPOSE AND INTENDED USE (CS-01)
+
+The Interest Rate Swap Valuation Model ("the Model") calculates the fair market value and risk sensitivities of plain vanilla interest rate swaps (IRS) in the bank's derivatives trading book and banking book hedging portfolio. The Model supports:
+
+- Daily mark-to-market valuation of the IRS portfolio for financial reporting (ASC 820)
+- Counterparty credit exposure calculation for CVA/DVA adjustments
+- Hedge effectiveness testing under ASC 815
+- DV01 and key rate duration calculations for interest rate risk management
+
+The Model is approved for:
+- Plain vanilla fixed-for-floating interest rate swaps denominated in USD, EUR, GBP, and JPY
+- Overnight index swaps (OIS) referencing SOFR, ESTR, SONIA, and TONAR
+- Swaps with maturities from 1 month to 30 years
+
+The Model must NOT be used for:
+- Cross-currency swaps (require FX modeling)
+- Swaptions or other options on swaps (require volatility modeling)
+- Inflation-linked swaps
+- Basis swaps with complex spread dynamics
+- Structured or exotic swaps with non-standard features (amortizing, accreting, range accrual)
+
+2. THEORETICAL AND MATHEMATICAL FRAMEWORK (CS-02)
+
+The Model values interest rate swaps using the discounted cash flow (DCF) methodology under the multi-curve framework adopted industry-wide following the 2008 financial crisis.
+
+Fixed Leg Valuation:
+The present value of the fixed leg is:
+
+    PV_fixed = N * c * sum_{i=1}^{n} delta_i * D(0, T_i)
+
+where N is the notional principal, c is the fixed coupon rate, delta_i is the day count fraction for period i (calculated using the contract's day count convention — typically 30/360 or ACT/360), and D(0, T_i) is the discount factor from today to payment date T_i.
+
+Floating Leg Valuation:
+The present value of the floating leg is:
+
+    PV_float = N * sum_{j=1}^{m} F(T_{j-1}, T_j) * delta_j * D(0, T_j)
+
+where F(T_{j-1}, T_j) is the forward rate for the period [T_{j-1}, T_j], derived from the appropriate forward curve (e.g., 3-month SOFR forward curve), and delta_j is the day count fraction.
+
+Forward Rate Calculation:
+Forward rates are derived from the zero-coupon yield curve using the no-arbitrage relationship:
+
+    F(T_1, T_2) = (1/delta) * [D(0, T_1) / D(0, T_2) - 1]
+
+Multi-Curve Framework:
+Post-2008, the Model uses separate curves for discounting and forward rate projection:
+- Discounting curve: OIS curve (SOFR for USD) — reflects the risk-free rate used for collateralized derivatives
+- Forward projection curve: Tenor-specific curve (e.g., 3-month SOFR term rate curve) — reflects the rate that determines floating leg cash flows
+- The spread between OIS and forward curves captures tenor basis risk
+
+Curve Construction:
+Zero-coupon curves are bootstrapped from market instruments using a sequential approach:
+1. Short end (0-2 years): SOFR overnight rate and SOFR futures
+2. Medium term (2-10 years): SOFR swap rates
+3. Long end (10-30 years): SOFR swap rates with interpolation
+
+Interpolation between bootstrap nodes uses monotone-preserving cubic Hermite interpolation (Hyman filter) to ensure positive forward rates.
+
+Swap Value:
+The mark-to-market value of a receive-fixed swap is:
+
+    V_swap = PV_fixed - PV_float
+
+For a pay-fixed swap, the sign is reversed. The par swap rate is the fixed rate that makes V_swap = 0 at inception.
+
+3. KEY ASSUMPTIONS (CS-03)
+
+Assumption 1 — No default risk (for collateralized swaps): The DCF model assumes counterparty default risk is negligible for swaps subject to daily margin exchange under CSA agreements. CVA/DVA adjustments are computed separately by the Counterparty Credit Risk Model.
+
+Assumption 2 — Deterministic interest rates for valuation: The DCF approach treats forward rates as deterministic — it does not account for the convexity adjustment that arises from the correlation between floating rates and discount factors. For plain vanilla swaps, this convexity effect is negligible (< 0.1 bp for maturities under 10 years).
+
+Assumption 3 — Continuous compounding equivalence: The Model converts between different compounding conventions (annual, semi-annual, continuous) assuming smooth and continuous yield curves. Discontinuities in the curve (e.g., central bank meeting dates) are captured through the bootstrap instruments but not through explicit jump modeling.
+
+Assumption 4 — Perfect collateralization: The OIS discounting framework assumes swaps are perfectly collateralized with daily margin exchange at the OIS rate. For swaps with imperfect collateral terms (e.g., threshold amounts, minimum transfer amounts), the Model may produce slightly inaccurate valuations.
+
+Assumption 5 — Static notional: The Model assumes constant notional over the swap's life. Amortizing or accreting notional schedules require a separate model configuration.
+
+Assumption 6 — Day count and calendar conventions are correct: The Model relies on accurate implementation of day count conventions (30/360, ACT/360, ACT/365, ACT/ACT) and business day calendars for each currency. Errors in convention implementation directly affect cash flow calculations.
+
+4. ASSUMPTION LIMITATIONS AND BOUNDARIES (CS-04)
+
+Deterministic rate limitation: The no-convexity-adjustment assumption becomes material for long-dated swaps (maturity > 15 years) and for swaps in currencies with significant rate volatility. For a 30-year USD swap, the convexity adjustment can be 1-3 basis points. The Model does not capture this effect, leading to a systematic undervaluation of receive-fixed positions in long-dated swaps.
+
+Collateralization assumption: Approximately 12% of the bank's swap portfolio is bilateral (non-cleared) with CSA terms that include material threshold amounts ($10M+) or non-daily margin frequency. For these swaps, the OIS discounting assumption introduces valuation uncertainty of 0.5-2 basis points, depending on the CSA terms and counterparty credit quality.
+
+Curve construction limitations: The bootstrapping approach assumes that market instruments are priced consistently. During periods of market stress, swap spreads can exhibit dislocations that cause the bootstrapped curve to be jagged or non-monotone in forward space. The Hyman filter smooths these artifacts but may produce forward rates that do not perfectly match observed market instruments.
+
+SOFR transition artifacts: The transition from LIBOR to SOFR introduced basis risk for legacy swaps with LIBOR fallback language. The Model uses the ISDA-prescribed SOFR + spread adjustment for legacy positions, but the static spread adjustment does not capture dynamic basis movements.
+
+Cross-currency limitation: The Model does not account for cross-currency basis when valuing USD swaps held as hedges for non-USD assets. This can lead to hedge ineffectiveness that the Model cannot explain.
+
+5. DATA INPUTS AND SOURCES (CS-05)
+
+Market data inputs (refreshed daily at 4:00 PM ET):
+- SOFR overnight rate: Federal Reserve Bank of New York, published daily at 8:00 AM ET. Used as the anchor for the OIS curve.
+- SOFR futures (1-month and 3-month): CME Group settlement prices. Used for short-end curve construction (0-2 years).
+- SOFR swap rates (2Y, 3Y, 5Y, 7Y, 10Y, 15Y, 20Y, 25Y, 30Y): Sourced from Bloomberg (BBG ICAP composite) and verified against Tradeweb and DTCC SDR reported rates. Used for medium and long-end curve construction.
+- ESTR, SONIA, TONAR rates and swap curves: Sourced from Bloomberg for non-USD currencies.
+
+Trade data:
+- Swap terms (notional, fixed rate, floating index, payment frequency, day count, maturity): Sourced from the trade capture system (Murex). Reconciled daily against DTCC Trade Information Warehouse for cleared swaps.
+- CSA terms (threshold, minimum transfer amount, eligible collateral): Sourced from the Collateral Management System (Calypso).
+
+Data quality requirements:
+- Market data must pass range checks (rates between -1% and 15%), staleness checks (maximum 24-hour age for active markets), and cross-validation (primary vs. secondary source discrepancy < 2bp).
+- Trade data reconciliation: 100% match rate required between Murex and clearing house records for cleared swaps. Discrepancies investigated same day.
+
+6. MODEL SCOPE AND APPLICABILITY (CS-06)
+
+The Model is validated for plain vanilla IRS only:
+- Fixed-for-floating swaps with standard terms (quarterly or semi-annual payments, standard day count)
+- Maturities: 1 month to 30 years
+- Currencies: USD, EUR, GBP, JPY
+- Cleared swaps (LCH, CME) and bilateral swaps under standard CSA terms
+
+NOT applicable for:
+- Non-linear derivatives (swaptions, caps, floors) — require volatility surface
+- Multi-currency or cross-currency products — require FX modeling
+- Structured swaps (callable, puttable, range accrual, CMS) — require Monte Carlo simulation
+- Swaps in emerging market currencies — insufficient liquidity for reliable curve construction
+- Inflation swaps — require inflation curve modeling
+
+Boundary conditions: The Model's accuracy degrades for swaps with unusual characteristics:
+- Very short maturity (< 1 week): Settlement and fixing conventions dominate valuation
+- Very long maturity (> 30 years): Extrapolation beyond observable curve introduces uncertainty
+- Large notional (> $1B): Market impact and liquidity risk not captured by mid-market valuation
+
+7. KNOWN MODEL WEAKNESSES (CS-07)
+
+Weakness 1 — No convexity adjustment: As noted in the limitations section, the deterministic rate assumption causes systematic mispricing of long-dated swaps. For 30-year swaps, this can reach 1-3bp. The bank accepts this known bias rather than introducing a stochastic rate model, which would add implementation complexity disproportionate to the improvement.
+
+Weakness 2 — Interpolation sensitivity: The choice of interpolation method between bootstrap nodes affects forward rates and swap valuations. Our monotone cubic Hermite method can differ from linear or log-linear interpolation by 0.5-1bp for swaps with non-standard maturities. This is a model risk that cannot be eliminated but is monitored through regular comparison against alternative interpolation methods.
+
+Weakness 3 — End-of-day timing: The Model uses 4:00 PM ET market data, but swap markets continue to trade in London and Tokyo after this cutoff. This can cause the Model's valuations to differ from clearing house settlement prices by 0.5-2bp on volatile days.
+
+Weakness 4 — Basis risk: Tenor basis (e.g., 1M SOFR vs. 3M SOFR) is captured through separate forward curves, but the Model assumes basis spreads are deterministic. In practice, basis spreads exhibit volatility that contributes to P&L noise not explained by the Model.
+
+Weakness 5 — Holiday calendar maintenance: The Model relies on accurate business day calendars for four currencies. Calendar errors (missed holidays, incorrect observance rules) directly affect accrued interest calculations. The calendar database is sourced from a third-party vendor (Calendarific) and verified quarterly.
+
+================================================================================
+OUTCOMES ANALYSIS
+================================================================================
+
+1. BACKTESTING METHODOLOGY (OA-01)
+
+The Model is backtested using a hypothetical portfolio approach with daily observation frequency over a 3-year window (January 2022 through December 2024).
+
+Methodology: For each trading day, the Model calculates the theoretical change in swap value based on the change in market inputs (curve shifts). This is compared against the actual P&L computed from the clearing house settlement values (for cleared swaps) and independent dealer valuations (for bilateral swaps).
+
+Backtesting dimensions:
+- Mark-to-market accuracy: Model-predicted value vs. clearing house settlement value
+- P&L prediction: Model-predicted daily P&L vs. actual daily P&L
+- Risk sensitivity accuracy: Model-predicted DV01 vs. empirically observed DV01 from actual rate moves
+
+Universe: All USD IRS in the trading book with notional > $50M (approximately 1,200 swaps). Sample refreshed quarterly.
+
+Results are reported monthly to the Market Risk team and quarterly to the Model Risk Committee.
+
+2. PERFORMANCE METRICS (OA-02)
+
+The following metrics are computed monthly:
+
+Valuation RMSE: Root mean square error of Model valuations vs. clearing house settlement prices. Current: 0.42 basis points of notional. Threshold: < 1.0 bp.
+
+P&L Explanation Ratio: Percentage of actual daily P&L explained by Model-predicted P&L. Current: 94.3%. Threshold: > 90%. Unexplained P&L is attributed to: basis risk (3.1%), timing differences (1.8%), and residual (0.8%).
+
+DV01 Accuracy: Model DV01 vs. empirical DV01 (computed from regression of swap value changes on rate changes). Model/empirical ratio: 0.98. Threshold: between 0.95 and 1.05.
+
+Curve Fit Quality: Mean absolute error of repriced bootstrap instruments vs. market quotes. Current: 0.08bp. Threshold: < 0.25bp. This confirms the curve construction is consistent with market observables.
+
+Valuation Bid-Ask Coverage: Percentage of swaps where Model mid-market value falls within the bid-ask range from independent dealer quotes. Current: 97.2%. Threshold: > 95%.
+
+3. BENCHMARKING (OA-03)
+
+The Model is benchmarked against three alternative sources:
+
+Benchmark 1 — Clearing House Valuations (LCH, CME): For cleared swaps, the clearing house provides independent valuations using their own curve construction and pricing engines. Mean absolute difference: 0.35bp of notional. The Model's valuations are highly consistent with clearing house values, which serve as the authoritative fair value for cleared derivatives.
+
+Benchmark 2 — Bloomberg SWPM: Bloomberg's swap pricing module uses a similar DCF methodology. Mean absolute difference: 0.52bp. Differences are primarily attributable to curve construction methodology (Bloomberg uses a different interpolation method) and market data source differences.
+
+Benchmark 3 — QuantLib Open-Source Engine: As a methodological cross-check, swap valuations are computed using the QuantLib library with the same market data inputs. Mean absolute difference: 0.12bp. The close agreement confirms the Model's DCF implementation is mathematically correct.
+
+4. SENSITIVITY ANALYSIS (OA-04)
+
+Parallel rate shift (+/- 100bp):
+- 5-year receive-fixed swap (notional $100M): Base value = +$2.34M
+  - +100bp: value = -$2.45M (delta = -$4.79M)
+  - -100bp: value = +$7.13M (delta = +$4.79M)
+  - Symmetric DV01 confirms the Model is consistent for parallel shifts
+
+Key rate sensitivities (10bp shift at each tenor point):
+- 2Y point: DV01 = $48K per $100M notional (5Y swap)
+- 5Y point: DV01 = $187K per $100M notional (5Y swap)
+- 10Y point: DV01 = $3K per $100M notional (5Y swap)
+- The sensitivity profile confirms that valuation is driven by rates near the swap maturity
+
+Curve twist (+50bp short end, -50bp long end):
+- 10Y receive-fixed swap: value change = +$1.23M per $100M notional
+- Confirms the Model captures yield curve shape risk appropriately
+
+Basis spread sensitivity (+/- 5bp OIS-SOFR term basis):
+- Impact: 0.15bp of notional for a 5Y swap
+- Basis risk is a second-order effect for well-collateralized swaps
+
+5. STRESS TESTING (OA-05)
+
+Three stress scenarios evaluated quarterly:
+
+Scenario 1 — 2022 Rate Hiking Cycle Replay:
+300bp increase in short-end rates over 6 months, 150bp increase in long-end rates (bear flattening). 10Y swap portfolio impact: -$45M (on $10B notional receive-fixed portfolio). Model remained accurate throughout the actual 2022 episode — backtesting P&L explanation ratio stayed above 92%.
+
+Scenario 2 — 2020 COVID Rate Crash:
+150bp decline across the curve within 30 days, OIS-term basis widening of 25bp. 10Y swap portfolio impact: +$38M. Basis widening component: -$2.1M (not captured by primary model, estimated separately).
+
+Scenario 3 — Curve Inversion (inverted 2s10s by 150bp):
+Short rates 200bp above current, long rates 50bp above current. Impact on duration-hedged portfolio: residual exposure of $8.2M due to non-parallel curve risk. Confirms that simple DV01 hedging is insufficient for extreme curve shape changes.
+
+Reverse stress test: The rate move required to generate a $100M loss on the current portfolio is a 220bp parallel shift. This corresponds to approximately a 3.5 standard deviation move based on historical daily rate changes.
+
+6. OUT-OF-SAMPLE TESTING (OA-06)
+
+Temporal hold-out: The curve construction methodology was calibrated using market data from 2019-2022. Out-of-sample testing on 2023-2024 data:
+- Curve fit RMSE: 0.09bp (vs. 0.08bp in-sample)
+- Valuation RMSE vs. clearing house: 0.45bp (vs. 0.42bp in-sample)
+- P&L explanation ratio: 93.8% (vs. 94.3% in-sample)
+
+Performance was consistent across the 2023-2024 out-of-sample period, including the October 2023 rate volatility episode (10Y UST moved 50bp in one week). During that episode, the Model's daily P&L explanation ratio temporarily dropped to 89% for 3 days before recovering.
+
+Currency hold-out: The Model was developed primarily on USD swap data. Testing on EUR swaps (using ESTR discounting):
+- Valuation RMSE: 0.55bp (slightly higher than USD due to less liquid long-end in EUR)
+- P&L explanation ratio: 92.1%
+- Results confirm the Model generalizes to non-USD currencies within its approved scope.
+
+7. STATISTICAL VALIDATION (OA-07)
+
+Valuation residual analysis (Model value minus clearing house value):
+- Mean residual: +0.02bp (not statistically different from zero, t-test p = 0.72)
+- Residual standard deviation: 0.42bp
+- Residuals are approximately normal (Jarque-Bera test: JB = 4.2, p = 0.12)
+- No significant autocorrelation (Ljung-Box Q(10) = 8.3, p = 0.60)
+- No significant trend (linear regression slope = 0.0001, p = 0.89)
+
+P&L prediction accuracy:
+- Regression of actual P&L on predicted P&L: slope = 1.02, R-squared = 0.94
+- Slope not significantly different from 1.0 (95% CI: [0.98, 1.06])
+- Intercept not significantly different from 0 (p = 0.45)
+
+DV01 stability test:
+- Rolling 60-day DV01 ratio (model/empirical) ranges from 0.96 to 1.04
+- No systematic drift detected (ADF test on ratio series: p = 0.003, stationary)
+
+Curve fit residual analysis:
+- Bootstrap instruments repriced with mean absolute error of 0.08bp
+- Maximum individual instrument error: 0.31bp (15Y swap, attributable to interpolation)
+- No systematic pattern in residuals across tenors (chi-squared test for uniformity: p = 0.67)
