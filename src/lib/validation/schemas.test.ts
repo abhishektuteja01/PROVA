@@ -385,6 +385,7 @@ describe("JudgeOutputSchema", () => {
 
   it("rejects missing agent_feedback pillar", () => {
     const { agent_feedback: { ongoing_monitoring: _om, ...feedbackRest } } = validJudge;
+    void _om;
     expect(
       JudgeOutputSchema.safeParse({ ...validJudge, agent_feedback: feedbackRest }).success
     ).toBe(false);
@@ -564,7 +565,8 @@ describe("ComplianceResponseSchema", () => {
   });
 
   it("rejects a missing created_at field", () => {
-    const { created_at: _, ...withoutDate } = validResponse;
+    const { created_at: _createdAt, ...withoutDate } = validResponse;
+    void _createdAt;
     expect(ComplianceResponseSchema.safeParse(withoutDate).success).toBe(false);
   });
 });
@@ -837,7 +839,8 @@ describe("PillarScoresSchema", () => {
   });
 
   it("rejects a missing pillar", () => {
-    const { ongoing_monitoring: _, ...partial } = validScores;
+    const { ongoing_monitoring: _om, ...partial } = validScores;
+    void _om;
     expect(PillarScoresSchema.safeParse(partial).success).toBe(false);
   });
 });
@@ -881,7 +884,8 @@ describe("SubmissionDetailSchema", () => {
   });
 
   it("rejects missing document_text", () => {
-    const { document_text: _, ...withoutText } = validDetail;
+    const { document_text: _docText, ...withoutText } = validDetail;
+    void _docText;
     expect(SubmissionDetailSchema.safeParse(withoutText).success).toBe(false);
   });
 });

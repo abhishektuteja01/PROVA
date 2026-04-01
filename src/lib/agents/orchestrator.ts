@@ -26,7 +26,6 @@ export async function runCompliance(
   let retryCount = 0;
   let previousIssues: string[] = [];
 
-  // eslint-disable-next-line no-constant-condition
   while (true) {
     const retryContext = retryCount > 0 ? buildRetryContext(retryCount, previousIssues) : undefined;
 
