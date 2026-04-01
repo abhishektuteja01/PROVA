@@ -21,7 +21,7 @@
 | S2-03 | Update POST /api/compliance — Full 3-Agent + Judge + Scoring Flow | 2 | ✅ Done |
 | S2-04 | Dashboard Page — Overview, Model Inventory, Score Chart, Activity Feed | 2 | ✅ Done |
 | S2-05 | New Compliance Check Page (`/check`) | 2 | ✅ Done |
-| S2-06 | Submission History and Single Submission View | 2 | 🔲 Pending |
+| S2-06 | Submission History and Single Submission View | 2 | ✅ Done |
 | S2-07 | PDF Report Generation (`POST /api/report`) | 2 | 🔲 Pending |
 | S2-08 | Settings Page (Dashboard Preferences) | 2 | ✅ Done |
 | S3-01 | GitHub Actions CI/CD Pipeline | 3 | 🔲 Pending |
@@ -310,7 +310,7 @@ Full results view:
 
 ---
 
-## Issue S2-06 🔲 PENDING: Submission History and Single Submission View
+## Issue S2-06 ✅ DONE: Submission History and Single Submission View
 
 **Labels:** `sprint-2` `frontend` `backend`
 **Milestone:** Sprint 2 (Mar 30–Apr 9)
