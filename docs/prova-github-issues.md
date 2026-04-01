@@ -27,8 +27,8 @@
 | S3-01 | GitHub Actions CI/CD Pipeline | 3 | 🔲 Pending |
 | S3-02 | AI Regression Test Suite (Synthetic Documents) | 3 | 🔲 Pending |
 | S3-03 | Sentry Error Tracking and Vercel Analytics | 3 | 🔲 Pending |
-| S3-04 | Security Hardening and Penetration Checklist | 3 | 🔲 Pending |
-| S3-05 | Unit Test Coverage — Agents, Scoring, API Routes | 3 | 🔲 Pending |
+| S3-04 | Security Hardening and Penetration Checklist | 3 | ✅ Done |
+| S3-05 | Unit Test Coverage — Agents, Scoring, API Routes | 3 | ✅ Done |
 | S3-06 | Help Page and Final Polish | 3 | 🔲 Pending |
 
 ---
