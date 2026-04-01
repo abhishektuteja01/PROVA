@@ -313,3 +313,24 @@ export const ErrorResponseSchema = z.object({
 });
 
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
+
+// ─── Pagination & param schemas ─────────────────────────────────────────────
+
+export const PaginationParamsSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(10),
+});
+
+export type PaginationParams = z.infer<typeof PaginationParamsSchema>;
+
+export const UuidParamSchema = z.object({
+  id: z.string().uuid("Invalid submission ID"),
+});
+
+export type UuidParam = z.infer<typeof UuidParamSchema>;
+
+export const DeleteAllConfirmSchema = z.object({
+  confirm: z.literal(true, { message: "Confirmation required" }),
+});
+
+export type DeleteAllConfirm = z.infer<typeof DeleteAllConfirmSchema>;
