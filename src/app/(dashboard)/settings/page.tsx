@@ -40,7 +40,7 @@ export default function SettingsPage() {
   const [deleting, setDeleting] = useState(false);
 
   // Password recovery
-  const [recoveryMode, setRecoveryMode] = useState(false);
+  const [recoveryMode, setRecoveryMode] = useState(searchParams.get("type") === "recovery");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [updatingPassword, setUpdatingPassword] = useState(false);
@@ -71,11 +71,6 @@ export default function SettingsPage() {
     }
 
     init();
-
-    // Check for recovery mode via URL param
-    if (searchParams.get("type") === "recovery") {
-      setRecoveryMode(true);
-    }
 
     // Listen for PASSWORD_RECOVERY auth event
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
