@@ -1,6 +1,10 @@
 # Prova — Database Schema & RLS Policies
 **Version:** 1.0 | **Date:** March 19, 2026
 
+<!-- SUMMARY: 5 tables: models, submissions, gaps, user_preferences, evals.
+RLS enabled on all — every user table locked to auth.uid() = user_id.
+evals: service role only (no user RLS policies). DDL: §2 | Indexes: §3 | RLS: §5 | Functions/triggers: §6 | Client setup: §7 -->
+
 Run these SQL statements in the Supabase SQL Editor in this exact order.
 Do not modify RLS policies without understanding the security implications.
 

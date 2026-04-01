@@ -1,6 +1,10 @@
 # Prova — Agent Prompt Templates
 **Version:** 1.0 | **Date:** March 19, 2026
 
+<!-- SUMMARY: 4 agents. Element code reference table (all 20 SR 11-7 codes): top section.
+Agent 1 CS (40%), Agent 2 OA (35%), Agent 3 OM (25%) — each: system prompt + user template.
+Agent 4 Judge: evaluates agent outputs, not document. Implementation notes + model string: bottom. -->
+
 These are the exact prompt templates used by all four agents.
 Do not modify these without running the full synthetic test suite and verifying no score drift > 10 points.
 
