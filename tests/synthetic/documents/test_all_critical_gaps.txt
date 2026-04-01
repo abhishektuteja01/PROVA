@@ -1,0 +1,4 @@
+INTERNAL PREDICTION MODEL
+Documentation Summary
+
+This document describes our internal model. The model uses advanced techniques to generate predictions for various business purposes. It has been developed by our analytics team using industry best practices and modern methodologies. The model has been tested and found to perform well against our internal benchmarks. We believe the model is suitable for its intended applications and will continue to monitor its performance going forward. Our team is committed to maintaining the highest standards of model governance.

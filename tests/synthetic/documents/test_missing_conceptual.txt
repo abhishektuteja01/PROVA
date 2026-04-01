@@ -1,0 +1,179 @@
+CREDIT RISK SCORECARD MODEL
+Model Validation Documentation
+Version 2.1 | February 2026
+
+================================================================================
+OUTCOMES ANALYSIS
+================================================================================
+
+1. BACKTESTING METHODOLOGY (OA-01)
+
+The Credit Risk Scorecard Model has been backtested using a 5-year rolling window approach from January 2019 through December 2024. The backtesting evaluates the model's ability to discriminate between defaulting and non-defaulting obligors.
+
+Methodology: For each quarter in the backtesting period, the model's predicted probability of default (PD) is compared against actual observed defaults within a 12-month forward window. The backtesting universe consists of all retail credit exposures in the bank's portfolio with outstanding balance exceeding $1,000, totaling approximately 2.3 million accounts per quarter.
+
+The backtesting framework evaluates: (1) discrimination power — the model's ability to rank-order risk, measured by the Gini coefficient and Kolmogorov-Smirnov statistic, (2) calibration accuracy — whether predicted PDs match observed default rates across score bands, and (3) stability — whether model performance is consistent across time periods and segments.
+
+Quarterly backtesting reports are generated automatically and reviewed by the Credit Model Risk team within 15 business days of quarter-end.
+
+2. PERFORMANCE METRICS (OA-02)
+
+The following metrics are computed quarterly and reported to the Credit Risk Model Committee:
+
+Gini Coefficient: 0.72 (latest quarter, Q4 2024). The Gini coefficient measures the model's discrimination power — the ability to separate defaulters from non-defaulters. A Gini of 0.72 indicates strong discrimination. Acceptable range: > 0.60.
+
+Kolmogorov-Smirnov (KS) Statistic: 0.48 (Q4 2024). The KS statistic measures the maximum separation between the cumulative default and non-default score distributions. Acceptable range: > 0.35.
+
+Population Stability Index (PSI): 0.08 (Q4 2024). PSI measures the shift in the score distribution between the development sample and the current portfolio. A PSI of 0.08 indicates minor drift. Thresholds: < 0.10 (stable), 0.10-0.25 (moderate shift, investigate), > 0.25 (significant shift, action required).
+
+Hosmer-Lemeshow Calibration Test: Chi-squared = 12.4, p-value = 0.13 (Q4 2024). The model's predicted PDs are statistically consistent with observed default rates across decile score bands. PASS at 5% significance level.
+
+Accuracy Ratio: 0.71 (Q4 2024). The accuracy ratio is equivalent to the Gini coefficient and confirms strong model discrimination.
+
+Default Rate by Score Band: The observed default rate increases monotonically across score bands from 0.2% (best band) to 8.7% (worst band), confirming appropriate risk ranking.
+
+3. BENCHMARKING (OA-03)
+
+The Scorecard Model is benchmarked against two alternative approaches:
+
+Benchmark 1 — Logistic Regression PD Model: A pure logistic regression model using the same input variables but without the expert-adjusted scorecard weights. The logistic regression model achieves a Gini of 0.69 vs. 0.72 for the Scorecard, demonstrating that the expert adjustments add approximately 3 percentage points of discrimination power.
+
+Benchmark 2 — External Bureau Score (FICO): The FICO score alone achieves a Gini of 0.65 on our portfolio. The Scorecard outperforms FICO by 7 Gini points, justifying the use of an internal model that incorporates bank-specific behavioral data not available to external bureaus.
+
+Benchmark 3 — Random Forest Ensemble: A machine learning random forest model trained on the same features achieves a Gini of 0.76 — 4 points higher than the Scorecard. However, the random forest lacks interpretability required for regulatory compliance and adverse action notice generation under ECOA/Regulation B. The Scorecard's transparent structure is preferred for the current use case.
+
+4. SENSITIVITY ANALYSIS (OA-04)
+
+Input sensitivity analysis quantifies how model output (PD) changes in response to perturbations in each input variable:
+
+Debt-to-Income Ratio (DTI): A 10-percentage-point increase in DTI increases predicted PD by 1.8 percentage points on average across the portfolio. DTI is the most material input variable, contributing 28% of the total score variance.
+
+Payment History (months since last delinquency): Reducing time since last delinquency from 24 months to 6 months increases PD by 2.3 percentage points. This is the second most material variable.
+
+Credit Utilization: A 20-percentage-point increase in utilization increases PD by 1.2 percentage points.
+
+Length of Credit History: Reducing credit history from 10 years to 2 years increases PD by 0.7 percentage points. This variable has relatively low sensitivity.
+
+Number of Recent Inquiries: Increasing hard inquiries from 1 to 5 within the last 6 months increases PD by 0.4 percentage points.
+
+Cross-variable interaction: DTI and utilization exhibit a positive interaction effect — the combined impact of simultaneously increasing both exceeds the sum of individual effects by approximately 15%.
+
+5. STRESS TESTING (OA-05)
+
+The model is stress tested under three macroeconomic scenarios defined by the bank's Economic Forecasting team:
+
+Baseline Scenario: GDP growth 2.1%, unemployment 4.2%, home prices +3%.
+Model output: Portfolio-weighted PD = 2.8%. Expected losses within risk appetite.
+
+Adverse Scenario: GDP contraction -1.5%, unemployment rises to 7.5%, home prices decline 10%.
+Model output: Portfolio-weighted PD = 5.4% (93% increase from baseline). Stress losses = $340M on $12B portfolio. The model exhibits approximately linear response to unemployment, which is the dominant macro driver.
+
+Severely Adverse Scenario: GDP contraction -4.0%, unemployment rises to 10.5%, home prices decline 25%.
+Model output: Portfolio-weighted PD = 9.1% (225% increase from baseline). Stress losses = $620M. At this stress level, the model's linear unemployment sensitivity may underestimate losses — the true PD could be 10-15% higher due to nonlinear contagion effects not captured by the model.
+
+Reverse Stress Test: The unemployment level required to deplete the credit loss reserve ($450M) is 9.2%. This corresponds to a scenario with approximately 2.5% probability based on the bank's macroeconomic distribution.
+
+6. OUT-OF-SAMPLE TESTING (OA-06)
+
+Out-of-sample testing was conducted using two approaches:
+
+Temporal hold-out: The model was developed on data from 2015-2021 and tested on 2022-2024 (3-year hold-out). Results:
+- Gini: 0.70 (vs. 0.73 in-sample) — 3-point degradation, within acceptable bounds
+- KS: 0.46 (vs. 0.49 in-sample)
+- PSI: 0.06 (stable)
+- Calibration p-value: 0.09 (PASS at 5%)
+
+Geographic hold-out: The model was developed on accounts from 45 states and tested on 5 held-out states (FL, TX, CA, NY, IL — representing 38% of the portfolio). Results:
+- Gini: 0.69 (3-point degradation from full-sample)
+- Calibration varies by state: FL and TX show slightly higher observed defaults than predicted (by 0.3pp), consistent with known regional economic factors
+
+Both hold-out tests confirm the model generalizes well beyond the development data.
+
+7. STATISTICAL VALIDATION (OA-07)
+
+Binomial Test of Default Rate by Score Band:
+For each of the 10 score decile bands, we test H0: observed default rate = predicted default rate.
+Result: 9 of 10 bands pass at 5% significance level. Band 7 (moderate risk) shows marginally higher observed defaults than predicted (p=0.04). This is being monitored for persistent bias.
+
+Chi-Squared Goodness-of-Fit Test:
+Overall calibration test across all score bands.
+Chi-squared = 14.2, df = 8, p-value = 0.08.
+Result: PASS at 5% significance level.
+
+Spearman Rank Correlation:
+Correlation between predicted PD and observed default rate across score bands: rho = 0.98 (p < 0.001). Confirms strong monotonic relationship.
+
+Likelihood Ratio Test:
+Compares the scorecard model against a null (intercept-only) model.
+LR statistic = 8,450, p-value < 0.001.
+Result: The scorecard provides highly significant discrimination over the null model.
+
+Variance Inflation Factor (VIF):
+All input variables have VIF < 3.0, confirming no problematic multicollinearity.
+
+================================================================================
+ONGOING MONITORING
+================================================================================
+
+1. KPIs AND PERFORMANCE THRESHOLDS (OM-01)
+
+KPI 1 — Gini Coefficient: Threshold > 0.60. Current: 0.72. Monitoring: quarterly. If Gini drops below 0.60, trigger model review. If below 0.55, trigger immediate revalidation.
+
+KPI 2 — Population Stability Index: Threshold < 0.25. Current: 0.08. Monitoring: monthly. PSI > 0.10 triggers investigation; PSI > 0.25 triggers mandatory recalibration.
+
+KPI 3 — Calibration (Hosmer-Lemeshow): p-value > 0.05. Current: 0.13. Monitoring: quarterly. Failure triggers recalibration investigation.
+
+KPI 4 — Characteristic Stability: Individual variable PSI < 0.25. Monitoring: monthly. Breach triggers investigation of data quality or population shift for that variable.
+
+KPI 5 — Override Rate: Manual overrides should not exceed 5% of total decisions. Current: 3.2%. Monitoring: monthly. Excessive overrides indicate the model may not be capturing current risk dynamics.
+
+2. MONITORING FREQUENCY (OM-02)
+
+Monthly: PSI (overall and by characteristic), override rate, data completeness checks, score distribution review.
+Quarterly: Full backtesting (Gini, KS, calibration), performance metrics report, stress test update, Model Risk Committee reporting.
+Semi-annually: Benchmarking refresh against FICO and alternative models.
+Annually: Full model revalidation by independent Model Validation team, regulatory documentation update.
+
+3. ESCALATION PROCEDURES (OM-03)
+
+Tier 1 — Automated Alert: KPI breach detected by monitoring system. Alert sent to Credit Model Risk Analyst within 4 hours. Analyst investigates root cause within 5 business days.
+
+Tier 2 — Team Lead Review: If breach is confirmed and not a data issue, Credit Model Risk team lead is notified. Decision within 3 business days: (a) continue monitoring with enhanced frequency, (b) initiate targeted recalibration, or (c) escalate to Tier 3.
+
+Tier 3 — Credit Risk Model Committee: Material deficiencies (Gini drop > 5 points, calibration failure for 2 consecutive quarters, or PSI > 0.25) are escalated to the quarterly committee meeting. Committee decides: recalibrate, redevelop, or replace the model.
+
+Tier 4 — CRO/Board Risk Committee: If the model deficiency impacts regulatory capital calculations or violates OCC/Fed supervisory expectations, the CRO is notified within 1 business day. Potential actions include: interim capital add-on, portfolio-level risk limit adjustments, or expedited model replacement.
+
+4. TRIGGER CONDITIONS FOR MODEL REVIEW (OM-04)
+
+Trigger 1 — Gini degradation: Gini drops below 0.60 for two consecutive quarters.
+Trigger 2 — Calibration failure: Hosmer-Lemeshow test fails (p < 0.05) for two consecutive quarters.
+Trigger 3 — Population shift: Overall PSI exceeds 0.25.
+Trigger 4 — Regulatory change: New guidance from OCC, Fed, or CFPB affecting credit risk modeling requirements.
+Trigger 5 — Portfolio change: Significant change in portfolio composition (new products, new geographies, acquisition integration).
+Trigger 6 — Macro regime shift: Unemployment rate changes by more than 3 percentage points within 6 months.
+Trigger 7 — Annual calendar: Mandatory annual review regardless of performance.
+
+5. DATA QUALITY MONITORING (OM-05)
+
+Completeness: Automated daily checks verify all model input fields are populated. Missing data rate must be below 0.5% per variable. Current average: 0.1%. Missing data is imputed using the variable median for numerical fields and the mode for categorical fields — imputation rates are tracked and reported monthly.
+
+Timeliness: Bureau data must be refreshed within the prior 90 days for active accounts. Stale data alerts are generated for accounts with bureau data older than 90 days. Current compliance: 98.7%.
+
+Accuracy: Monthly reconciliation of internal behavioral data against source systems. Discrepancy rate must be below 0.1%. Quarterly reconciliation of bureau data against direct bureau pulls for a random sample of 1,000 accounts.
+
+Outlier detection: Input variables are screened against domain-specific ranges (e.g., DTI between 0% and 200%, age between 18 and 120). Out-of-range values are flagged and excluded from scoring until corrected. Approximately 0.02% of records are flagged per month.
+
+6. CHANGE MANAGEMENT (OM-06)
+
+All changes follow the bank's Model Risk Management Policy (MRP-001):
+
+Minor changes (documentation updates, threshold adjustments): Approved by Credit Model Risk team lead. No parallel run required.
+
+Moderate changes (weight adjustments, variable transformations): Approved by Credit Risk Model Committee. Minimum 60-day parallel run required.
+
+Material changes (new variables, methodology changes, redevelopment): Approved by Model Risk Committee and CRO. Minimum 90-day parallel run plus independent validation required.
+
+Emergency changes: CRO may authorize immediate production changes. Retroactive validation required within 30 business days.
+
+All changes are logged in the Model Change Registry with: change description, rationale, impact assessment, approval chain, implementation date, and post-implementation review results.
