@@ -24,7 +24,7 @@
 | S2-06 | Submission History and Single Submission View | 2 | ✅ Done |
 | S2-07 | PDF Report Generation (`POST /api/report`) | 2 | ✅ Done |
 | S2-08 | Settings Page (Dashboard Preferences) | 2 | ✅ Done |
-| S3-01 | GitHub Actions CI/CD Pipeline | 3 | 🔲 Pending |
+| S3-01 | GitHub Actions CI/CD Pipeline | 3 | ✅ Done |
 | S3-02 | AI Regression Test Suite (Synthetic Documents) | 3 | 🔲 Pending |
 | S3-03 | Sentry Error Tracking and Vercel Analytics | 3 | 🔲 Pending |
 | S3-04 | Security Hardening and Penetration Checklist | 3 | 🔲 Pending |
