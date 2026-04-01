@@ -14,5 +14,12 @@ export async function GET(request: Request) {
   // Fall back to origin only in dev when the env var is not set.
   const safeBase = process.env.NEXT_PUBLIC_APP_URL || origin;
 
-  return NextResponse.redirect(new URL("/dashboard", safeBase));
+  // Honour ?next= param for post-auth redirects (e.g. password reset → /settings).
+  // Validate it's a relative path to prevent open-redirect attacks.
+  const next = searchParams.get("next");
+  const isSafeRelativePath =
+    next !== null && next.startsWith("/") && !next.startsWith("//") && !next.includes("\\");
+  const destination = isSafeRelativePath ? next : "/dashboard";
+
+  return NextResponse.redirect(new URL(destination, safeBase));
 }

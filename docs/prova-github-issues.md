@@ -19,11 +19,11 @@
 | S2-01 | Complete Parallel Agent System (Agents 2, 3, Orchestrator, Judge) | 2 | ✅ Done |
 | S2-02 | Scoring Calculator | 2 | ✅ Done |
 | S2-03 | Update POST /api/compliance — Full 3-Agent + Judge + Scoring Flow | 2 | ✅ Done |
-| S2-04 | Dashboard Page — Overview, Model Inventory, Score Chart, Activity Feed | 2 | 🔲 Pending |
-| S2-05 | New Compliance Check Page (`/check`) | 2 | 🔲 Pending |
+| S2-04 | Dashboard Page — Overview, Model Inventory, Score Chart, Activity Feed | 2 | ✅ Done |
+| S2-05 | New Compliance Check Page (`/check`) | 2 | ✅ Done |
 | S2-06 | Submission History and Single Submission View | 2 | 🔲 Pending |
 | S2-07 | PDF Report Generation (`POST /api/report`) | 2 | 🔲 Pending |
-| S2-08 | Settings Page (Dashboard Preferences) | 2 | 🔲 Pending |
+| S2-08 | Settings Page (Dashboard Preferences) | 2 | ✅ Done |
 | S3-01 | GitHub Actions CI/CD Pipeline | 3 | 🔲 Pending |
 | S3-02 | AI Regression Test Suite (Synthetic Documents) | 3 | 🔲 Pending |
 | S3-03 | Sentry Error Tracking and Vercel Analytics | 3 | 🔲 Pending |
@@ -150,7 +150,7 @@
 
 ---
 
-## Issue S2-04 🔲 PENDING: Dashboard Page — Overview, Model Inventory, Score Chart, Activity Feed
+## Issue S2-04 ✅ DONE: Dashboard Page — Overview, Model Inventory, Score Chart, Activity Feed
 
 **Labels:** `sprint-2` `frontend`
 **Milestone:** Sprint 2 (Mar 30–Apr 9)
@@ -234,7 +234,7 @@ All dashboard data fetched server-side in the page component or via client fetch
 
 ---
 
-## Issue S2-05 🔲 PENDING: New Compliance Check Page (`/check`)
+## Issue S2-05 ✅ DONE: New Compliance Check Page (`/check`)
 
 **Labels:** `sprint-2` `frontend`
 **Milestone:** Sprint 2 (Mar 30–Apr 9)
@@ -430,7 +430,7 @@ Body: { submissionId: string }
 
 ---
 
-## Issue S2-08 🔲 PENDING: Settings Page (Dashboard Preferences)
+## Issue S2-08 ✅ DONE: Settings Page (Dashboard Preferences)
 
 **Labels:** `sprint-2` `frontend` `backend`
 **Milestone:** Sprint 2 (Mar 30–Apr 9)
