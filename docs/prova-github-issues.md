@@ -24,12 +24,12 @@
 | S2-06 | Submission History and Single Submission View | 2 | ✅ Done |
 | S2-07 | PDF Report Generation (`POST /api/report`) | 2 | ✅ Done |
 | S2-08 | Settings Page (Dashboard Preferences) | 2 | ✅ Done |
-| S3-01 | GitHub Actions CI/CD Pipeline | 3 | 🔲 Pending |
+| S3-01 | GitHub Actions CI/CD Pipeline | 3 | ✅ Done |
 | S3-02 | AI Regression Test Suite (Synthetic Documents) | 3 | 🔲 Pending |
 | S3-03 | Sentry Error Tracking and Vercel Analytics | 3 | 🔲 Pending |
 | S3-04 | Security Hardening and Penetration Checklist | 3 | ✅ Done |
 | S3-05 | Unit Test Coverage — Agents, Scoring, API Routes | 3 | ✅ Done |
-| S3-06 | Help Page and Final Polish | 3 | 🔲 Pending |
+| S3-06 | Help Page and Final Polish | 3 | ✅ Done |
 
 ---
 
@@ -475,7 +475,7 @@ Behavior:
 
 ---
 
-## Issue S3-01 🔲 PENDING: GitHub Actions CI/CD Pipeline
+## Issue S3-01 ✅ DONE: GitHub Actions CI/CD Pipeline
 
 **Labels:** `sprint-3` `infra`
 **Milestone:** Sprint 3 (Apr 10–19)
@@ -737,7 +737,7 @@ Write unit tests for all critical logic: agent output parsing, scoring calculato
 
 ---
 
-## Issue S3-06 🔲 PENDING: Help Page and Final Polish
+## Issue S3-06 ✅ DONE: Help Page and Final Polish
 
 **Labels:** `sprint-3` `frontend`
 **Milestone:** Sprint 3 (Apr 10–19)
