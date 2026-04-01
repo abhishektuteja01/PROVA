@@ -13,7 +13,7 @@ import { ComplianceRequestSchema, MAX_FILE_SIZE_BYTES } from '@/lib/validation/s
 import type { Gap } from '@/lib/validation/schemas';
 import { errorResponse } from '@/lib/errors/messages';
 
-const MODEL_USED = 'claude-haiku-3-5-20241022';
+const MODEL_USED = 'claude-haiku-4-5-20251001';
 
 /** Type guard for Supabase row with an `id` field */
 function hasStringId(row: unknown): row is { id: string } {
