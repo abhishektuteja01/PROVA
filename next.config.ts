@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["pdf-parse", "mammoth"],
+  serverExternalPackages: ["pdf-parse", "mammoth", "@react-pdf/renderer"],
   async headers() {
     return [
       {
