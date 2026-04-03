@@ -1,0 +1,53 @@
+{
+  "_comment": "Placeholder baseline — regenerate after first real test:ai run with: npm run test:ai -- --update-baseline",
+  "_warning": "All scores are zeros/placeholders. This baseline has never been populated with real AI agent scores. Run npm run test:ai -- --update-baseline to generate real values.",
+  "test_fully_compliant.txt": {
+    "finalScore": 0,
+    "cs": 0,
+    "oa": 0,
+    "om": 0,
+    "timestamp": "1970-01-01T00:00:00.000Z"
+  },
+  "test_missing_conceptual.txt": {
+    "finalScore": 0,
+    "cs": 0,
+    "oa": 0,
+    "om": 0,
+    "timestamp": "1970-01-01T00:00:00.000Z"
+  },
+  "test_missing_outcomes.txt": {
+    "finalScore": 0,
+    "cs": 0,
+    "oa": 0,
+    "om": 0,
+    "timestamp": "1970-01-01T00:00:00.000Z"
+  },
+  "test_missing_monitoring.txt": {
+    "finalScore": 0,
+    "cs": 0,
+    "oa": 0,
+    "om": 0,
+    "timestamp": "1970-01-01T00:00:00.000Z"
+  },
+  "test_all_critical_gaps.txt": {
+    "finalScore": 0,
+    "cs": 0,
+    "oa": 0,
+    "om": 0,
+    "timestamp": "1970-01-01T00:00:00.000Z"
+  },
+  "test_prompt_injection.txt": {
+    "finalScore": 0,
+    "cs": 0,
+    "oa": 0,
+    "om": 0,
+    "timestamp": "1970-01-01T00:00:00.000Z"
+  },
+  "test_verbose_low_quality.txt": {
+    "finalScore": 0,
+    "cs": 0,
+    "oa": 0,
+    "om": 0,
+    "timestamp": "1970-01-01T00:00:00.000Z"
+  }
+}

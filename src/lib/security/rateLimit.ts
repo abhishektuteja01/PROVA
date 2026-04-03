@@ -1,6 +1,8 @@
 import { createServiceClient } from "@/lib/supabase/server";
+import * as Sentry from "@sentry/nextjs";
 
 const DEFAULT_LIMIT = 10;
+const FAIL_CLOSED_WINDOW_MS = 5 * 60 * 1000;
 
 function getLimit(): number {
   const raw = process.env.RATE_LIMIT_REQUESTS_PER_HOUR;
@@ -25,10 +27,13 @@ export async function checkRateLimit(
     .gte("created_at", oneHourAgo);
 
   if (countError) {
-    // If we can't check the rate limit, allow the request to proceed
-    // rather than blocking the user. The error will be logged by Sentry
-    // if it's a persistent issue.
-    return { allowed: true };
+    // Fail closed: block requests when rate limit DB check fails to prevent
+    // unlimited API usage during outages
+    Sentry.captureException(countError, {
+      tags: { component: "rate_limit" },
+      extra: { userId },
+    });
+    return { allowed: false, resetAt: new Date(Date.now() + FAIL_CLOSED_WINDOW_MS) };
   }
 
   const currentCount = count ?? 0;

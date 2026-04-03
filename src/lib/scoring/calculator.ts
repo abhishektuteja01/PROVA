@@ -3,6 +3,7 @@ import {
   AgentOutput,
   ScoringResult,
   ScoringResultSchema,
+  Status,
 } from "@/lib/validation/schemas";
 
 /**
@@ -33,6 +34,12 @@ function verifyPillarScore(agentScore: number, gaps: Gap[]): number {
   return calculated;
 }
 
+export function deriveStatus(score: number): Status {
+  if (score >= 80) return "Compliant";
+  if (score >= 60) return "Needs Improvement";
+  return "Critical Gaps";
+}
+
 /**
  * Combine three agent outputs into a validated ScoringResult.
  *
@@ -56,15 +63,7 @@ export function calculateScores(
     csScore * 0.4 + oaScore * 0.35 + omScore * 0.25
   );
 
-  // Compliance status derived from final score thresholds.
-  let status: ScoringResult["status"];
-  if (finalScore >= 80) {
-    status = "Compliant";
-  } else if (finalScore >= 60) {
-    status = "Needs Improvement";
-  } else {
-    status = "Critical Gaps";
-  }
+  const status = deriveStatus(finalScore);
 
   // Aggregate gap counts across all three pillars.
   const allGaps: Gap[] = [
