@@ -859,7 +859,7 @@ describe("SubmissionDetailSchema", () => {
     status: "Compliant",
     assessment_confidence_label: "High",
     created_at: "2026-03-23T10:00:00.000Z",
-    document_text: "Full model documentation text here.",
+    document_text: "A".repeat(100),
     gap_analysis: [],
     judge_confidence: 0.9,
   };
@@ -925,7 +925,7 @@ describe("SubmissionRowSchema", () => {
     model_id: "660e8400-e29b-41d4-a716-446655440001",
     user_id: "770e8400-e29b-41d4-a716-446655440002",
     version_number: 1,
-    document_text: "Full document text.",
+    document_text: "A".repeat(100),
     conceptual_score: 80,
     outcomes_score: 70,
     monitoring_score: 90,
