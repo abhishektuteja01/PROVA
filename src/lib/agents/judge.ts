@@ -71,7 +71,7 @@ Return ONLY valid JSON. No preamble, no explanation, no markdown. Keep your resp
 
 const USER_PROMPT_TEMPLATE = `Review the following three agent assessments for quality and consistency.
 
-Model Name: {modelName}
+Model Name: <model_name>{modelName}</model_name>
 
 CONCEPTUAL SOUNDNESS AGENT OUTPUT:
 {conceptualSoundnessOutput}
@@ -95,12 +95,12 @@ export async function runJudge(
 ): Promise<JudgeOutput> {
   const pillar = 'judge';
 
-  const userPrompt = USER_PROMPT_TEMPLATE
-    .replace('{modelName}', modelName)
-    .replace('{conceptualSoundnessOutput}', JSON.stringify(csOutput))
-    .replace('{outcomesAnalysisOutput}', JSON.stringify(oaOutput))
-    .replace('{ongoingMonitoringOutput}', JSON.stringify(omOutput))
-    .replace('{retryContext}', retryContext ?? '');
+  let userPrompt = USER_PROMPT_TEMPLATE;
+  userPrompt = userPrompt.split('{modelName}').join(modelName);
+  userPrompt = userPrompt.split('{conceptualSoundnessOutput}').join(JSON.stringify(csOutput));
+  userPrompt = userPrompt.split('{outcomesAnalysisOutput}').join(JSON.stringify(oaOutput));
+  userPrompt = userPrompt.split('{ongoingMonitoringOutput}').join(JSON.stringify(omOutput));
+  userPrompt = userPrompt.split('{retryContext}').join(retryContext ?? '');
 
   const anthropic = getAnthropicClient();
 

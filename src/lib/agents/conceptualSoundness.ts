@@ -76,7 +76,7 @@ The gaps array may be empty if the document is fully compliant.`;
 
 const USER_PROMPT_TEMPLATE = `Assess the following model documentation for SR 11-7 Conceptual Soundness compliance.
 
-Model Name: {modelName}
+Model Name: <model_name>{modelName}</model_name>
 
 <document>
 {documentText}
@@ -91,9 +91,9 @@ export async function assessConceptualSoundness(
 ): Promise<AgentOutput> {
   const pillar = 'conceptual_soundness';
 
-  let userPrompt = USER_PROMPT_TEMPLATE
-    .replace('{modelName}', modelName)
-    .replace('{documentText}', documentText);
+  let userPrompt = USER_PROMPT_TEMPLATE;
+  userPrompt = userPrompt.split('{modelName}').join(modelName);
+  userPrompt = userPrompt.split('{documentText}').join(documentText);
 
   if (retryContext) {
     userPrompt += `\n\n${retryContext}`;

@@ -10,7 +10,14 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = await createServerClient();
+  let supabase;
+  try {
+    supabase = await createServerClient();
+  } catch (err) {
+    Sentry.captureException(err);
+    return errorResponse('UNKNOWN_ERROR');
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -91,7 +98,14 @@ export async function DELETE(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabase = await createServerClient();
+  let supabase;
+  try {
+    supabase = await createServerClient();
+  } catch (err) {
+    Sentry.captureException(err);
+    return errorResponse('UNKNOWN_ERROR');
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();

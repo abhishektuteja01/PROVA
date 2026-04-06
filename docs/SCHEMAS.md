@@ -68,7 +68,7 @@ export const GapSchema = z.object({
   element_name: z.string().min(1).max(200),
   severity: SeverityEnum,
   description: z.string().min(1).max(1000),
-  recommendation: z.string().min(1).max(500)
+  recommendation: z.string().min(1).max(1000)
 });
 
 export type Gap = z.infer<typeof GapSchema>;
@@ -83,7 +83,7 @@ export const AgentOutputSchema = z.object({
   score: z.number().min(0).max(100),
   confidence: z.number().min(0).max(1),
   gaps: z.array(GapSchema),
-  summary: z.string().min(1).max(1000)
+  summary: z.string().min(1).max(2000)
 });
 
 export type AgentOutput = z.infer<typeof AgentOutputSchema>;
@@ -143,6 +143,36 @@ export const ScoringResultSchema = z.object({
 export type ScoringResult = z.infer<typeof ScoringResultSchema>;
 
 // ─────────────────────────────────────────────────────────────────────────────
+// AUTH SCHEMAS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const loginSchema = z.object({
+  email: z.string().email().max(255),
+  password: z.string().min(8).max(128)
+});
+
+export type LoginInput = z.infer<typeof loginSchema>;
+
+export const signupSchema = z.object({
+  email: z.string().email().max(255),
+  password: z.string().min(8).max(128),
+  confirmPassword: z.string().min(8).max(128)
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword']
+});
+
+export type SignupInput = z.infer<typeof signupSchema>;
+
+export const documentUploadSchema = z.object({
+  name: z.string().min(1),
+  type: z.enum(ALLOWED_MIME_TYPES),
+  size: z.number().min(1).max(MAX_FILE_SIZE_BYTES)
+});
+
+export type DocumentUploadInput = z.infer<typeof documentUploadSchema>;
+
+// ─────────────────────────────────────────────────────────────────────────────
 // API REQUEST SCHEMAS
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -151,7 +181,7 @@ export const ComplianceRequestSchema = z.object({
   model_name: z.string()
     .min(1, 'Model name is required')
     .max(200, 'Model name must be under 200 characters')
-    .regex(/^[a-zA-Z0-9\s\-_().]+$/, 'Model name contains invalid characters'),
+    .regex(/^[a-zA-Z0-9 \-_().]+$/, 'Model name contains invalid characters'),
   document_text: z.string()
     .min(100, 'Document must be at least 100 characters')
     .max(50000, 'Document must be under 50,000 characters')
@@ -209,7 +239,7 @@ export type SubmissionListItem = z.infer<typeof SubmissionListItemSchema>;
 
 // GET /api/submissions/[id] — full submission response
 export const SubmissionDetailSchema = SubmissionListItemSchema.extend({
-  document_text: z.string(),
+  document_text: z.string().min(100).max(50000),
   gap_analysis: z.array(GapSchema),
   judge_confidence: z.number().min(0).max(1)
 });
@@ -224,7 +254,7 @@ export type SubmissionDetail = z.infer<typeof SubmissionDetailSchema>;
 export const ModelRowSchema = z.object({
   id: z.string().uuid(),
   user_id: z.string().uuid(),
-  model_name: z.string(),
+  model_name: z.string().max(200),
   created_at: z.string().datetime()
 });
 
@@ -235,12 +265,12 @@ export const SubmissionRowSchema = z.object({
   model_id: z.string().uuid(),
   user_id: z.string().uuid(),
   version_number: z.number().int().min(1),
-  document_text: z.string(),
+  document_text: z.string().min(100).max(50000),
   conceptual_score: z.number(),
   outcomes_score: z.number(),
   monitoring_score: z.number(),
   final_score: z.number(),
-  gap_analysis: z.any(), // JSONB — use GapSchema array for typed access
+  gap_analysis: z.array(GapSchema).nullable(),
   judge_confidence: z.number(),
   assessment_confidence_label: ConfidenceLabelEnum,
   created_at: z.string().datetime()
@@ -300,6 +330,29 @@ export const ErrorResponseSchema = z.object({
 });
 
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAGINATION & PARAM SCHEMAS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const PaginationParamsSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(10)
+});
+
+export type PaginationParams = z.infer<typeof PaginationParamsSchema>;
+
+export const UuidParamSchema = z.object({
+  id: z.string().uuid('Invalid submission ID')
+});
+
+export type UuidParam = z.infer<typeof UuidParamSchema>;
+
+export const DeleteAllConfirmSchema = z.object({
+  confirm: z.literal(true, { message: 'Confirmation required' })
+});
+
+export type DeleteAllConfirm = z.infer<typeof DeleteAllConfirmSchema>;
 ```
 
 ---

@@ -7,7 +7,14 @@ import { renderReport } from "@/components/report/renderReport";
 import { deriveStatus } from "@/lib/scoring/calculator";
 
 export async function POST(request: Request) {
-  const supabase = await createServerClient();
+  let supabase;
+  try {
+    supabase = await createServerClient();
+  } catch (err) {
+    Sentry.captureException(err);
+    return errorResponse("UNKNOWN_ERROR");
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -161,21 +161,6 @@ Implement all error states exactly as defined here — do not invent error messa
 
 ---
 
-### ASSESSMENT_LOW_CONFIDENCE
-**Trigger:** Compliance check completed successfully but judge confidence < 0.6 after max retries.
-**HTTP:** 200 (this is a SUCCESS response with a warning, not an error)
-**User-facing message:** Shown as a warning banner on results page:
-"⚠ Low Confidence Assessment — The document's structure made some elements difficult to assess reliably. Review the gaps carefully and consider resubmitting with clearer section headings."
-**UI behavior:**
-- Results are shown normally (full scores, gaps, recommendations)
-- Amber warning banner at top of results page
-- Assessment confidence badge shows "Low" in amber
-- "Download Report" button still available
-- Report includes "Low Confidence" disclaimer
-**Recovery:** Resubmit with better-structured document.
-
----
-
 ### SUBMISSION_NOT_FOUND
 **Trigger:** `GET /api/submissions/[id]` or `POST /api/report` with an ID that doesn't exist or belongs to another user (RLS prevents access to others' data — appears as "not found").
 **HTTP:** 404

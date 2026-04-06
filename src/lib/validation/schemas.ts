@@ -14,15 +14,15 @@ export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 // ─── Auth schemas ─────────────────────────────────────────────────────────────
 
 export const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
+  email: z.string().email().max(255),
+  password: z.string().min(8).max(128),
 });
 
 export const signupSchema = z
   .object({
-    email: z.string().email(),
-    password: z.string().min(8),
-    confirmPassword: z.string(),
+    email: z.string().email().max(255),
+    password: z.string().min(8).max(128),
+    confirmPassword: z.string().min(8).max(128),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
@@ -243,7 +243,7 @@ export const SubmissionListItemSchema = z.object({
 export type SubmissionListItem = z.infer<typeof SubmissionListItemSchema>;
 
 export const SubmissionDetailSchema = SubmissionListItemSchema.extend({
-  document_text: z.string(),
+  document_text: z.string().min(100).max(50000),
   gap_analysis: z.array(GapSchema),
   judge_confidence: z.number().min(0).max(1),
 });
@@ -255,7 +255,7 @@ export type SubmissionDetail = z.infer<typeof SubmissionDetailSchema>;
 export const ModelRowSchema = z.object({
   id: z.string().uuid(),
   user_id: z.string().uuid(),
-  model_name: z.string(),
+  model_name: z.string().max(200),
   created_at: z.string().datetime(),
 });
 
@@ -266,7 +266,7 @@ export const SubmissionRowSchema = z.object({
   model_id: z.string().uuid(),
   user_id: z.string().uuid(),
   version_number: z.number().int().min(1),
-  document_text: z.string(),
+  document_text: z.string().min(100).max(50000),
   conceptual_score: z.number(),
   outcomes_score: z.number(),
   monitoring_score: z.number(),

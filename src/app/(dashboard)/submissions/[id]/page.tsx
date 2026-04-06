@@ -225,6 +225,10 @@ export default function SubmissionDetailPage() {
       setNotFound(false);
       try {
         const res = await fetch(`/api/submissions/${id}`);
+        if (res.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
         if (res.status === 404) {
           setNotFound(true);
           setLoading(false);

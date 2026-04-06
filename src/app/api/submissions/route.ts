@@ -5,12 +5,20 @@ import { errorResponse } from '@/lib/errors/messages';
 import {
   PaginationParamsSchema,
   DeleteAllConfirmSchema,
+  ConfidenceLabelEnum,
 } from '@/lib/validation/schemas';
 import type { SubmissionListItem } from '@/lib/validation/schemas';
 import { deriveStatus } from '@/lib/scoring/calculator';
 
 export async function GET(request: Request) {
-  const supabase = await createServerClient();
+  let supabase;
+  try {
+    supabase = await createServerClient();
+  } catch (err) {
+    Sentry.captureException(err);
+    return errorResponse('UNKNOWN_ERROR');
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -79,7 +87,7 @@ export async function GET(request: Request) {
         monitoring_score: Number(row.monitoring_score),
         final_score: finalScore,
         status: deriveStatus(finalScore),
-        assessment_confidence_label: row.assessment_confidence_label as SubmissionListItem['assessment_confidence_label'],
+        assessment_confidence_label: ConfidenceLabelEnum.catch('Low').parse(row.assessment_confidence_label),
         created_at: row.created_at,
       };
     });
@@ -94,7 +102,14 @@ export async function GET(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const supabase = await createServerClient();
+  let supabase;
+  try {
+    supabase = await createServerClient();
+  } catch (err) {
+    Sentry.captureException(err);
+    return errorResponse('UNKNOWN_ERROR');
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();

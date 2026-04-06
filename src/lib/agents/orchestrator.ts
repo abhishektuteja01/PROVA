@@ -2,6 +2,7 @@ import { assessConceptualSoundness } from '@/lib/agents/conceptualSoundness';
 import { assessOutcomesAnalysis } from '@/lib/agents/outcomesAnalysis';
 import { assessOngoingMonitoring } from '@/lib/agents/ongoingMonitoring';
 import { runJudge } from '@/lib/agents/judge';
+import { AgentParseError, AgentSchemaError } from '@/lib/agents/errors';
 import { type JudgeOutput } from '@/lib/validation/schemas';
 import { type ComplianceRunResult } from '@/types/index';
 
@@ -48,6 +49,18 @@ export async function runCompliance(
       const failedErrors = results
         .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
         .map((r) => (r.reason instanceof Error ? r.reason.message : String(r.reason)));
+
+      // Retry on parse/schema validation failures (per spec: max 2 retries)
+      const isRetryable = results
+        .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
+        .some((r) => r.reason instanceof AgentParseError || r.reason instanceof AgentSchemaError);
+
+      if (isRetryable && retryCount < 2) {
+        previousIssues = failedErrors;
+        retryCount++;
+        continue;
+      }
+
       throw new Error(
         `Agent(s) failed: ${failedAgents.join(', ')}. Errors: ${failedErrors.join('; ')}`
       );

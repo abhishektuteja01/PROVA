@@ -33,7 +33,7 @@ Runs after three parallel agents complete. Reviews their outputs for:
 - After max retries with confidence still < 0.6 → surface "Low Confidence" warning
 
 **Judge output does NOT affect final compliance score** — separate quality indicator:
-- 0.8–1.0: "High" | 0.6–0.79: "Medium" | 0.0–0.59: "Low"
+- 0.9–1.0: "High" | 0.7–0.89: "Medium" | 0.5–0.69: "Low" | Below 0.5: "Low" (significant uncertainty)
 
 ---
 
