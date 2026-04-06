@@ -29,7 +29,8 @@ CREATE TABLE public.models (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
   CONSTRAINT models_model_name_length CHECK (char_length(model_name) <= 200),
-  CONSTRAINT models_model_name_not_empty CHECK (char_length(trim(model_name)) > 0)
+  CONSTRAINT models_model_name_not_empty CHECK (char_length(trim(model_name)) > 0),
+  CONSTRAINT models_user_model_name_unique UNIQUE (user_id, model_name)
 );
 ```
 
@@ -51,7 +52,8 @@ CREATE TABLE public.submissions (
   retry_count                 INTEGER NOT NULL DEFAULT 0 CHECK (retry_count >= 0 AND retry_count <= 2),
   created_at                  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
-  CONSTRAINT submissions_version_positive CHECK (version_number > 0)
+  CONSTRAINT submissions_version_positive CHECK (version_number > 0),
+  CONSTRAINT submissions_model_version_unique UNIQUE (model_id, version_number)
 );
 ```
 

@@ -32,14 +32,19 @@ export default function CustomCursor() {
       }
     };
 
+    const leave = () => setHidden(true);
+    const enter = () => setHidden(false);
+
     window.addEventListener("mousemove", move);
     window.addEventListener("mouseover", over);
-    document.documentElement.addEventListener("mouseleave", () => setHidden(true));
-    document.documentElement.addEventListener("mouseenter", () => setHidden(false));
+    document.documentElement.addEventListener("mouseleave", leave);
+    document.documentElement.addEventListener("mouseenter", enter);
 
     return () => {
       window.removeEventListener("mousemove", move);
       window.removeEventListener("mouseover", over);
+      document.documentElement.removeEventListener("mouseleave", leave);
+      document.documentElement.removeEventListener("mouseenter", enter);
     };
   }, [mx, my]);
 

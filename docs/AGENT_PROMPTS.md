@@ -127,7 +127,7 @@ The gaps array may be empty if the document is fully compliant.
 ```
 Assess the following model documentation for SR 11-7 Conceptual Soundness compliance.
 
-Model Name: {modelName}
+Model Name: <model_name>{modelName}</model_name>
 
 <document>
 {documentText}
@@ -217,7 +217,7 @@ If no gaps are found for an element, do not include it in the gaps array.
 ```
 Assess the following model documentation for SR 11-7 Outcomes Analysis compliance.
 
-Model Name: {modelName}
+Model Name: <model_name>{modelName}</model_name>
 
 <document>
 {documentText}
@@ -304,7 +304,7 @@ If no gaps are found for an element, do not include it in the gaps array.
 ```
 Assess the following model documentation for SR 11-7 Ongoing Monitoring compliance.
 
-Model Name: {modelName}
+Model Name: <model_name>{modelName}</model_name>
 
 <document>
 {documentText}
@@ -391,7 +391,7 @@ Return ONLY valid JSON. No preamble, no explanation, no markdown.
 ```
 Review the following three agent assessments for quality and consistency.
 
-Model Name: {modelName}
+Model Name: <model_name>{modelName}</model_name>
 
 CONCEPTUAL SOUNDNESS AGENT OUTPUT:
 {conceptualSoundnessOutput}

@@ -71,7 +71,7 @@ If no gaps are found for an element, do not include it in the gaps array.`;
 
 const USER_PROMPT_TEMPLATE = `Assess the following model documentation for SR 11-7 Ongoing Monitoring compliance.
 
-Model Name: {modelName}
+Model Name: <model_name>{modelName}</model_name>
 
 <document>
 {documentText}
@@ -86,9 +86,9 @@ export async function assessOngoingMonitoring(
 ): Promise<AgentOutput> {
   const pillar = 'ongoing_monitoring';
 
-  let userPrompt = USER_PROMPT_TEMPLATE
-    .replace('{modelName}', modelName)
-    .replace('{documentText}', documentText);
+  let userPrompt = USER_PROMPT_TEMPLATE;
+  userPrompt = userPrompt.split('{modelName}').join(modelName);
+  userPrompt = userPrompt.split('{documentText}').join(documentText);
 
   if (retryContext) {
     userPrompt += `\n\n${retryContext}`;

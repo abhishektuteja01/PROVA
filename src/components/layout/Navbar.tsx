@@ -60,6 +60,9 @@ export default function Navbar() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
       setReady(true);
+    }).catch((err) => {
+      console.error("Failed to get user:", err);
+      setReady(true);
     });
 
     const {

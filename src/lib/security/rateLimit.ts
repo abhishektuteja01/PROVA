@@ -4,6 +4,12 @@ import * as Sentry from "@sentry/nextjs";
 const DEFAULT_LIMIT = 10;
 const FAIL_CLOSED_WINDOW_MS = 5 * 60 * 1000;
 
+// NOTE: This rate limiter has a TOCTOU window between the count check and the
+// actual submission insert in the compliance route. Two concurrent requests near
+// the limit boundary can both pass. This is acceptable for the current use case
+// (low-volume compliance checks) but should be replaced with a DB-level atomic
+// check (e.g. a Postgres function) if stricter enforcement is needed.
+
 function getLimit(): number {
   const raw = process.env.RATE_LIMIT_REQUESTS_PER_HOUR;
   const parsed = parseInt(raw ?? "", 10);

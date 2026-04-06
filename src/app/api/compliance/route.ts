@@ -34,13 +34,20 @@ export async function POST(request: Request) {
   const requestStartTime = Date.now();
 
   // 1. Verify session server-side — nothing executes before this check
-  const supabase = await createServerClient();
+  let supabase;
+  try {
+    supabase = await createServerClient();
+  } catch (err) {
+    Sentry.captureException(err);
+    return errorResponse('UNKNOWN_ERROR');
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return errorResponse('AUTH_INVALID');
+    return errorResponse('AUTH_REQUIRED');
   }
 
   const userId = user.id;
@@ -65,6 +72,10 @@ export async function POST(request: Request) {
   let modelName: string;
 
   const contentType = request.headers.get('content-type') ?? '';
+  const contentLength = parseInt(request.headers.get('content-length') ?? '0', 10);
+  if (contentLength > MAX_FILE_SIZE_BYTES) {
+    return errorResponse('FILE_TOO_LARGE');
+  }
 
   if (contentType.includes('multipart/form-data')) {
     // File upload path
@@ -141,7 +152,6 @@ export async function POST(request: Request) {
     if (!result.success) {
       return errorResponse('VALIDATION_ERROR', {
         message: result.error.issues[0]?.message ?? 'Invalid request.',
-        extras: { details: result.error.flatten() },
       });
     }
 
@@ -216,11 +226,27 @@ export async function POST(request: Request) {
         .select('id')
         .single();
 
-      if (modelError || !newModel || !hasStringId(newModel)) {
+      if (modelError && isUniqueViolation(modelError)) {
+        // Race condition: another request created the model between our lookup and insert.
+        // Re-fetch the now-existing model.
+        const { data: raceModel, error: raceError } = await db
+          .from('models')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('model_name', modelName)
+          .single();
+
+        if (raceError || !raceModel || !hasStringId(raceModel)) {
+          Sentry.captureException(raceError ?? new Error('Model re-fetch after race failed'));
+          return errorResponse('DATABASE_ERROR');
+        }
+        modelId = raceModel.id;
+      } else if (modelError || !newModel || !hasStringId(newModel)) {
         Sentry.captureException(modelError ?? new Error('Model insert returned no id'));
         return errorResponse('DATABASE_ERROR');
+      } else {
+        modelId = newModel.id;
       }
-      modelId = newModel.id;
     }
 
     // 8. Insert submission — retry on version number race condition

@@ -187,8 +187,8 @@ function buildReportElement(React, pdf, props) {
 
   // ─── Gap table rows ─────────────────────────────────────────────────────
 
-  var gapRows = sortedGaps.map(function (gap, i) {
-    return h(View, { style: s.tableRow, key: i, wrap: false },
+  var gapRows = sortedGaps.map(function (gap) {
+    return h(View, { style: s.tableRow, key: gap.element_code, wrap: false },
       h(View, { style: s.colSeverity },
         h(Text, { style: Object.assign({}, s.severityBadge, { backgroundColor: severityColor(gap.severity) }) }, gap.severity)
       ),
@@ -206,8 +206,8 @@ function buildReportElement(React, pdf, props) {
 
   // ─── Remediation rows ──────────────────────────────────────────────────
 
-  var remediationRows = sortedGaps.map(function (gap, i) {
-    return h(View, { style: s.remediationItem, key: i, wrap: false },
+  var remediationRows = sortedGaps.map(function (gap) {
+    return h(View, { style: s.remediationItem, key: gap.element_code, wrap: false },
       h(View, { style: s.remediationHeader },
         h(Text, { style: s.remediationCode }, gap.element_code),
         h(Text, { style: s.remediationName }, gap.element_name),

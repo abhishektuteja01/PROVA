@@ -21,17 +21,21 @@ function getScoreLabel(s: number) {
 function useCountUp(target: number, duration = 1800, delay = 0) {
   const [val, setVal] = useState(0);
   useEffect(() => {
+    let rafId: number;
     const t = setTimeout(() => {
       const start = performance.now();
       const tick = (now: number) => {
         const p = Math.min((now - start) / duration, 1);
         const eased = 1 - Math.pow(1 - p, 3);
         setVal(Math.round(eased * target));
-        if (p < 1) requestAnimationFrame(tick);
+        if (p < 1) rafId = requestAnimationFrame(tick);
       };
-      requestAnimationFrame(tick);
+      rafId = requestAnimationFrame(tick);
     }, delay);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      cancelAnimationFrame(rafId);
+    };
   }, [target, duration, delay]);
   return val;
 }

@@ -111,7 +111,7 @@ export default function SettingsPage() {
   async function handleChangePassword() {
     setPasswordResetSending(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/settings`,
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || (typeof window !== "undefined" ? window.location.origin : "")}/auth/callback?next=/settings`,
     });
     setPasswordResetSending(false);
 

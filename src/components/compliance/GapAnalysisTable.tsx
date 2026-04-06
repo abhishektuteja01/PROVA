@@ -139,7 +139,7 @@ export default function GapAnalysisTable({ gaps }: GapAnalysisTableProps) {
           <tbody>
             {sorted.map((gap, i) => (
               <motion.tr
-                key={`${gap.element_code}-${i}`}
+                key={gap.element_code}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.25, delay: i * 0.03 }}
