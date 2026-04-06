@@ -10,7 +10,7 @@ Upload a model doc → get a gap analysis, compliance score, and PDF report in m
 [![Next.js](https://img.shields.io/badge/Next.js_16-000000?style=flat&logo=nextdotjs&logoColor=white)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=flat&logo=supabase&logoColor=white)](https://supabase.com)
-[![Anthropic](https://img.shields.io/badge/Claude_Haiku_4.5-D97757?style=flat&logo=anthropic&logoColor=white)](https://anthropic.com)
+[![Anthropic](https://img.shields.io/badge/Claude_Haiku_3.5-D97757?style=flat&logo=anthropic&logoColor=white)](https://anthropic.com)
 [![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat&logo=vercel&logoColor=white)](https://vercel.com)
 
 </div>
@@ -72,7 +72,7 @@ Upload / paste model documentation
 |---|---|
 | Framework | Next.js 16 App Router · TypeScript strict |
 | Auth & Database | Supabase (PostgreSQL + Auth + Row Level Security) |
-| AI | Anthropic Claude Haiku 4.5 (`claude-haiku-4-5-20251001`) |
+| AI | Anthropic Claude Haiku 3.5 (`claude-haiku-3-5-20241022`) |
 | PDF | `@react-pdf/renderer` |
 | Document parsing | `pdf-parse` (PDF) · `mammoth` (DOCX) |
 | Validation | Zod — all schemas in `src/lib/validation/schemas.ts` |

@@ -23,8 +23,6 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
             position: "fixed",
             inset: 0,
             zIndex: 9998,
-            /* No CSS variable exists for overlay opacity — this is an acceptable
-               one-off since modal backdrop is a unique pattern in the design system. */
             background: "rgba(0, 0, 0, 0.6)",
             display: "flex",
             alignItems: "center",

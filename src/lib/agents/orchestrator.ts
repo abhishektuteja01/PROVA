@@ -29,39 +29,11 @@ export async function runCompliance(
   while (true) {
     const retryContext = retryCount > 0 ? buildRetryContext(retryCount, previousIssues) : undefined;
 
-    const results = await Promise.allSettled([
+    const [csOutput, oaOutput, omOutput] = await Promise.all([
       assessConceptualSoundness(documentText, modelName, retryContext),
       assessOutcomesAnalysis(documentText, modelName, retryContext),
       assessOngoingMonitoring(documentText, modelName, retryContext),
     ]);
-
-    const agentNames = ['Conceptual Soundness', 'Outcomes Analysis', 'Ongoing Monitoring'] as const;
-    const failedAgents: string[] = [];
-
-    for (let i = 0; i < results.length; i++) {
-      if (results[i].status === 'rejected') {
-        failedAgents.push(agentNames[i]);
-      }
-    }
-
-    if (failedAgents.length > 0) {
-      const failedErrors = results
-        .filter((r): r is PromiseRejectedResult => r.status === 'rejected')
-        .map((r) => (r.reason instanceof Error ? r.reason.message : String(r.reason)));
-      throw new Error(
-        `Agent(s) failed: ${failedAgents.join(', ')}. Errors: ${failedErrors.join('; ')}`
-      );
-    }
-
-    const [csResult, oaResult, omResult] = results as [
-      PromiseFulfilledResult<Awaited<ReturnType<typeof assessConceptualSoundness>>>,
-      PromiseFulfilledResult<Awaited<ReturnType<typeof assessOutcomesAnalysis>>>,
-      PromiseFulfilledResult<Awaited<ReturnType<typeof assessOngoingMonitoring>>>,
-    ];
-
-    const csOutput = csResult.value;
-    const oaOutput = oaResult.value;
-    const omOutput = omResult.value;
 
     const judgeOutput = await runJudge(modelName, csOutput, oaOutput, omOutput, retryContext);
 

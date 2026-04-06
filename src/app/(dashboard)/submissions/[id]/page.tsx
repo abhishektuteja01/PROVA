@@ -185,37 +185,6 @@ export default function SubmissionDetailPage() {
     message: string;
     type: "error";
   } | null>(null);
-  const [downloadLoading, setDownloadLoading] = useState(false);
-
-  const handleDownloadReport = async () => {
-    setDownloadLoading(true);
-    try {
-      const res = await fetch("/api/report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ submission_id: id }),
-      });
-      if (!res.ok) throw new Error("Failed to generate report");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download =
-        res.headers
-          .get("content-disposition")
-          ?.split("filename=")[1]
-          ?.replace(/"/g, "") ?? "prova-report.pdf";
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      setToast({
-        message: "Failed to generate report. Please try again.",
-        type: "error",
-      });
-    } finally {
-      setDownloadLoading(false);
-    }
-  };
 
   useEffect(() => {
     if (!id) return;
@@ -570,10 +539,10 @@ export default function SubmissionDetailPage() {
             <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
               <Button
                 variant="outline"
-                disabled={downloadLoading}
-                onClick={handleDownloadReport}
+                disabled
+                style={{ opacity: 0.5, cursor: "not-allowed" }}
               >
-                {downloadLoading ? "Generating Report..." : "Download Report"}
+                Download Report (Coming Soon)
               </Button>
               <Link href="/submissions" style={{ textDecoration: "none" }}>
                 <Button variant="ghost">Back to History</Button>
@@ -589,7 +558,6 @@ export default function SubmissionDetailPage() {
             type={toast.type}
             visible={!!toast}
             onClose={() => setToast(null)}
-            duration={5000}
           />
         )}
       </div>

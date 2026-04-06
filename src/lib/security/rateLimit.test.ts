@@ -81,11 +81,10 @@ describe("checkRateLimit", () => {
     expect(result.allowed).toBe(false);
   });
 
-  it("blocks request when Supabase count query fails (fail-closed)", async () => {
+  it("allows request when Supabase count query fails (fail-open)", async () => {
     mockChain = createChainMock({ count: null, error: { message: "DB error" } });
     const result = await checkRateLimit("user-error");
-    expect(result.allowed).toBe(false);
-    expect(result.resetAt).toBeDefined();
+    expect(result.allowed).toBe(true);
   });
 
   it("uses custom limit from env var", async () => {

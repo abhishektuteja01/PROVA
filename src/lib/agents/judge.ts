@@ -108,7 +108,6 @@ export async function runJudge(
     {
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 5000,
-      temperature: 0,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userPrompt }],
     },

@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import type { ComplianceResponse, Gap } from "@/lib/validation/schemas";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
-import Toast from "@/components/ui/Toast";
 import { getScoreColor } from "@/components/dashboard/utils";
 import type { Status } from "@/components/dashboard/utils";
 import PillarScoreCard from "./PillarScoreCard";
@@ -39,39 +37,10 @@ export default function ComplianceResults({
   result,
   onRunAnother,
 }: ComplianceResultsProps) {
-  const { scoring, judge, all_gaps, model_name, version, submission_id } = result;
+  const { scoring, judge, all_gaps, model_name, version } = result;
   const { final_score, status, pillar_scores } = scoring;
   const color = getScoreColor(final_score);
   const isLowConfidence = judge.confidence_label === "Low";
-  const [downloadLoading, setDownloadLoading] = useState(false);
-  const [toast, setToast] = useState<{ message: string; type: "error" | "success" } | null>(null);
-
-  const handleDownloadReport = async () => {
-    setDownloadLoading(true);
-    try {
-      const res = await fetch("/api/report", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ submission_id }),
-      });
-      if (!res.ok) throw new Error("Failed to generate report");
-      const blob = await res.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download =
-        res.headers
-          .get("content-disposition")
-          ?.split("filename=")[1]
-          ?.replace(/"/g, "") ?? "prova-report.pdf";
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch {
-      setToast({ message: "Failed to generate report. Please try again.", type: "error" });
-    } finally {
-      setDownloadLoading(false);
-    }
-  };
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
@@ -290,24 +259,15 @@ export default function ComplianceResults({
       <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
         <Button
           variant="outline"
-          onClick={handleDownloadReport}
-          disabled={downloadLoading}
+          disabled
+          style={{ opacity: 0.5, cursor: "not-allowed" }}
         >
-          {downloadLoading ? "Generating Report…" : "Download Report"}
+          Download Report (Coming Soon)
         </Button>
         <Button variant="ghost" onClick={onRunAnother}>
           Run Another Check
         </Button>
       </div>
-
-      {toast && (
-        <Toast
-          visible
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
     </div>
   );
 }

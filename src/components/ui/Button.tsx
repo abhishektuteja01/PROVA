@@ -42,7 +42,7 @@ export default function Button({
   const variantStyles: Record<string, React.CSSProperties> = {
     primary: {
       background: "var(--color-accent)",
-      color: "var(--color-text-primary)",
+      color: "#fff",
       border: "1px solid var(--color-accent)",
     },
     ghost: {
