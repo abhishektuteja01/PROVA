@@ -100,7 +100,7 @@ export const GapSchema = z.object({
   element_name: z.string().min(1).max(200),
   severity: SeverityEnum,
   description: z.string().min(1).max(1000),
-  recommendation: z.string().min(1).max(500),
+  recommendation: z.string().min(1).max(1000),
 });
 
 export type Gap = z.infer<typeof GapSchema>;
@@ -112,7 +112,7 @@ export const AgentOutputSchema = z.object({
   score: z.number().min(0).max(100),
   confidence: z.number().min(0).max(1),
   gaps: z.array(GapSchema),
-  summary: z.string().min(1).max(1000),
+  summary: z.string().min(1).max(2000),
 });
 
 export type AgentOutput = z.infer<typeof AgentOutputSchema>;

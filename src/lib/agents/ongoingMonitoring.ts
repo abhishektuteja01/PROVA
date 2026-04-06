@@ -60,11 +60,11 @@ You must return ONLY valid JSON. No preamble, no explanation, no markdown. Only 
       "element_code": "<OM-01 through OM-06>",
       "element_name": "<full element name>",
       "severity": "<Critical|Major|Minor>",
-      "description": "<specific description of what is missing or incomplete>",
-      "recommendation": "<category-level remediation action>"
+      "description": "<specific description of what is missing or incomplete, max 200 characters>",
+      "recommendation": "<one-sentence remediation action, max 200 characters>"
     }
   ],
-  "summary": "<2-3 sentences summarizing the ongoing monitoring assessment>"
+  "summary": "<2-3 sentences summarizing the ongoing monitoring assessment, max 500 characters>"
 }
 
 If no gaps are found for an element, do not include it in the gaps array.`;
@@ -99,7 +99,7 @@ export async function assessOngoingMonitoring(
   const response = await anthropic.messages.create(
     {
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
+      max_tokens: 3000,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userPrompt }],
     },

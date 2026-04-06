@@ -1,0 +1,687 @@
+CECL COMMERCIAL REAL ESTATE LOAN LOSS MODEL
+Model Validation Documentation
+Version 2.1 | January 2026
+Prepared by: Model Risk Management — Credit Analytics Group
+
+================================================================================
+1. MODEL PURPOSE AND INTENDED USE (CS-01)
+================================================================================
+
+The CECL Commercial Real Estate Loan Loss Model ("the Model") estimates lifetime expected credit losses for the institution's Commercial Real Estate (CRE) loan portfolio under the Current Expected Credit Losses (CECL) accounting standard (ASC 326-20). The Model produces quarterly allowance estimates that directly feed the Allowance for Credit Losses (ACL) reported on the institution's Call Report and 10-Q/10-K filings.
+
+Business decisions supported:
+- Quarterly ACL estimation for financial reporting under ASC 326-20
+- Loan-level loss reserve allocation for portfolio management
+- Credit risk appetite monitoring against Board-approved concentration limits
+- Stress scenario loss projections for CCAR/DFAST submissions
+- New loan pricing support through marginal expected loss contribution
+
+Scope of appropriate use:
+The Model is approved for the following CRE loan segments:
+- Multifamily residential (5+ units)
+- Office (suburban and CBD)
+- Retail (anchored and unanchored strip centers, single-tenant NNN)
+- Industrial/warehouse
+- Hospitality (limited-service and full-service hotels)
+- Mixed-use properties where CRE usage exceeds 50%
+
+The Model must NOT be used for:
+- Construction and land development loans (separate C&D model applies)
+- Owner-occupied CRE (C&I methodology)
+- Agricultural RE
+- Single-family residential (1-4 units, covered by the consumer CECL model)
+- Loans with remaining maturity under 12 months (simplified measurement election)
+- International CRE loans (U.S. domestic only)
+- Any segment with fewer than 30 loans (individual assessment required per ASC 326-20-30-9)
+
+Regulatory context:
+Developed under FASB ASU 2016-13 (CECL), effective fiscal year 2023. Requires lifetime expected credit loss estimation incorporating reasonable and supportable forecasts, replacing the prior incurred-loss model (ASC 450-20).
+
+Model governance classification:
+Tier 1 (Critical) under Model Risk Management Policy. Material changes require pre-implementation MRC approval and post-implementation validation within 90 days.
+
+================================================================================
+2. THEORETICAL AND MATHEMATICAL FRAMEWORK (CS-02)
+================================================================================
+
+The Model employs a Probability of Default / Loss Given Default (PD/LGD) framework to estimate lifetime expected credit losses at the loan level. The total expected credit loss for each loan i is:
+
+    ECL_i = SUM(t=1 to T_i) [ PD_i(t) × LGD_i(t) × EAD_i(t) × DF(t) ]
+
+where:
+- T_i is the remaining contractual life of loan i (adjusted for prepayments)
+- PD_i(t) is the marginal probability of default in period t
+- LGD_i(t) is the loss given default in period t
+- EAD_i(t) is the exposure at default in period t
+- DF(t) is the discount factor using the loan's effective interest rate
+
+--- Probability of Default (PD) Module ---
+
+The PD model is a discrete-time survival model using a complementary log-log (cloglog) link function, estimated on the institution's historical CRE loan performance data from 2005 to 2024 (approximately 12,400 loan-quarter observations spanning 2,100 unique loans):
+
+    cloglog[PD_i(t)] = log[-log(1 - PD_i(t))] = X_i(t)' × beta + gamma(t)
+
+where:
+- X_i(t) is a vector of loan-level and macroeconomic covariates at time t
+- beta is the vector of estimated coefficients
+- gamma(t) is a baseline hazard function modeled as a restricted cubic spline with knots at quarters 4, 12, 24, and 40
+
+The cloglog link is preferred over the logit link because it corresponds to the discrete-time representation of a continuous-time proportional hazards model (Allison, 1982).
+
+Covariates included in the PD model (all statistically significant at p < 0.01):
+- Loan-level: DSCR (log-transformed), LTV, property type (6 categories), loan seasoning (via baseline hazard), amortization type, origination vintage cohort (3-year groups), loan size quintile, borrower experience indicator
+- Macroeconomic (one-quarter lag): national unemployment rate (BLS), CRE price index (RCA CPPI), 10-year Treasury yield (Fed H.15), BBB credit spread (ICE BofA), real GDP growth (BEA)
+
+--- Loss Given Default (LGD) Module ---
+
+The LGD model estimates the loss severity conditional on default using a two-stage approach:
+
+Stage 1 — Workout outcome classification:
+A multinomial logistic regression classifies defaulted loans into three workout outcomes:
+(a) Full cure / return to performing (historical rate: 28%)
+(b) Discounted payoff or modified terms (historical rate: 31%)
+(c) Liquidation / REO disposition (historical rate: 41%)
+
+Stage 2 — Severity estimation by outcome:
+- Full cure: LGD = 0 (plus ~2% workout costs)
+- Discounted payoff: OLS regression on recovery rates (covariates: LTV at default, property type, location tier, CRE price index)
+- Liquidation: beta regression (Ferrari & Cribari-Neto, 2004) on [0,1] domain (covariates: LTV at default, property condition, environmental risk, time-to-resolution, vacancy rate)
+
+Combined LGD is the probability-weighted average: LGD_i = P(cure)×LGD_cure + P(DPO)×LGD_DPO + P(liq)×LGD_liq. Estimation sample: 847 defaulted CRE loans (2006-2023).
+
+--- Exposure at Default (EAD) Module ---
+
+For fully drawn term loans (93% of the CRE portfolio), EAD equals the scheduled amortized balance:
+
+    EAD_i(t) = UPB_i(t) = UPB_i(0) × AmortFactor(t, rate_i, term_i)
+
+For revolving CRE lines (7% of portfolio), EAD incorporates a Credit Conversion Factor (CCF) estimated from historical draw-down behavior of defaulted commitments:
+
+    EAD_i(t) = Drawn_i(t) + CCF × Undrawn_i(t)
+
+The CCF is estimated at 72% based on the historical average draw-down of unfunded commitments within 12 months prior to default (sample: 156 defaulted revolving CRE facilities, 2008-2023).
+
+--- Prepayment Module ---
+
+Prepayments modeled via logistic regression (8,200 prepaid loans, 2010-2024) with covariates: rate differential (contractual vs. market), seasoning, lockout/defeasance indicator, and property type. The model captures the inverted-U seasoning curve typical of CRE loans.
+
+--- Discounting ---
+
+ECL present-valued at each loan's effective interest rate per ASC 326-20-30-4. Variable-rate loans use the current contractual rate per ASC 326-20-30-5A.
+
+================================================================================
+3. KEY ASSUMPTIONS DOCUMENTATION (CS-03)
+================================================================================
+
+The Model relies on the following key assumptions, each of which has been reviewed and approved by the Model Risk Committee:
+
+Assumption 1 — Stationarity of risk factor relationships
+The estimated coefficients (beta) from the PD model are assumed to remain stable over time. The relationship between covariates (DSCR, LTV, unemployment, etc.) and default probability is assumed to be structurally constant, with macroeconomic variables capturing cyclical variation. This assumption is tested quarterly via parameter stability tests (CUSUM and Chow breakpoint tests).
+
+Assumption 2 — Portfolio homogeneity within segments
+Loans within the same property type, vintage cohort, and risk rating band are assumed to have homogeneous default and loss characteristics conditional on their observable covariates. Unobserved heterogeneity is partially addressed through the vintage cohort fixed effects and the random intercept specification in the robustness model.
+
+Assumption 3 — Independence of defaults across borrowers
+The Model assumes conditional independence of defaults given the macroeconomic state. That is, the correlation in default timing across loans is assumed to be fully captured by the shared macroeconomic covariates. Residual borrower-to-borrower correlation (e.g., from common sponsors) is not modeled. This is a known limitation for portfolios with sponsor concentration.
+
+Assumption 4 — Representativeness of historical data
+The estimation sample (2005-2024) is assumed to be representative of future credit conditions within the reasonable and supportable forecast horizon. The sample spans multiple complete credit cycles, including the Global Financial Crisis (2007-2009), the post-GFC recovery (2010-2015), the late-cycle period (2016-2019), the COVID-19 disruption (2020-2021), and the rising rate environment (2022-2024).
+
+Assumption 5 — Reasonable and supportable forecast horizon
+Macroeconomic forecasts are incorporated for a 2-year (8-quarter) reasonable and supportable forecast period, after which the Model reverts to long-run historical averages using a 4-quarter linear transition. The 2-year horizon is based on the institution's assessment that reliable macroeconomic forecasts are available from consensus economics (Blue Chip Economic Indicators, Moody's Analytics baseline scenario) for approximately this duration.
+
+Assumption 6 — Prepayment behavior predictability
+Voluntary prepayment rates are assumed to follow historical patterns conditional on the interest rate environment and loan seasoning. The Model does not incorporate behavioral prepayment responses to future economic scenarios (e.g., tightening credit conditions may reduce refinancing activity beyond what the rate differential captures).
+
+Assumption 7 — LGD workout timing
+Workout durations are assumed to follow historical patterns by property type and judicial/non-judicial foreclosure jurisdiction. The Model uses a fixed time-to-resolution assumption by property type (ranging from 14 months for industrial to 26 months for hospitality) rather than modeling resolution timing dynamically.
+
+Assumption 8 — Discount rate appropriateness
+The use of each loan's effective interest rate as the discount rate assumes that the EIR appropriately reflects the time value of money for expected loss cash flows. For deeply distressed loans where the market discount rate may materially exceed the contractual EIR, this assumption may understate the present value of expected losses.
+
+================================================================================
+4. ASSUMPTION LIMITATIONS AND BOUNDARIES (CS-04)
+================================================================================
+
+Each assumption above has known limitations and boundary conditions under which it may break down:
+
+Limitation of Assumption 1 (Stationarity):
+The stationarity assumption breaks down during structural regime changes. For example, the work-from-home shift following COVID-19 may have permanently altered the risk profile of office properties, such that the historical relationship between office vacancy rates and default probability is no longer valid. Similarly, the rapid rise in interest rates during 2022-2023 was unprecedented in the estimation sample in both magnitude and speed, potentially invalidating the historical rate-sensitivity estimates. The Model addresses this partially through the vintage cohort effects, but a true structural break requires model recalibration.
+
+Limitation of Assumption 2 (Homogeneity):
+The homogeneity assumption becomes unreliable for property types with highly heterogeneous risk profiles within the segment. Specifically:
+- Hospitality: Limited-service highway hotels have materially different risk characteristics than urban full-service convention hotels, but both are pooled under "hospitality"
+- Retail: Grocery-anchored neighborhood centers differ substantially from unanchored strip malls and single-tenant properties
+- Office: Class A CBD office towers vs. suburban Class B/C flex space
+
+When the model is applied to a sub-segment with fewer than 30 loans, the pooling assumption should be abandoned in favor of individual assessment.
+
+Limitation of Assumption 3 (Independence):
+The conditional independence assumption fails when:
+- The portfolio has significant sponsor concentration (>5% of UPB to a single borrower group)
+- Geographic concentration exceeds 25% in a single MSA
+- A systemic event creates correlated defaults beyond what macro variables capture (e.g., a regional natural disaster not reflected in national macro indicators)
+
+Limitation of Assumption 5 (Forecast horizon):
+The 2-year reasonable and supportable forecast horizon assumes that consensus economic forecasts are available and reliable for this duration. During periods of extreme uncertainty (e.g., the initial COVID-19 shock in March 2020, or geopolitical crises), forecast reliability may degrade significantly even within 2 years. The Model does not dynamically shorten the forecast horizon during high-uncertainty periods.
+
+Limitation of Assumption 6 (Prepayment):
+The prepayment model does not account for:
+- Borrower-specific events (e.g., property sale, 1031 exchange)
+- Changes in bank lending standards that restrict refinancing availability
+- Prepayment penalties that were waived or restructured
+
+The Model may overestimate contractual life (and thus lifetime ECL) during periods of high voluntary prepayment activity, or underestimate it when refinancing markets are frozen.
+
+Boundary conditions triggering model override:
+The following conditions should trigger management discussion of a qualitative overlay to model output:
+- National unemployment rate exceeds 10% (beyond the historical estimation range peak of 10.0% in Oct 2009)
+- CRE price index declines more than 40% peak-to-trough (exceeds GFC experience of -37%)
+- Any single property type segment experiences default rates exceeding 3× the modeled conditional PD for two consecutive quarters
+- Interest rates rise more than 300bps in a 12-month period (exceeds the 2022-2023 experience used in estimation)
+
+================================================================================
+5. DATA INPUTS AND SOURCES (CS-05)
+================================================================================
+
+The Model consumes the following data inputs:
+
+Loan-level data (sourced from the Loan Accounting System — "LoanIQ"):
+- Unpaid principal balance (UPB), refreshed daily
+- Original and current appraised value, updated at origination and upon triggering events (maturity, modification, deterioration)
+- Debt service coverage ratio (DSCR), updated annually from borrower financial statements
+- Loan terms: origination date, maturity date, interest rate, amortization schedule, I/O period
+- Borrower and property identifiers
+- Risk rating (internal 10-point scale, mapped from PD model output and qualitative overlays)
+- Payment history and delinquency status (current, 30, 60, 90+ days past due)
+
+Property-level data (sourced from CoStar and internal appraisals):
+- Property type classification
+- Geographic location (MSA, state, zip code)
+- Net rentable area, unit count (multifamily), and room count (hospitality)
+- Occupancy rate (updated quarterly from borrower reporting)
+- Local market vacancy rate and rental rate trends (CoStar, quarterly)
+
+Macroeconomic data (sourced from public and licensed providers):
+- National unemployment rate: Bureau of Labor Statistics (BLS), Current Population Survey, seasonally adjusted, monthly (aggregated to quarterly average)
+- CRE price index: Real Capital Analytics (RCA) Commercial Property Price Index (CPPI), national all-property composite, quarterly
+- 10-year Treasury yield: Federal Reserve Statistical Release H.15, daily (aggregated to quarterly average)
+- BBB credit spread: ICE BofA US Corporate BBB Option-Adjusted Spread, daily (aggregated to quarterly average)
+- Real GDP growth: Bureau of Economic Analysis (BEA), advance estimate, seasonally adjusted annual rate, quarterly
+
+Macroeconomic forecast data:
+- Baseline scenario: Moody's Analytics CRE forecast, quarterly, 2-year horizon
+- Optimistic scenario: Blue Chip Economic Indicators top-10 average
+- Pessimistic scenario: Moody's Analytics S3 (severely adverse) scenario
+
+Data quality controls:
+- Automated completeness checks: all required fields must be populated; loans with missing critical fields (UPB, DSCR, LTV, property type) are flagged for manual review and excluded from pooled estimation
+- Range validation: DSCR must be > 0 and < 10; LTV must be > 0% and < 200%; interest rate must be > 0% and < 25%
+- Vintage consistency: origination date must precede the reporting date; maturity date must follow the reporting date
+- Cross-system reconciliation: total UPB from the model input file is reconciled to the general ledger within $1M tolerance quarterly
+- Delinquency status reconciliation: delinquency flags are cross-checked against the loan servicing system (Black Knight MSP) monthly
+
+================================================================================
+6. MODEL SCOPE AND APPLICABILITY (CS-06)
+================================================================================
+
+Intended population:
+The Model applies to the institution's domestic CRE loan portfolio as defined in Section 1. As of the most recent measurement date (December 31, 2025), the applicable portfolio comprises 1,847 loans with an aggregate UPB of $14.2 billion across the six approved property types.
+
+Portfolio composition by property type:
+- Multifamily: 612 loans, $4.8B UPB (34%)
+- Office: 298 loans, $3.1B UPB (22%)
+- Retail: 341 loans, $2.4B UPB (17%)
+- Industrial: 287 loans, $2.1B UPB (15%)
+- Hospitality: 198 loans, $1.2B UPB (8%)
+- Mixed-use: 111 loans, $0.6B UPB (4%)
+
+Geographic distribution:
+The portfolio is distributed across 127 MSAs. The top 5 MSAs by UPB concentration are: New York-Newark (11%), Los Angeles-Long Beach (8%), Chicago-Naperville (6%), Dallas-Fort Worth (5%), and Miami-Fort Lauderdale (5%). No single MSA exceeds the 15% concentration limit.
+
+Model applicability boundaries:
+The Model should not be applied outside the following boundaries without recalibration:
+- Portfolio size: the Model requires a minimum of 30 loans per segment for pooled estimation. Segments falling below this threshold require individual assessment.
+- Property types: only the six approved property types. New property type classifications (e.g., data centers, life sciences, self-storage) require separate model development or extension with validation.
+- Geographic scope: U.S. domestic only. International CRE exposures have different legal frameworks (foreclosure timelines, borrower recourse), market dynamics, and data availability.
+- Loan size: the Model was estimated on loans ranging from $500K to $250M. Loans outside this range may have different risk dynamics (very small loans may have less sophisticated borrowers; very large loans may have complex capital structures).
+- Economic environment: the Model was estimated across interest rate environments ranging from near-zero (2020-2021) to 5.25-5.50% (2023-2024). Extrapolation beyond this range should be flagged.
+
+================================================================================
+7. KNOWN MODEL WEAKNESSES (CS-07)
+================================================================================
+
+Weakness 1 — Sponsor concentration risk
+The conditional independence assumption means the Model does not capture correlated default risk from common sponsors. A single large sponsor managing multiple properties could experience financial distress that triggers concurrent defaults across multiple loans. The institution mitigates this through separate sponsor concentration monitoring outside the model framework.
+
+Weakness 2 — Structural shifts in property type risk profiles
+The office segment faces a potential structural disruption from the hybrid work trend. Historical data (2005-2024) may not fully reflect the long-term impact of permanently reduced office space demand. The Model's office segment PDs may be understated for suburban Class B/C office properties most affected by this trend. Management applies a qualitative overlay of +15% to modeled office ECL to address this weakness.
+
+Weakness 3 — Limited loss data for benign periods
+The estimation sample overweights the GFC period (2007-2009) when approximately 40% of the 847 default observations occurred. Loss severity estimates may be biased toward GFC-era conditions (fire-sale pricing, extended workout timelines). Conversely, the Model may underestimate loss severity in a downturn with different characteristics (e.g., rapid interest rate shock rather than demand-driven recession).
+
+Weakness 4 — Vintage effect estimation
+Origination vintage effects are grouped into 3-year cohorts (2005-2007, 2008-2010, ..., 2023-2025) due to sample size constraints within individual years. This grouping may mask meaningful within-cohort variation, particularly for the 2005-2007 cohort which spans both pre-crisis exuberance and early-crisis prudence.
+
+Weakness 5 — Environmental risk not explicitly modeled
+Climate-related transition risk (e.g., energy efficiency regulations) and physical risk (e.g., flood, wildfire) are not included as covariates in the PD or LGD models. While geographic location partially proxies for physical risk, the Model does not incorporate forward-looking climate scenarios. This is a known gap relative to emerging regulatory expectations (OCC Climate Risk Management Principles, 2023).
+
+Weakness 6 — Interpolation between forecast and reversion
+The 4-quarter linear reversion from the 2-year forecast horizon to long-run averages is a simplification. In practice, economic recovery paths are rarely linear — they may be V-shaped, L-shaped, or W-shaped. The linear interpolation may over- or underestimate losses during the reversion period depending on the actual recovery trajectory.
+
+================================================================================
+8. BACKTESTING METHODOLOGY (OA-01)
+================================================================================
+
+Backtesting compares the Model's predicted default rates and loss estimates against actual observed outcomes to assess model accuracy. Backtesting is performed quarterly using a rolling 4-quarter observation window.
+
+PD backtesting methodology:
+- Method: Binomial test comparing predicted PD to realized default frequency within each risk rating band (10 bands)
+- Null hypothesis: the observed default rate equals the predicted PD for each band
+- Test statistic: Z-score = (observed_rate - predicted_rate) / sqrt(predicted_rate × (1 - predicted_rate) / n)
+- Rejection criterion: |Z| > 1.96 (95% confidence level)
+- Frequency: quarterly, using a 4-quarter observation window
+- Sample: all loans in the portfolio at the start of the observation window that were not already in default
+
+LGD backtesting methodology:
+- Method: comparison of predicted LGD at default to actual realized LGD for loans that completed workout during the observation period
+- Metric: Mean Absolute Error (MAE) and Root Mean Squared Error (RMSE)
+- Acceptance threshold: MAE < 10 percentage points, RMSE < 15 percentage points
+- Frequency: semi-annually (due to long workout timelines, quarterly samples are too small)
+- Sample: all loans that completed workout (cure, DPO, or liquidation) during the period
+
+ECL backtesting methodology:
+- Method: comparison of the Model's predicted 12-month ECL (reserves estimated at period start) against actual 12-month net charge-offs
+- Metric: Coverage ratio = predicted ECL / actual net charge-offs
+- Acceptance range: coverage ratio between 0.80 and 1.50
+- Frequency: annually
+- This back-test is inherently conservative — CECL requires lifetime ECL, but we can only validate against realized losses for finite observation windows
+
+Most recent backtesting results (Q4 2025):
+- PD model: 8 of 10 risk bands passed the binomial test. Two bands (Band 7 and Band 8, representing watch-list and substandard credits) showed higher-than-predicted default rates (p-values of 0.03 and 0.04 respectively). Investigation concluded this reflected a known data lag in risk rating updates during Q3 2025. After correcting the rating lag, all 10 bands passed.
+- LGD model: MAE = 7.2 percentage points, RMSE = 11.8 percentage points — within acceptance thresholds.
+- ECL coverage: predicted Q4 2024 12-month ECL was $187M; actual 12-month net charge-offs were $156M. Coverage ratio = 1.20 — within the 0.80-1.50 acceptance range.
+
+================================================================================
+9. PERFORMANCE METRICS DEFINITION AND REPORTING (OA-02)
+================================================================================
+
+The following performance metrics are computed and reported quarterly to the Model Risk Committee:
+
+PD model metrics:
+- Area Under ROC Curve (AUC/c-statistic): measures the PD model's discriminatory power — its ability to distinguish loans that will default from those that will not. Target: AUC > 0.70. Most recent: 0.78.
+- Kolmogorov-Smirnov (KS) statistic: maximum separation between the cumulative default and non-default distributions. Target: KS > 0.30. Most recent: 0.42.
+- Brier Score: mean squared error of predicted PDs versus binary default outcomes. Target: Brier < 0.10. Most recent: 0.037.
+- Hosmer-Lemeshow goodness-of-fit test: chi-squared test of calibration across deciles. Target: p-value > 0.05. Most recent: chi-squared = 11.2, p-value = 0.19.
+- Population Stability Index (PSI): measures distributional shift in PD model scores between development and current periods. Target: PSI < 0.10 (insignificant shift), Warning: 0.10-0.25, Alert: > 0.25. Most recent: 0.06.
+
+LGD model metrics:
+- Mean Absolute Error (MAE): average absolute deviation between predicted and realized LGD. Target: < 10pp. Most recent: 7.2pp.
+- Root Mean Squared Error (RMSE): penalizes large errors more heavily. Target: < 15pp. Most recent: 11.8pp.
+- R-squared: proportion of variance in realized LGD explained by the model. Target: > 0.30. Most recent: 0.41.
+
+ECL model aggregate metrics:
+- Coverage ratio: ratio of predicted ECL to actual net charge-offs. Target: 0.80-1.50.
+- Reserve volatility: quarter-over-quarter change in total ACL. Monitored for reasonableness — large swings flagged for investigation.
+- Provision rate: quarterly provision expense as a percentage of total CRE UPB. Compared to peer benchmarks (Federal Reserve Y-14 data).
+
+Reporting cadence:
+All metrics are reported quarterly to the Model Risk Committee via the Model Performance Dashboard. PD discrimination metrics (AUC, KS) that fall below thresholds for two consecutive quarters trigger a formal model review. ECL coverage ratios outside the 0.80-1.50 band for any single quarter trigger immediate investigation.
+
+================================================================================
+10. BENCHMARKING AGAINST ALTERNATIVE MODELS (OA-03)
+================================================================================
+
+The Model is benchmarked against three alternative approaches to ensure its methodology produces reasonable results:
+
+Benchmark 1 — Vintage Loss Rate Method (Historical Average)
+A simple approach applying historical average cumulative loss rates by property type and origination vintage to current portfolio balances. This method does not incorporate forward-looking information and serves as a lower bound during benign conditions and an upper bound during stress.
+
+Comparison results (Q4 2025):
+- Model ECL: $412M
+- Vintage loss rate ECL: $378M
+- Difference: +$34M (+9.0%)
+- Assessment: The Model produces a modestly higher ECL than the vintage method, consistent with its incorporation of a mildly deteriorating economic forecast. The difference is within the expected range.
+
+Benchmark 2 — Moody's Analytics CRE Expected Loss Model (Licensed Vendor)
+An externally licensed model from Moody's Analytics that uses similar PD/LGD methodology but with their proprietary CRE database (national, multi-lender data) and their own macro forecast scenarios.
+
+Comparison results (Q4 2025):
+- Model ECL: $412M
+- Moody's CRE EL: $445M
+- Difference: -$33M (-7.4%)
+- Assessment: The Model produces a lower ECL than Moody's, primarily because (a) Moody's uses a more pessimistic baseline office forecast and (b) the institution's portfolio has lower average LTV than the national average in Moody's database. The difference is within the acceptable +/- 20% tolerance band.
+
+Benchmark 3 — Peer Analysis (Call Report/Y-14 Comparison)
+Comparison of the institution's CRE allowance rate (ACL / CRE loans) against peer institutions with similar portfolio composition and size.
+
+Comparison results (Q3 2025, latest available):
+- Institution's CRE allowance rate: 2.90%
+- Peer median: 2.75%
+- Peer interquartile range: 2.35% - 3.20%
+- Assessment: The institution's allowance rate falls within the peer interquartile range and slightly above the median, indicating a conservatively calibrated model consistent with the institution's risk appetite.
+
+================================================================================
+11. SENSITIVITY ANALYSIS (OA-04)
+================================================================================
+
+Sensitivity analysis quantifies how Model output (total portfolio ECL) changes as individual input parameters vary, holding all other inputs constant. This identifies the most material risk drivers.
+
+Method: one-at-a-time perturbation of each key input variable by +/- one standard deviation from the baseline value. The resulting change in portfolio ECL is expressed in absolute dollars and as a percentage of baseline ECL ($412M).
+
+Results (Q4 2025 measurement date):
+
+| Input Variable                  | Perturbation        | ECL Impact ($M) | ECL Impact (%) |
+|---------------------------------|---------------------|-----------------|----------------|
+| National unemployment rate      | +1.5pp (to 5.7%)    | +$89M           | +21.6%         |
+| National unemployment rate      | -1.5pp (to 2.7%)    | -$61M           | -14.8%         |
+| CRE price index growth          | -5pp (to -3%)       | +$67M           | +16.3%         |
+| CRE price index growth          | +5pp (to +7%)       | -$42M           | -10.2%         |
+| 10-year Treasury yield          | +100bps (to 5.3%)   | +$38M           | +9.2%          |
+| 10-year Treasury yield          | -100bps (to 3.3%)   | -$29M           | -7.0%          |
+| BBB credit spread               | +75bps (to 2.15%)   | +$28M           | +6.8%          |
+| Portfolio average LTV           | +5pp (to 67%)       | +$52M           | +12.6%         |
+| Portfolio average DSCR          | -0.15x (to 1.30x)   | +$44M           | +10.7%         |
+| Forecast horizon extension      | +1yr (to 3 years)   | +$31M           | +7.5%          |
+
+Key findings:
+1. National unemployment rate is the single most material driver — a 1.5pp increase produces a $89M (22%) increase in ECL. This is expected given that unemployment is the primary macro covariate in the PD model and also influences LGD through the commercial real estate price channel.
+2. CRE price index is the second most material driver, primarily through its impact on LGD severity estimates.
+3. Loan-level variables (LTV, DSCR) have meaningful but lower sensitivity than macro variables, consistent with the diversification of idiosyncratic risk across 1,847 loans.
+4. Extending the reasonable and supportable forecast horizon by one year adds $31M (7.5%) — this quantifies the impact of the management judgment embedded in the 2-year horizon assumption.
+
+================================================================================
+12. STRESS TESTING (OA-05)
+================================================================================
+
+The Model is subjected to three macroeconomic stress scenarios to assess portfolio vulnerability and reserve adequacy under adverse conditions. Scenarios are updated annually and reviewed by the Chief Risk Officer.
+
+Scenario 1 — Mild Recession (aligned with CCAR supervisory baseline)
+- Unemployment: rises to 6.5% by Q4 2027 (from 4.2% baseline)
+- CRE price index: declines 8% peak-to-trough over 6 quarters
+- GDP growth: -0.5% for 2 quarters, recovery to 1.5% trend
+- 10-year Treasury: declines to 3.0% (flight to quality)
+- BBB spread: widens to 2.50%
+
+Stressed ECL: $578M (+40% vs. baseline)
+Incremental provision: $166M
+
+Scenario 2 — Severe Recession (aligned with CCAR severely adverse)
+- Unemployment: rises to 10.0% by Q2 2027
+- CRE price index: declines 25% peak-to-trough over 8 quarters
+- GDP growth: -4.0% for 3 quarters
+- 10-year Treasury: declines to 1.5%
+- BBB spread: widens to 5.50%
+
+Stressed ECL: $1,024M (+149% vs. baseline)
+Incremental provision: $612M
+
+Scenario 3 — CRE-Specific Stress (office sector shock)
+- Office vacancy rate: rises to 30% nationally (from 18% baseline)
+- Office property values: decline 40%
+- Hospitality occupancy: declines to 45% (pandemic-lite scenario)
+- Other macro variables: follow mild recession paths
+
+Stressed ECL: $743M (+80% vs. baseline)
+Office segment contribution: $398M (54% of stressed total, vs. 22% of portfolio UPB)
+
+Capital impact assessment:
+Under the severely adverse scenario, the institution's CET1 ratio declines from 12.8% to 10.1%, remaining above the 7.0% minimum (4.5% minimum + 2.5% capital conservation buffer). The institution maintains adequate capital under all three stress scenarios.
+
+================================================================================
+13. OUT-OF-SAMPLE TESTING (OA-06)
+================================================================================
+
+Out-of-sample testing evaluates the Model's predictive accuracy on data not used during estimation, guarding against overfitting.
+
+Method 1 — Temporal holdout
+The PD model was estimated on data through Q4 2021 and validated on the Q1 2022 - Q4 2024 holdout period (12 quarters). This holdout period is particularly informative because it includes the rapid interest rate tightening cycle (2022-2023), which represents an economic regime not previously observed in the estimation sample.
+
+Holdout period results:
+- AUC: 0.74 (vs. 0.78 in-sample) — modest degradation, within tolerance
+- Brier Score: 0.042 (vs. 0.037 in-sample) — slight increase, within tolerance
+- Hosmer-Lemeshow p-value: 0.11 — passes calibration test at 5% significance
+- Predicted vs. actual default rate: 1.8% predicted, 2.1% actual — slight underprediction, consistent with the unprecedented rate environment
+
+Assessment: The model maintains acceptable discrimination and calibration in the holdout period. The slight underprediction of defaults in the rising-rate period is expected given that the estimation sample had limited exposure to rapid rate increases. This finding motivated the addition of the BBB credit spread covariate in Model Version 2.1.
+
+Method 2 — K-fold cross-validation
+5-fold cross-validation was performed on the full estimation sample (2005-2024) to assess stability of coefficient estimates.
+
+Results:
+- AUC range across folds: 0.75 - 0.80 (mean: 0.77)
+- Coefficient stability: all key covariates maintained sign and statistical significance (p < 0.05) across all 5 folds
+- Standard deviation of coefficient estimates across folds: all within 15% of the point estimate, indicating stable parameter identification
+
+Method 3 — External sample comparison
+The Model's PD estimates were compared against default rates from the American Council of Life Insurers (ACLI) CRE mortgage database, which represents a broader industry sample. The ACLI 10-year cumulative default rate for CRE mortgages originated 2010-2015 was 3.8%; the Model's predicted 10-year cumulative PD for the same vintage cohort was 3.4%. The 0.4pp difference is within the expected range given differences in portfolio composition (the institution's portfolio has a lower average LTV than the ACLI universe).
+
+================================================================================
+14. STATISTICAL VALIDATION RESULTS (OA-07)
+================================================================================
+
+Comprehensive statistical validation was performed in November 2025 as part of the annual model validation cycle. Key findings:
+
+PD Model — Coefficient significance and signs:
+All 14 covariates are statistically significant at the 1% level. The signs of all coefficients are economically intuitive:
+- DSCR (log): negative coefficient (-1.42, SE 0.18) — higher debt service coverage reduces default probability
+- LTV: positive coefficient (0.028, SE 0.005) — higher leverage increases default probability
+- Unemployment rate: positive coefficient (0.31, SE 0.04) — macro deterioration increases defaults
+- CRE price index change: negative coefficient (-0.019, SE 0.004) — rising property values reduce defaults
+- 10-year Treasury: positive coefficient (0.14, SE 0.03) — higher rates increase default risk via debt service burden
+- BBB spread: positive coefficient (0.22, SE 0.05) — wider spreads signal credit stress
+
+Model fit statistics:
+- Pseudo R-squared (McFadden): 0.18 — typical for default prediction models on pooled data
+- Log-likelihood ratio test: chi-squared = 847.3, df = 14, p < 0.001 — the model is jointly significant
+- Akaike Information Criterion (AIC): 8,234 (vs. 8,892 for the restricted model with only loan-level covariates) — macro variables provide meaningful incremental explanatory power
+
+Multicollinearity diagnostics:
+- Variance Inflation Factors (VIF): all covariates have VIF < 4.0, well below the commonly used threshold of 10.0
+- Highest VIF: unemployment rate (3.7), due to its correlation with GDP growth and CRE price index
+- GDP growth rate was removed from the final specification due to VIF > 5.0 and its information being largely subsumed by unemployment rate and CRE price index
+
+Residual diagnostics:
+- Pearson residual distribution: no systematic patterns by property type, vintage, or geography
+- Link function test (Pregibon, 1980): p-value = 0.34, supporting the cloglog specification
+- Deviance residual outlier analysis: 12 loans (0.10% of sample) identified as high-influence observations; model results are robust to their exclusion (coefficient changes < 5%)
+
+LGD Model — Validation summary:
+- Beta regression specification: mean model AIC = 1,247 vs. linear OLS AIC = 1,389 — beta regression provides superior fit for bounded loss severity data
+- Dispersion parameter: phi = 4.8, indicating moderate heterogeneity in LGD — within expected range for CRE
+- Reset test for functional form misspecification: p-value = 0.22 — no evidence of misspecification
+
+================================================================================
+15. KPIs AND PERFORMANCE THRESHOLDS (OM-01)
+================================================================================
+
+The following Key Performance Indicators are monitored on an ongoing basis, with specific thresholds triggering escalation:
+
+| KPI | Metric | Green | Amber | Red |
+|-----|--------|-------|-------|-----|
+| PD discrimination | AUC (c-statistic) | > 0.70 | 0.60 - 0.70 | < 0.60 |
+| PD calibration | Hosmer-Lemeshow p-value | > 0.05 | 0.01 - 0.05 | < 0.01 |
+| PD stability | Population Stability Index | < 0.10 | 0.10 - 0.25 | > 0.25 |
+| LGD accuracy | Mean Absolute Error | < 10pp | 10pp - 15pp | > 15pp |
+| ECL coverage | Predicted/Actual ratio | 0.80 - 1.50 | 0.60-0.80 or 1.50-2.00 | < 0.60 or > 2.00 |
+| Data completeness | Missing critical field rate | < 1% | 1% - 5% | > 5% |
+| Backtest pass rate | PD bins passing binomial test | 9-10 of 10 | 7-8 of 10 | < 7 of 10 |
+
+Threshold rationale:
+- AUC > 0.70 is the minimum acceptable discrimination for regulatory models (OCC 2011-12 guidance)
+- PSI thresholds follow industry standard: < 0.10 insignificant, 0.10-0.25 moderate, > 0.25 significant distributional shift
+- ECL coverage ratio of 0.80-1.50 balances the need for conservative reserving (> 0.80) against excessive over-reserving (< 1.50) which would indicate systematic model bias
+
+================================================================================
+16. MONITORING FREQUENCY (OM-02)
+================================================================================
+
+Monitoring activities are performed on the following schedule:
+
+Monthly:
+- Data quality checks: completeness, range validation, cross-system reconciliation
+- Portfolio-level default rate tracking vs. model-predicted default frequency
+- Exception reporting: new loans falling outside model applicability boundaries
+
+Quarterly:
+- Full KPI dashboard update (all metrics in Section 15)
+- PD backtesting by risk rating band (binomial test)
+- Population Stability Index calculation
+- Sensitivity analysis refresh with current portfolio and macro inputs
+- Model Risk Committee reporting
+
+Semi-annually:
+- LGD backtesting (MAE, RMSE calculation on completed workouts)
+- Benchmark model comparison update (vintage loss rate, Moody's, peer analysis)
+- Qualitative overlay assessment and documentation
+
+Annually:
+- Comprehensive model validation by independent Model Risk Management team
+- Out-of-sample testing refresh
+- Stress scenario update and capital impact assessment
+- Full re-estimation feasibility assessment (determine if model recalibration is warranted)
+- Regulatory examination preparation documentation
+
+Ad hoc:
+- Triggered by any Red threshold breach
+- Triggered by material changes in portfolio composition (>10% shift in any segment)
+- Triggered by significant methodological questions from regulators or auditors
+
+================================================================================
+17. ESCALATION PROCEDURES (OM-03)
+================================================================================
+
+When KPIs breach established thresholds, the following escalation protocol applies:
+
+Green → Amber transition (Warning):
+1. Model owner investigates root cause within 5 business days
+2. Written finding documented in the Model Monitoring Log
+3. If root cause is transient (e.g., seasonal data quality issue), document rationale for no action
+4. If root cause is persistent, escalate to the Model Risk Committee at next scheduled meeting
+5. Model Risk Committee decides: (a) continue monitoring, (b) apply qualitative overlay, or (c) initiate accelerated model review
+
+Amber → Red transition (Alert):
+1. Immediate notification to Model Risk Committee Chair and Chief Risk Officer within 1 business day
+2. Model owner prepares root cause analysis within 10 business days
+3. Emergency Model Risk Committee meeting convened within 15 business days
+4. Committee decides: (a) apply qualitative overlay with enhanced monitoring, (b) initiate model redevelopment, or (c) restrict model use pending remediation
+5. Any qualitative overlay applied must be documented with supporting rationale and approved by the CRO
+6. Regulatory Affairs team notified if the Red condition may affect regulatory filings
+
+Escalation contacts:
+- Model Owner: VP, Credit Risk Analytics (primary), Director, Credit Modeling (backup)
+- Model Risk Committee Chair: SVP, Model Risk Management
+- Chief Risk Officer: EVP & CRO
+- Regulatory Affairs: SVP, Regulatory Relations
+
+Resolution tracking:
+All escalation events are logged in the Model Risk Management Information System (MRMIS) with: date identified, KPI breached, severity, root cause, remediation actions, resolution date, and sign-off authority. Open items are reviewed at each monthly Model Risk Committee meeting until resolved.
+
+================================================================================
+18. TRIGGER CONDITIONS FOR MODEL REVIEW (OM-04)
+================================================================================
+
+A formal model review or revalidation is triggered by any of the following conditions:
+
+Quantitative triggers:
+- Any Red KPI threshold breach persisting for two consecutive quarters
+- PD model AUC declining below 0.65 (even if for a single quarter)
+- ECL coverage ratio outside the 0.60-2.00 band for any single quarter
+- PSI exceeding 0.25, indicating significant distributional shift in model scores
+- Backtesting failure in 4 or more risk bands in a single quarter
+- Actual portfolio default rate exceeding model-predicted rate by more than 50% for two consecutive quarters
+
+Environmental triggers:
+- Federal Reserve or OCC releases new CRE lending guidance or model risk guidance
+- FASB issues amendments to ASC 326 affecting CECL methodology
+- Material change in portfolio composition: any single property type increases or decreases by more than 10 percentage points of total UPB
+- Entry into a new geographic market representing more than 5% of CRE UPB
+- Acquisition or disposition of a CRE loan portfolio exceeding $500M
+
+Methodological triggers:
+- Model has not been revalidated within the past 18 months (automatic trigger per Model Risk Policy)
+- Model owner identifies a material error in model code or data inputs
+- New academic research or industry best practice suggests a superior methodology
+- Peer institution or regulatory examination identifies a methodology concern applicable to this model
+
+Process upon trigger:
+1. Model Risk Management team confirms the trigger condition and logs it in MRMIS
+2. Scope of review determined: targeted (address specific trigger) or comprehensive (full revalidation)
+3. Timeline established: targeted review within 60 days, comprehensive revalidation within 120 days
+4. Model use continues during review unless the Model Risk Committee imposes restrictions
+5. Findings documented in a formal validation report with remediation actions and deadlines
+
+================================================================================
+19. DATA QUALITY MONITORING (OM-05)
+================================================================================
+
+Data quality is monitored through automated and manual controls at each stage of the model data pipeline:
+
+Stage 1 — Source system extraction (automated, daily):
+Record count validation, schema validation (required fields, data types, no unexpected nulls), and freshness check (extraction within 24 hours).
+
+Stage 2 — Transformation and enrichment (automated, daily):
+Derived field validation (e.g., current LTV = UPB / appraised value), reference data integrity (property type, MSA, risk rating codes), and cross-field consistency (maturity > origination, current UPB <= original UPB).
+
+Stage 3 — Model input file preparation (automated, quarterly):
+Completeness dashboard (target: > 99%), outlier detection (DSCR < 0.5 or > 5.0, LTV > 150%), vintage distribution check, and macro data cross-reference to published sources.
+
+Stage 4 — Post-model output validation (automated, quarterly):
+Output range checks (PDs and LGDs in [0,1], ECL non-negative and <= UPB), aggregation reconciliation (loan-level sum matches portfolio-level within $1,000), and score distribution stability (PSI check).
+
+Data governance:
+- Data lineage documentation maintained for all model inputs, tracing from source system to model input file
+- Data quality issues logged in the Data Quality Issue Tracker with severity, root cause, remediation, and resolution date
+- Quarterly data quality report presented to the Data Governance Committee
+- Annual data quality certification by the Model Owner attesting to the fitness of model input data
+
+================================================================================
+20. CHANGE MANAGEMENT PROCESS (OM-06)
+================================================================================
+
+All changes to the Model follow a structured change management process to ensure auditability, risk assessment, and appropriate approval:
+
+Change classification:
+
+Tier 1 — Material changes (require pre-implementation MRC approval + post-implementation validation):
+- Changes to the PD, LGD, or EAD model specification (adding/removing covariates, changing functional form)
+- Changes to the reasonable and supportable forecast horizon or reversion methodology
+- Model recalibration or re-estimation on updated data
+- Changes to the scoring formula or ECL aggregation methodology
+- Migration to a new model platform or technology stack
+
+Tier 2 — Moderate changes (require Model Owner approval + post-implementation monitoring):
+- Updates to data sources (e.g., switching macro forecast provider)
+- Changes to data quality thresholds or monitoring frequency
+- Updates to stress testing scenarios
+- Bug fixes in model code that affect output values
+- Changes to qualitative overlay methodology
+
+Tier 3 — Minor changes (require Model Developer approval + documentation):
+- Bug fixes in model code that do not affect output values (e.g., logging, formatting)
+- Updates to monitoring dashboards or report formats
+- Changes to non-model documentation
+- Infrastructure changes (e.g., server migration) with validated identical output
+
+Change process:
+1. Change request submitted via MRMIS with description, tier, rationale, and impact assessment
+2. Approver reviews and approves/rejects
+3. Development and testing in non-production environment
+4. Pre-implementation testing: parallel run (Tier 1) or output comparison (Tier 2)
+5. Documented sign-off, production implementation with rollback plan
+6. Post-implementation validation confirming output consistency
+7. Change log updated in MRMIS
+
+Version control: all model code in Git, tagged releases (e.g., v2.1.3), documentation updated with each material change, 7-year retention.
+
+Audit trail: MRMIS entries are immutable, MRC minutes document Tier 1 approvals, regulators have read access to full change history.
+
+================================================================================
+DOCUMENT CONTROL
+================================================================================
+Document Owner: VP, Credit Risk Analytics
+Last Updated: January 15, 2026
+Next Scheduled Review: July 2026
+Approved by: Model Risk Committee, January 22, 2026
+Classification: Internal — Confidential
+Distribution: Model Risk Management, Credit Risk, Internal Audit, Regulators (upon request)
