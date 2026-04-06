@@ -44,26 +44,26 @@ CONFIDENCE SCORING RULES:
 - Below 0.5: Significant issues, definitely retry
 
 OUTPUT FORMAT:
-Return ONLY valid JSON. No preamble, no explanation, no markdown.
+Return ONLY valid JSON. No preamble, no explanation, no markdown. Keep your response concise — each issues string must be under 100 characters, max 3 issues per agent.
 
 {
   "confidence": <number 0.0-1.0>,
   "confidence_label": "<High|Medium|Low>",
   "is_consistent": <boolean>,
   "anomaly_detected": <boolean>,
-  "anomaly_description": <string or null>,
+  "anomaly_description": <string max 200 characters, or null>,
   "agent_feedback": {
     "conceptual_soundness": {
       "complete": <boolean>,
-      "issues": [<string array of specific issues found, empty if none>]
+      "issues": [<max 3 strings, each max 100 characters>]
     },
     "outcomes_analysis": {
       "complete": <boolean>,
-      "issues": [<string array of specific issues found, empty if none>]
+      "issues": [<max 3 strings, each max 100 characters>]
     },
     "ongoing_monitoring": {
       "complete": <boolean>,
-      "issues": [<string array of specific issues found, empty if none>]
+      "issues": [<max 3 strings, each max 100 characters>]
     }
   },
   "retry_recommended": <boolean — true if confidence < 0.6>
@@ -107,7 +107,7 @@ export async function runJudge(
   const response = await anthropic.messages.create(
     {
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
+      max_tokens: 5000,
       temperature: 0,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userPrompt }],

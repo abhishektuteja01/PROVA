@@ -275,8 +275,8 @@ describe("GapSchema", () => {
     expect(GapSchema.safeParse({ ...validGap, description: "x".repeat(1001) }).success).toBe(false);
   });
 
-  it("rejects recommendation exceeding 500 characters", () => {
-    expect(GapSchema.safeParse({ ...validGap, recommendation: "x".repeat(501) }).success).toBe(false);
+  it("rejects recommendation exceeding 1000 characters", () => {
+    expect(GapSchema.safeParse({ ...validGap, recommendation: "x".repeat(1001) }).success).toBe(false);
   });
 });
 
@@ -335,8 +335,8 @@ describe("AgentOutputSchema", () => {
     expect(AgentOutputSchema.safeParse({ ...validOutput, summary: "" }).success).toBe(false);
   });
 
-  it("rejects summary exceeding 1000 characters", () => {
-    expect(AgentOutputSchema.safeParse({ ...validOutput, summary: "x".repeat(1001) }).success).toBe(false);
+  it("rejects summary exceeding 2000 characters", () => {
+    expect(AgentOutputSchema.safeParse({ ...validOutput, summary: "x".repeat(2001) }).success).toBe(false);
   });
 
   it("rejects a gap with an invalid element_code", () => {
