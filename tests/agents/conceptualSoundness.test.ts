@@ -100,7 +100,7 @@ describe('assessConceptualSoundness — API call parameters', () => {
     await assessConceptualSoundness('doc', 'ModelX');
 
     const callArgs = mockCreate.mock.calls[0][0];
-    expect(callArgs.max_tokens).toBe(1500);
+    expect(callArgs.max_tokens).toBe(3000);
   });
 
   it('includes SR 11-7 Conceptual Soundness in the system prompt', async () => {
