@@ -64,11 +64,11 @@ You must return ONLY valid JSON matching this exact structure. No preamble, no e
       "element_code": "<CS-01 through CS-07>",
       "element_name": "<full element name>",
       "severity": "<Critical|Major|Minor>",
-      "description": "<specific description of what is missing or incomplete>",
-      "recommendation": "<category-level remediation action>"
+      "description": "<specific description of what is missing or incomplete, max 200 characters>",
+      "recommendation": "<one-sentence remediation action, max 200 characters>"
     }
   ],
-  "summary": "<2-3 sentences summarizing the conceptual soundness assessment>"
+  "summary": "<2-3 sentences summarizing the conceptual soundness assessment, max 500 characters>"
 }
 
 If no gaps are found for an element, do not include it in the gaps array.
@@ -104,7 +104,7 @@ export async function assessConceptualSoundness(
   const response = await anthropic.messages.create(
     {
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
+      max_tokens: 3000,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: userPrompt }],
     },

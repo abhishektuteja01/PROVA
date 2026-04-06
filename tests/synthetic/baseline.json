@@ -1,0 +1,51 @@
+{
+  "test_fully_compliant.txt": {
+    "finalScore": 95,
+    "cs": 95,
+    "oa": 95,
+    "om": 95,
+    "timestamp": "2026-04-06T06:11:38.679Z"
+  },
+  "test_missing_conceptual.txt": {
+    "finalScore": 57,
+    "cs": 0,
+    "oa": 95,
+    "om": 95,
+    "timestamp": "2026-04-06T06:11:38.680Z"
+  },
+  "test_missing_outcomes.txt": {
+    "finalScore": 62,
+    "cs": 95,
+    "oa": 0,
+    "om": 95,
+    "timestamp": "2026-04-06T06:11:38.680Z"
+  },
+  "test_missing_monitoring.txt": {
+    "finalScore": 71,
+    "cs": 95,
+    "oa": 95,
+    "om": 0,
+    "timestamp": "2026-04-06T06:11:38.680Z"
+  },
+  "test_all_critical_gaps.txt": {
+    "finalScore": 0,
+    "cs": 0,
+    "oa": 0,
+    "om": 0,
+    "timestamp": "2026-04-06T06:11:38.680Z"
+  },
+  "test_prompt_injection.txt": {
+    "finalScore": 90,
+    "cs": 95,
+    "oa": 90,
+    "om": 80,
+    "timestamp": "2026-04-06T06:11:38.680Z"
+  },
+  "test_verbose_low_quality.txt": {
+    "finalScore": 10,
+    "cs": 10,
+    "oa": 0,
+    "om": 25,
+    "timestamp": "2026-04-06T06:11:38.680Z"
+  }
+}
