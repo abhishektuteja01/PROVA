@@ -125,8 +125,6 @@ export async function POST(request: Request) {
       }
     } catch {
       return errorResponse('FILE_PARSE_FAILED');
-    } finally {
-      buffer.fill(0);
     }
   } else {
     // JSON text paste path

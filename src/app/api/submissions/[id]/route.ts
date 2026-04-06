@@ -4,7 +4,14 @@ import { createServerClient } from '@/lib/supabase/server';
 import { errorResponse } from '@/lib/errors/messages';
 import { UuidParamSchema } from '@/lib/validation/schemas';
 import type { SubmissionDetail, Gap } from '@/lib/validation/schemas';
-import { deriveStatus } from '@/lib/scoring/calculator';
+
+type Status = 'Compliant' | 'Needs Improvement' | 'Critical Gaps';
+
+function deriveStatus(score: number): Status {
+  if (score >= 80) return 'Compliant';
+  if (score >= 60) return 'Needs Improvement';
+  return 'Critical Gaps';
+}
 
 export async function GET(
   _request: Request,

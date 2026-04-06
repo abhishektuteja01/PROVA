@@ -111,7 +111,7 @@ export default function SettingsPage() {
   async function handleChangePassword() {
     setPasswordResetSending(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/settings`,
+      redirectTo: `${window.location.origin}/auth/callback?next=/settings`,
     });
     setPasswordResetSending(false);
 
@@ -290,7 +290,7 @@ export default function SettingsPage() {
                   </p>
                 )}
                 <Button type="submit" disabled={updatingPassword}>
-                  {updatingPassword ? "Updating\u2026" : "Update Password"}
+                  {updatingPassword ? "Updating…" : "Update Password"}
                 </Button>
               </form>
             </Card>
@@ -423,7 +423,7 @@ export default function SettingsPage() {
                     onClick={handleChangePassword}
                     disabled={passwordResetSending}
                   >
-                    {passwordResetSending ? "Sending\u2026" : "Change Password"}
+                    {passwordResetSending ? "Sending…" : "Change Password"}
                   </Button>
                   <Button
                     variant="outline"
@@ -505,7 +505,7 @@ export default function SettingsPage() {
               borderColor: "var(--color-critical)",
             }}
           >
-            {deleting ? "Deleting\u2026" : "Delete Account"}
+            {deleting ? "Deleting…" : "Delete Account"}
           </Button>
         </div>
       </Modal>
@@ -516,7 +516,6 @@ export default function SettingsPage() {
         type={toast?.type ?? "success"}
         visible={toast !== null}
         onClose={() => setToast(null)}
-        duration={toast?.type === "error" ? 5000 : 3000}
       />
     </main>
   );

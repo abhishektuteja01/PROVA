@@ -103,33 +103,7 @@ export default function ScoreProgressionChart({
     modelNames[0] ?? ""
   );
 
-  if (modelNames.length === 0 || !selectedModel) {
-    return (
-      <Card animate delay={0.2}>
-        <div style={SECTION_HEADER}>Score Progression</div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: "48px 24px",
-          }}
-        >
-          <span
-            style={{
-              fontFamily: "var(--font-geist)",
-              fontSize: "13px",
-              color: "var(--color-text-secondary)",
-              textAlign: "center",
-              lineHeight: 1.5,
-            }}
-          >
-            Submit a second version of a model to see score progression.
-          </span>
-        </div>
-      </Card>
-    );
-  }
+  if (modelNames.length === 0 || !selectedModel) return null;
 
   const submissions = submissionsByModel[selectedModel] ?? [];
   const chartData = submissions
@@ -163,7 +137,6 @@ export default function ScoreProgressionChart({
         <div style={SECTION_HEADER}>Score Progression</div>
 
         <select
-          aria-label="Select model for score progression"
           value={selectedModel}
           onChange={(e) => setSelectedModel(e.target.value)}
           style={{
