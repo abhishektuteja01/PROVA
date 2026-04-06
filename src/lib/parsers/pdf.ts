@@ -1,30 +1,3 @@
-// Polyfill DOM globals that pdfjs-dist expects but don't exist in
-// Vercel's serverless Node.js runtime.  Only text extraction is used,
-// so these stubs are never called — they just prevent the
-// "DOMMatrix is not defined" crash on import.
-// pdf-parse must NOT be in serverExternalPackages — bundling ensures
-// these polyfills execute before pdfjs-dist initializes.
-if (typeof globalThis.DOMMatrix === "undefined") {
-  (globalThis as Record<string, unknown>).DOMMatrix = class DOMMatrix {};
-}
-if (typeof globalThis.Path2D === "undefined") {
-  (globalThis as Record<string, unknown>).Path2D = class Path2D {};
-}
-if (typeof globalThis.ImageData === "undefined") {
-  (globalThis as Record<string, unknown>).ImageData = class ImageData {
-    data: Uint8ClampedArray;
-    width: number;
-    height: number;
-    constructor(width: number, height: number) {
-      this.data = new Uint8ClampedArray(width * height * 4);
-      this.width = width;
-      this.height = height;
-    }
-  };
-}
-
-import { PDFParse } from "pdf-parse";
-
 export class PDFParseError extends Error {
   constructor(message: string) {
     super(message);
@@ -41,7 +14,11 @@ export async function parsePDF(buffer: Buffer): Promise<string> {
     throw new PDFParseError("parsePDF requires a Buffer, not a file path");
   }
 
-  let parser: PDFParse | undefined;
+  // Dynamic import ensures polyfills run before pdf-parse and pdfjs-dist are evaluated
+  const { PDFParse } = await import("pdf-parse");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let parser: any;
   try {
     parser = new PDFParse({ data: buffer });
     const result = await parser.getText();
@@ -51,6 +28,8 @@ export async function parsePDF(buffer: Buffer): Promise<string> {
       `Failed to parse PDF: ${err instanceof Error ? err.message : String(err)}`
     );
   } finally {
-    await parser?.destroy();
+    if (parser?.destroy) {
+      await parser.destroy();
+    }
   }
 }
