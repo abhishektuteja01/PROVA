@@ -8,6 +8,7 @@ import type { Status } from "./utils";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import Toast from "@/components/ui/Toast";
 import { getScoreColor, getStatusFromScore } from "./utils";
 
 interface ModelInventoryTableProps {
@@ -117,6 +118,35 @@ export default function ModelInventoryTable({
   const [scoreMin, setScoreMin] = useState("");
   const [scoreMax, setScoreMax] = useState("");
   const [page, setPage] = useState(0);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "error" | "success" } | null>(null);
+
+  const handleDownloadReport = async (submissionId: string) => {
+    setDownloadingId(submissionId);
+    try {
+      const res = await fetch("/api/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ submission_id: submissionId }),
+      });
+      if (!res.ok) throw new Error("Failed to generate report");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download =
+        res.headers
+          .get("content-disposition")
+          ?.split("filename=")[1]
+          ?.replace(/"/g, "") ?? "prova-report.pdf";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setToast({ message: "Failed to generate report. Please try again.", type: "error" });
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const processed = useMemo(() => {
     let filtered = submissions.map((s) => ({
@@ -253,6 +283,7 @@ export default function ModelInventoryTable({
   }
 
   return (
+    <>
     <Card animate delay={0.12} style={{ padding: 0, overflow: "hidden" }}>
       {/* Header + Filters */}
       <div
@@ -529,16 +560,15 @@ export default function ModelInventoryTable({
                       <Button
                         variant="ghost"
                         size="sm"
-                        disabled
+                        disabled={downloadingId === sub.id}
+                        onClick={() => handleDownloadReport(sub.id)}
                         style={{
                           fontFamily: "var(--font-geist)",
                           fontSize: "11px",
                           padding: "2px 6px",
-                          opacity: 0.5,
-                          cursor: "not-allowed",
                         }}
                       >
-                        Report
+                        {downloadingId === sub.id ? "…" : "Report"}
                       </Button>
                     </div>
                   </td>
@@ -590,5 +620,14 @@ export default function ModelInventoryTable({
         </div>
       </div>
     </Card>
+    {toast && (
+      <Toast
+        visible
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast(null)}
+      />
+    )}
+    </>
   );
 }

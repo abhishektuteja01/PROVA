@@ -17,7 +17,7 @@ export default function ResetPasswordPage() {
 
     const supabase = createClient();
     const { error: authError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/settings`,
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/callback?next=/settings`,
     });
 
     if (authError) {
@@ -81,10 +81,11 @@ export default function ResetPasswordPage() {
 
               {/* Email */}
               <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-                <label style={{ fontFamily: "var(--font-geist)", fontSize: "12px", fontWeight: 500, color: "var(--color-text-secondary)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+                <label htmlFor="reset-email" style={{ fontFamily: "var(--font-geist)", fontSize: "12px", fontWeight: 500, color: "var(--color-text-secondary)", letterSpacing: "0.04em", textTransform: "uppercase" }}>
                   Email
                 </label>
                 <input
+                  id="reset-email"
                   type="email"
                   required
                   value={email}
