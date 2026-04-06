@@ -1,28 +1,5 @@
-// Polyfill DOM globals that pdfjs-dist expects but don't exist in
-// Vercel's serverless Node.js runtime.  Only text extraction is used,
-// so these stubs are never called — they just prevent the
-// "DOMMatrix is not defined" crash on import.
-if (typeof globalThis.DOMMatrix === "undefined") {
-   
-  (globalThis as Record<string, unknown>).DOMMatrix = class DOMMatrix {};
-}
-if (typeof globalThis.Path2D === "undefined") {
-   
-  (globalThis as Record<string, unknown>).Path2D = class Path2D {};
-}
-if (typeof globalThis.ImageData === "undefined") {
-  (globalThis as Record<string, unknown>).ImageData = class ImageData {
-    data: Uint8ClampedArray;
-    width: number;
-    height: number;
-    constructor(width: number, height: number) {
-      this.data = new Uint8ClampedArray(width * height * 4);
-      this.width = width;
-      this.height = height;
-    }
-  };
-}
-
+// DOM polyfills (DOMMatrix, Path2D, ImageData) are registered in
+// instrumentation.ts so they're available before pdf-parse loads.
 import { PDFParse } from "pdf-parse";
 
 export class PDFParseError extends Error {
