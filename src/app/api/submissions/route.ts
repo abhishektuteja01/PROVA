@@ -7,14 +7,7 @@ import {
   DeleteAllConfirmSchema,
 } from '@/lib/validation/schemas';
 import type { SubmissionListItem } from '@/lib/validation/schemas';
-
-type Status = 'Compliant' | 'Needs Improvement' | 'Critical Gaps';
-
-function deriveStatus(score: number): Status {
-  if (score >= 80) return 'Compliant';
-  if (score >= 60) return 'Needs Improvement';
-  return 'Critical Gaps';
-}
+import { deriveStatus } from '@/lib/scoring/calculator';
 
 export async function GET(request: Request) {
   const supabase = await createServerClient();
@@ -47,7 +40,8 @@ export async function GET(request: Request) {
     // Count query for pagination metadata
     const { count, error: countError } = await supabase
       .from('submissions')
-      .select('id', { count: 'exact', head: true });
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id);
 
     if (countError) {
       Sentry.captureException(countError);
@@ -62,6 +56,7 @@ export async function GET(request: Request) {
       .select(
         'id, version_number, conceptual_score, outcomes_score, monitoring_score, final_score, assessment_confidence_label, created_at, models(model_name)'
       )
+      .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .range(from, to);
 

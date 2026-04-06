@@ -55,6 +55,8 @@ export const StatusEnum = z.enum([
   "Critical Gaps",
 ]);
 
+export type Status = z.infer<typeof StatusEnum>;
+
 export const ConfidenceLabelEnum = z.enum(["High", "Medium", "Low"]);
 
 // SR 11-7 element codes — exactly the codes defined in PRD Section 14.5

@@ -656,6 +656,7 @@ export default function SubmissionsPage() {
             type={toast.type}
             visible={!!toast}
             onClose={() => setToast(null)}
+            duration={toast.type === "error" ? 5000 : 3000}
           />
         )}
       </div>
