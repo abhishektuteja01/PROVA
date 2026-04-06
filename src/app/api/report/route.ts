@@ -1,16 +1,10 @@
-import { renderToBuffer } from "@react-pdf/renderer";
 import * as Sentry from "@sentry/nextjs";
 import { createServerClient } from "@/lib/supabase/server";
 import { errorResponse } from "@/lib/errors/messages";
 import { ReportRequestSchema } from "@/lib/validation/schemas";
 import type { Gap } from "@/lib/validation/schemas";
-import ReportDocument from "@/components/report/ReportDocument";
-
-function deriveStatus(score: number): string {
-  if (score >= 80) return "Compliant";
-  if (score >= 60) return "Needs Improvement";
-  return "Critical Gaps";
-}
+import { renderReport } from "@/components/report/renderReport";
+import { deriveStatus } from "@/lib/scoring/calculator";
 
 export async function POST(request: Request) {
   const supabase = await createServerClient();
@@ -81,23 +75,22 @@ export async function POST(request: Request) {
     // Render PDF
     let buffer: Buffer;
     try {
-      buffer = await renderToBuffer(
-        ReportDocument({
-          modelName,
-          versionNumber,
-          finalScore,
-          status: deriveStatus(finalScore),
-          pillarScores: {
-            conceptual_soundness: Number(row.conceptual_score),
-            outcomes_analysis: Number(row.outcomes_score),
-            ongoing_monitoring: Number(row.monitoring_score),
-          },
-          gaps: (gapRows ?? []) as Gap[],
-          confidenceLabel: row.assessment_confidence_label,
-          createdAt: row.created_at,
-        })
-      );
+      buffer = await renderReport({
+        modelName,
+        versionNumber,
+        finalScore,
+        status: deriveStatus(finalScore),
+        pillarScores: {
+          conceptual_soundness: Number(row.conceptual_score),
+          outcomes_analysis: Number(row.outcomes_score),
+          ongoing_monitoring: Number(row.monitoring_score),
+        },
+        gaps: (gapRows ?? []) as Gap[],
+        confidenceLabel: row.assessment_confidence_label,
+        createdAt: row.created_at,
+      });
     } catch (renderErr) {
+      console.error("[report] PDF render failed:", renderErr);
       Sentry.captureException(renderErr);
       return errorResponse("REPORT_GENERATION_FAILED");
     }
@@ -112,6 +105,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (err) {
+    console.error("[report] Unexpected error:", err);
     Sentry.captureException(err);
     return errorResponse("DATABASE_ERROR");
   }

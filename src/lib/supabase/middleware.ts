@@ -12,17 +12,31 @@ export async function updateSession(request: NextRequest) {
     const origin = request.headers.get("origin");
     const allowedOrigin = process.env.NEXT_PUBLIC_APP_URL;
 
-    // If Origin header is present and does not match the app URL, block the request.
-    // If Origin is missing we allow through (some legitimate clients omit it).
-    if (origin && allowedOrigin) {
-      // Strip trailing slashes for comparison
-      const normalise = (url: string) => url.replace(/\/+$/, "");
-      if (normalise(origin) !== normalise(allowedOrigin)) {
-        return NextResponse.json(
-          { error: "Forbidden", message: "Cross-origin request blocked." },
-          { status: 403 }
-        );
-      }
+    // Block state-changing API requests with missing Origin header
+    if (!origin) {
+      return NextResponse.json(
+        { error: "Forbidden", message: "Origin header is required for state-changing API requests." },
+        { status: 403 }
+      );
+    }
+
+    if (!allowedOrigin && process.env.NODE_ENV === "production") {
+      return NextResponse.json(
+        {
+          error: "UNKNOWN_ERROR",
+          error_code: "UNKNOWN_ERROR",
+          message: "Server misconfiguration: NEXT_PUBLIC_APP_URL is not set.",
+        },
+        { status: 500 }
+      );
+    }
+
+    const normalise = (url: string) => url.replace(/\/+$/, "");
+    if (allowedOrigin && normalise(origin) !== normalise(allowedOrigin)) {
+      return NextResponse.json(
+        { error: "Forbidden", message: "Cross-origin request blocked." },
+        { status: 403 }
+      );
     }
   }
 
