@@ -16,6 +16,9 @@ const scriptSrc = [
 
 const nextConfig: NextConfig = {
   serverExternalPackages: ["pdf-parse", "mammoth", "@react-pdf/renderer"],
+  outputFileTracingIncludes: {
+    "/api/report": ["./public/fonts/pdf/**/*"],
+  },
   async headers() {
     return [
       {
