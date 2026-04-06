@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 // @ts-nocheck
 // Plain JS — no JSX, no TypeScript, no imports.
 // All dependencies injected via buildReportElement(React, pdf, props)

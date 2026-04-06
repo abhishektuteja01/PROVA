@@ -37,7 +37,6 @@ function createChainMock(result: ChainResult) {
 let mockUser: { id: string } | null = null;
 let mockSubmissionChain: ReturnType<typeof createChainMock>;
 let mockGapsChain: ReturnType<typeof createChainMock>;
-let fromCallCount = 0;
 
 jest.mock('@/lib/supabase/server', () => ({
   createServerClient: jest.fn(async () => ({
@@ -48,7 +47,6 @@ jest.mock('@/lib/supabase/server', () => ({
     },
     from: jest.fn((table: string) => {
       if (table === 'submissions') {
-        fromCallCount++;
         return mockSubmissionChain;
       }
       if (table === 'gaps') {
@@ -101,7 +99,6 @@ const MOCK_GAPS = [
 describe('POST /api/report', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    fromCallCount = 0;
     mockUser = null;
   });
 

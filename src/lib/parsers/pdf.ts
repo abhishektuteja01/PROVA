@@ -3,11 +3,11 @@
 // so these stubs are never called — they just prevent the
 // "DOMMatrix is not defined" crash on import.
 if (typeof globalThis.DOMMatrix === "undefined") {
-  // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+   
   (globalThis as Record<string, unknown>).DOMMatrix = class DOMMatrix {};
 }
 if (typeof globalThis.Path2D === "undefined") {
-  // eslint-disable-next-line @typescript-eslint/no-extraneous-class
+   
   (globalThis as Record<string, unknown>).Path2D = class Path2D {};
 }
 if (typeof globalThis.ImageData === "undefined") {
