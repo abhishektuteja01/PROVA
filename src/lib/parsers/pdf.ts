@@ -3,7 +3,7 @@
 // so these stubs are never called — they just prevent the
 // "DOMMatrix is not defined" crash on import.
 // pdf-parse must NOT be in serverExternalPackages — bundling ensures
-// these polyfills execute before pdfjs-dist initializes.
+// these polyfills execute before pdfjs-dist initializes (when dynamically imported).
 if (typeof globalThis.DOMMatrix === "undefined") {
   (globalThis as Record<string, unknown>).DOMMatrix = class DOMMatrix {};
 }
@@ -23,8 +23,6 @@ if (typeof globalThis.ImageData === "undefined") {
   };
 }
 
-import { PDFParse } from "pdf-parse";
-
 export class PDFParseError extends Error {
   constructor(message: string) {
     super(message);
@@ -41,7 +39,11 @@ export async function parsePDF(buffer: Buffer): Promise<string> {
     throw new PDFParseError("parsePDF requires a Buffer, not a file path");
   }
 
-  let parser: PDFParse | undefined;
+  // Dynamic import ensures polyfills run before pdf-parse and pdfjs-dist are evaluated
+  const { PDFParse } = await import("pdf-parse");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let parser: any;
   try {
     parser = new PDFParse({ data: buffer });
     const result = await parser.getText();
@@ -51,6 +53,8 @@ export async function parsePDF(buffer: Buffer): Promise<string> {
       `Failed to parse PDF: ${err instanceof Error ? err.message : String(err)}`
     );
   } finally {
-    await parser?.destroy();
+    if (parser?.destroy) {
+      await parser.destroy();
+    }
   }
 }
