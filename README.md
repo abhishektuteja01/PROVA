@@ -74,7 +74,7 @@ Upload / paste model documentation
 | Auth & Database | Supabase (PostgreSQL + Auth + Row Level Security) |
 | AI | Anthropic Claude Haiku 4.5 (`claude-haiku-4-5-20251001`) |
 | PDF | `@react-pdf/renderer` |
-| Document parsing | `pdf-parse` (PDF) · `mammoth` (DOCX) |
+| Document parsing | `unpdf` (PDF) · `mammoth` (DOCX) |
 | Validation | Zod — all schemas in `src/lib/validation/schemas.ts` |
 | Styling | Tailwind CSS · Playfair Display · IBM Plex Mono · Geist |
 | Charts | Recharts |

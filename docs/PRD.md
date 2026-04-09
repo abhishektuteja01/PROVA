@@ -308,7 +308,7 @@ Every agent output validated against Zod schema before passing to next stage. Sc
 | Authentication | Supabase Auth |
 | AI | Anthropic Claude Haiku 3.5 |
 | PDF Generation | React-PDF (`@react-pdf/renderer`) |
-| PDF Parsing | `pdf-parse` |
+| PDF Parsing | `unpdf` |
 | DOCX Parsing | `mammoth` |
 | Schema Validation | Zod |
 | Error Tracking | Sentry |
@@ -338,7 +338,7 @@ POST /api/compliance
   1. Verify authenticated session (server-side)
   2. Check rate limit for user
   3. Validate request body against Zod schema
-  4. If file: extract text via pdf-parse or mammoth, delete file from memory
+  4. If file: extract text via unpdf or mammoth, delete file from memory
   5. Sanitize text: strip HTML, script tags
   6. Wrap text in XML delimiters
   7. Fire three agents in parallel (Promise.all):

@@ -77,7 +77,7 @@ RATE_LIMIT_REQUESTS_PER_HOUR   # Default: 10
 ---
 
 ## Stack at a Glance
-Next.js 16 App Router · TypeScript strict · Supabase (PostgreSQL + Auth + RLS) · Anthropic Claude Haiku 3.5 · `@react-pdf/renderer` · `pdf-parse` · `mammoth` · Zod · Tailwind CSS · Recharts · Sentry · Vercel
+Next.js 16 App Router · TypeScript strict · Supabase (PostgreSQL + Auth + RLS) · Anthropic Claude Haiku 3.5 · `@react-pdf/renderer` · `unpdf` · `mammoth` · Zod · Tailwind CSS · Recharts · Sentry · Vercel
 
 ---
 

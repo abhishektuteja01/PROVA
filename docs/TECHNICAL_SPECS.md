@@ -114,7 +114,7 @@ prova/
 │   │   │   └── calculator.ts             Scoring math — pillar scores + final weighted score
 │   │   │
 │   │   ├── parsers/
-│   │   │   ├── pdf.ts                    pdf-parse wrapper
+│   │   │   ├── pdf.ts                    unpdf wrapper
 │   │   │   └── docx.ts                   mammoth wrapper
 │   │   │
 │   │   ├── validation/
