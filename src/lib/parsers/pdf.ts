@@ -17,13 +17,16 @@ export async function parsePDF(buffer: Buffer): Promise<string> {
   }
 
   // Dynamic import ensures polyfills run before pdf-parse and pdfjs-dist are evaluated
+  // Official configuration for Next.js/Vercel serverless environments
+  // https://github.com/mehmet-kozan/pdf-parse/blob/main/docs/troubleshooting.md
+  const { CanvasFactory } = await import("pdf-parse/worker");
   const { PDFParse } = await import("pdf-parse");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let parser: any;
   let timeoutHandle: NodeJS.Timeout | null = null;
   try {
-    parser = new PDFParse({ data: buffer });
+    parser = new PDFParse({ data: buffer, CanvasFactory });
 
     const timeout = new Promise<never>((_resolve, reject) => {
       timeoutHandle = setTimeout(
@@ -32,6 +35,7 @@ export async function parsePDF(buffer: Buffer): Promise<string> {
       );
     });
 
+    await Promise.race([parser.load(), timeout]);
     const result = await Promise.race([parser.getText(), timeout]);
     return result.text;
   } catch (err) {
