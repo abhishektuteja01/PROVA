@@ -17,6 +17,20 @@ export async function parsePDF(buffer: Buffer): Promise<string> {
   }
 
   // Dynamic import ensures polyfills run before pdf-parse and pdfjs-dist are evaluated
+  // Polyfill canvas-related DOM objects to prevent pdfjs-dist from complaining and trying to load @napi-rs/canvas
+  if (typeof globalThis.DOMMatrix === "undefined") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    globalThis.DOMMatrix = class DOMMatrix {} as any;
+  }
+  if (typeof globalThis.ImageData === "undefined") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    globalThis.ImageData = class ImageData {} as any;
+  }
+  if (typeof globalThis.Path2D === "undefined") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    globalThis.Path2D = class Path2D {} as any;
+  }
+
   const { PDFParse } = await import("pdf-parse");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -32,6 +46,7 @@ export async function parsePDF(buffer: Buffer): Promise<string> {
       );
     });
 
+    await Promise.race([parser.load(), timeout]);
     const result = await Promise.race([parser.getText(), timeout]);
     return result.text;
   } catch (err) {
