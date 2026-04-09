@@ -16,18 +16,10 @@ export async function parsePDF(buffer: Buffer): Promise<string> {
     throw new PDFParseError("parsePDF requires a Buffer, not a file path");
   }
 
-  // Dynamic import ensures polyfills run before pdf-parse and pdfjs-dist are evaluated
-  // Official configuration for Next.js/Vercel serverless environments
-  // https://github.com/mehmet-kozan/pdf-parse/blob/main/docs/troubleshooting.md
-  const { CanvasFactory } = await import("pdf-parse/worker");
-  const { PDFParse } = await import("pdf-parse");
+  const { getDocumentProxy, extractText } = await import("unpdf");
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let parser: any;
   let timeoutHandle: NodeJS.Timeout | null = null;
   try {
-    parser = new PDFParse({ data: buffer, CanvasFactory });
-
     const timeout = new Promise<never>((_resolve, reject) => {
       timeoutHandle = setTimeout(
         () => reject(new PDFParseError(`PDF parsing timed out after ${PARSE_TIMEOUT_MS}ms`)),
@@ -35,9 +27,16 @@ export async function parsePDF(buffer: Buffer): Promise<string> {
       );
     });
 
-    await Promise.race([parser.load(), timeout]);
-    const result = await Promise.race([parser.getText(), timeout]);
-    return result.text;
+    const pdf = await Promise.race([
+      getDocumentProxy(new Uint8Array(buffer)),
+      timeout,
+    ]);
+    const { text } = await Promise.race([
+      extractText(pdf, { mergePages: true }),
+      timeout,
+    ]);
+    pdf.cleanup();
+    return text;
   } catch (err) {
     if (err instanceof PDFParseError) throw err;
     throw new PDFParseError(
@@ -45,12 +44,5 @@ export async function parsePDF(buffer: Buffer): Promise<string> {
     );
   } finally {
     if (timeoutHandle !== null) clearTimeout(timeoutHandle);
-    if (parser?.destroy) {
-      try {
-        await parser.destroy();
-      } catch {
-        // Cleanup failure must not mask the original error
-      }
-    }
   }
 }

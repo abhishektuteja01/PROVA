@@ -48,7 +48,7 @@ User submits document
 │  2. Check rate limit (user ID + timestamp)             │
 │  3. Validate request body (Zod: ComplianceRequest)     │
 │  4. Parse file if uploaded:                            │
-│     - PDF  → pdf-parse → extracted text               │
+│     - PDF  → unpdf     → extracted text               │
 │     - DOCX → mammoth   → extracted text               │
 │     - File deleted from memory immediately             │
 │  5. Sanitize text (strip HTML, scripts)                │

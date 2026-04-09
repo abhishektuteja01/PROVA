@@ -1,27 +1,28 @@
 import { parsePDF, PDFParseError } from "./pdf";
 
-// pdf-parse v2 uses workers that require --experimental-vm-modules and cannot
-// run natively in Jest. It is an external system boundary so mocking is correct.
-jest.mock("pdf-parse/worker", () => ({
-  CanvasFactory: jest.fn(),
+// unpdf is an external system boundary so mocking is correct.
+const mockCleanup = jest.fn();
+const mockGetDocumentProxy = jest.fn();
+const mockExtractText = jest.fn();
+
+jest.mock("unpdf", () => ({
+  getDocumentProxy: (...args: unknown[]) => mockGetDocumentProxy(...args),
+  extractText: (...args: unknown[]) => mockExtractText(...args),
 }));
 
-jest.mock("pdf-parse", () => ({
-  PDFParse: jest.fn().mockImplementation(({ data }: { data: Buffer }) => ({
-    load: jest.fn().mockResolvedValue(undefined),
-    getText: jest.fn().mockImplementation(async () => {
-      if (!data || data.length === 0) throw new Error("Empty PDF");
-      return { text: "Extracted PDF text" };
-    }),
-    destroy: jest.fn().mockResolvedValue(undefined),
-  })),
-}));
+beforeEach(() => {
+  mockCleanup.mockReset();
+  mockGetDocumentProxy.mockReset().mockResolvedValue({ cleanup: mockCleanup });
+  mockExtractText.mockReset().mockResolvedValue({ text: "Extracted PDF text" });
+});
 
 describe("parsePDF", () => {
   it("returns a string from a valid PDF buffer", async () => {
     const result = await parsePDF(Buffer.from("%PDF-1.4 fake content"));
     expect(typeof result).toBe("string");
     expect(result).toBe("Extracted PDF text");
+    expect(mockGetDocumentProxy).toHaveBeenCalledWith(expect.any(Uint8Array));
+    expect(mockCleanup).toHaveBeenCalled();
   });
 
   it("does not accept a file path — only a Buffer", async () => {
@@ -31,12 +32,7 @@ describe("parsePDF", () => {
   });
 
   it("throws a PDFParseError on library failure", async () => {
-    const { PDFParse } = await import("pdf-parse");
-    (PDFParse as unknown as jest.Mock).mockImplementationOnce(() => ({
-      load: jest.fn().mockResolvedValue(undefined),
-      getText: jest.fn().mockRejectedValue(new Error("corrupt PDF")),
-      destroy: jest.fn().mockResolvedValue(undefined),
-    }));
+    mockGetDocumentProxy.mockRejectedValueOnce(new Error("corrupt PDF"));
 
     await expect(parsePDF(Buffer.from("bad"))).rejects.toThrow(PDFParseError);
   });

@@ -115,7 +115,7 @@ Implement all error states exactly as defined here — do not invent error messa
 ---
 
 ### FILE_PARSE_FAILED
-**Trigger:** `pdf-parse` or `mammoth` fails to extract text from a valid file type.
+**Trigger:** `unpdf` or `mammoth` fails to extract text from a valid file type.
 **HTTP:** 422
 **User-facing message:** "Could not read this file. Try pasting your document text directly instead."
 **UI behavior:** Inline error. "Switch to text input" button shown prominently as recovery action.
