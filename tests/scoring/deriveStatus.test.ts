@@ -1,34 +1,34 @@
 /**
- * TDD GREEN PHASE — deriveStatus
+ * TDD REFACTOR PHASE — deriveStatus
  *
- * Assertions corrected to match the real behaviour.
- * Thresholds: score >= 80 → Compliant, >= 60 → Needs Improvement, else Critical Gaps.
- * All tests now pass without any changes to the source implementation.
+ * Converted to a table-driven format for clarity.
+ * All threshold values are documented inline with the scoring formula.
+ * No behaviour changes — same assertions, cleaner structure.
+ *
+ * Scoring formula (from docs/SCORING.md):
+ *   score >= 80  → Compliant
+ *   score >= 60  → Needs Improvement
+ *   score <  60  → Critical Gaps
  */
 import { deriveStatus } from '@/lib/scoring/calculator';
+import type { Status } from '@/lib/validation/schemas';
+
+// ─── Table-driven boundary tests ──────────────────────────────────────────────
+
+const cases: [number, Status, string][] = [
+  [100, 'Compliant',         'maximum score'],
+  [80,  'Compliant',         'exact Compliant lower boundary'],
+  [79,  'Needs Improvement', 'one below Compliant threshold'],
+  [60,  'Needs Improvement', 'exact Needs Improvement lower boundary'],
+  [59,  'Critical Gaps',     'one below Needs Improvement threshold'],
+  [0,   'Critical Gaps',     'minimum score'],
+];
 
 describe('deriveStatus', () => {
-  it('returns "Compliant" for score 100 (maximum score)', () => {
-    expect(deriveStatus(100)).toBe('Compliant');
-  });
-
-  it('returns "Compliant" for score 80 (lower Compliant boundary)', () => {
-    expect(deriveStatus(80)).toBe('Compliant');
-  });
-
-  it('returns "Needs Improvement" for score 79 (just below Compliant threshold)', () => {
-    expect(deriveStatus(79)).toBe('Needs Improvement');
-  });
-
-  it('returns "Needs Improvement" for score 60 (lower Needs Improvement boundary)', () => {
-    expect(deriveStatus(60)).toBe('Needs Improvement');
-  });
-
-  it('returns "Critical Gaps" for score 59 (just below Needs Improvement threshold)', () => {
-    expect(deriveStatus(59)).toBe('Critical Gaps');
-  });
-
-  it('returns "Critical Gaps" for score 0 (minimum score)', () => {
-    expect(deriveStatus(0)).toBe('Critical Gaps');
-  });
+  test.each(cases)(
+    'score %i → "%s" (%s)',
+    (score, expected) => {
+      expect(deriveStatus(score)).toBe(expected);
+    },
+  );
 });

@@ -1,43 +1,54 @@
 /**
- * TDD GREEN PHASE — validateFileMagicBytes
+ * TDD REFACTOR PHASE — validateFileMagicBytes
  *
- * Assertions corrected to match the real behaviour of validateFileMagicBytes.
- * All tests now pass without any changes to the source implementation.
+ * Extracted buffer factories into named helpers and added two extra
+ * edge-case tests for a truncated DOCX buffer and a DOCX checked as PDF.
+ * No behaviour changes — all existing assertions remain identical.
  */
 import { validateFileMagicBytes } from './sanitize';
 
-function makePdfBuffer(): Buffer {
-  // Real PDF magic bytes: %PDF-  (0x25 0x50 0x44 0x46 0x2D)
-  return Buffer.from([0x25, 0x50, 0x44, 0x46, 0x2d, 0x00, 0x00]);
-}
+// ─── Buffer factories ──────────────────────────────────────────────────────────
 
-function makeDocxBuffer(): Buffer {
-  // Real DOCX magic bytes: PK\x03\x04  (ZIP archive header)
-  return Buffer.from([0x50, 0x4b, 0x03, 0x04, 0x00, 0x00]);
-}
+/** Real PDF header: %PDF- (5 bytes) followed by padding. */
+const PDF_BUFFER = Buffer.from([0x25, 0x50, 0x44, 0x46, 0x2d, 0x00, 0x00]);
 
-function makeRandomBuffer(): Buffer {
-  return Buffer.from([0x00, 0x01, 0x02, 0x03, 0x04]);
-}
+/** Real DOCX header: PK\x03\x04 (4 bytes, ZIP archive) followed by padding. */
+const DOCX_BUFFER = Buffer.from([0x50, 0x4b, 0x03, 0x04, 0x00, 0x00]);
+
+/** Random bytes that match neither PDF nor DOCX signatures. */
+const RANDOM_BUFFER = Buffer.from([0x00, 0x01, 0x02, 0x03, 0x04]);
+
+/** Only 2 bytes — too short for any supported magic-byte signature. */
+const TRUNCATED_BUFFER = Buffer.from([0x25, 0x50]);
+
+// ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('validateFileMagicBytes', () => {
   it('returns true for a valid PDF buffer checked as pdf', () => {
-    expect(validateFileMagicBytes(makePdfBuffer(), 'pdf')).toBe(true);
+    expect(validateFileMagicBytes(PDF_BUFFER, 'pdf')).toBe(true);
   });
 
   it('returns true for a valid DOCX buffer checked as docx', () => {
-    expect(validateFileMagicBytes(makeDocxBuffer(), 'docx')).toBe(true);
+    expect(validateFileMagicBytes(DOCX_BUFFER, 'docx')).toBe(true);
   });
 
   it('returns false for a random buffer checked as pdf', () => {
-    expect(validateFileMagicBytes(makeRandomBuffer(), 'pdf')).toBe(false);
+    expect(validateFileMagicBytes(RANDOM_BUFFER, 'pdf')).toBe(false);
   });
 
-  it('returns false for a PDF buffer checked as docx (magic bytes do not match)', () => {
-    expect(validateFileMagicBytes(makePdfBuffer(), 'docx')).toBe(false);
+  it('returns false for a PDF buffer checked as docx (type mismatch)', () => {
+    expect(validateFileMagicBytes(PDF_BUFFER, 'docx')).toBe(false);
   });
 
-  it('returns false for an empty buffer (too short to contain any magic bytes)', () => {
+  it('returns false for a DOCX buffer checked as pdf (type mismatch)', () => {
+    expect(validateFileMagicBytes(DOCX_BUFFER, 'pdf')).toBe(false);
+  });
+
+  it('returns false for an empty buffer', () => {
     expect(validateFileMagicBytes(Buffer.alloc(0), 'pdf')).toBe(false);
+  });
+
+  it('returns false for a truncated buffer shorter than the magic-byte sequence', () => {
+    expect(validateFileMagicBytes(TRUNCATED_BUFFER, 'pdf')).toBe(false);
   });
 });
