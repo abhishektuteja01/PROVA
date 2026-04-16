@@ -1,9 +1,8 @@
 /**
- * TDD RED PHASE — validateFileMagicBytes
+ * TDD GREEN PHASE — validateFileMagicBytes
  *
- * These tests are written before verifying expected values.
- * All assertions are intentionally wrong so the suite fails.
- * Commit this file as-is to record the red phase.
+ * Assertions corrected to match the real behaviour of validateFileMagicBytes.
+ * All tests now pass without any changes to the source implementation.
  */
 import { validateFileMagicBytes } from './sanitize';
 
@@ -21,29 +20,24 @@ function makeRandomBuffer(): Buffer {
   return Buffer.from([0x00, 0x01, 0x02, 0x03, 0x04]);
 }
 
-describe('validateFileMagicBytes — RED phase (wrong assertions)', () => {
-  it('should return FALSE for a valid PDF buffer checked as pdf (WRONG: will be fixed in green)', () => {
-    // Wrong: a real PDF buffer SHOULD return true, not false
-    expect(validateFileMagicBytes(makePdfBuffer(), 'pdf')).toBe(false);
+describe('validateFileMagicBytes', () => {
+  it('returns true for a valid PDF buffer checked as pdf', () => {
+    expect(validateFileMagicBytes(makePdfBuffer(), 'pdf')).toBe(true);
   });
 
-  it('should return FALSE for a valid DOCX buffer checked as docx (WRONG: will be fixed in green)', () => {
-    // Wrong: a real DOCX buffer SHOULD return true, not false
-    expect(validateFileMagicBytes(makeDocxBuffer(), 'docx')).toBe(false);
+  it('returns true for a valid DOCX buffer checked as docx', () => {
+    expect(validateFileMagicBytes(makeDocxBuffer(), 'docx')).toBe(true);
   });
 
-  it('should return TRUE for a random buffer checked as pdf (WRONG: will be fixed in green)', () => {
-    // Wrong: a random buffer SHOULD return false, not true
-    expect(validateFileMagicBytes(makeRandomBuffer(), 'pdf')).toBe(true);
+  it('returns false for a random buffer checked as pdf', () => {
+    expect(validateFileMagicBytes(makeRandomBuffer(), 'pdf')).toBe(false);
   });
 
-  it('should return TRUE for a PDF buffer checked as docx (WRONG: will be fixed in green)', () => {
-    // Wrong: a PDF buffer checked as docx SHOULD return false, not true
-    expect(validateFileMagicBytes(makePdfBuffer(), 'docx')).toBe(true);
+  it('returns false for a PDF buffer checked as docx (magic bytes do not match)', () => {
+    expect(validateFileMagicBytes(makePdfBuffer(), 'docx')).toBe(false);
   });
 
-  it('should return TRUE for an empty buffer checked as pdf (WRONG: empty buffer has no magic bytes)', () => {
-    // Wrong: an empty buffer can't match any magic bytes — should be false
-    expect(validateFileMagicBytes(Buffer.alloc(0), 'pdf')).toBe(true);
+  it('returns false for an empty buffer (too short to contain any magic bytes)', () => {
+    expect(validateFileMagicBytes(Buffer.alloc(0), 'pdf')).toBe(false);
   });
 });
