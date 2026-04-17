@@ -10,9 +10,6 @@ Rules for all React components under `src/components/`.
 
 ---
 
-## Design Direction
-Banking-appropriate refined minimalism. Data is the hero. Trust and precision communicated through restraint.
-
 ## Typography
 - Display/headings: **Playfair Display**
 - Scores/numbers/data: **IBM Plex Mono** — all scores and percentages must use this
@@ -34,5 +31,3 @@ Banking-appropriate refined minimalism. Data is the hero. Trust and precision co
 - Mobile-web responsiveness: fluid scaling via Tailwind (mobile-first)
 - Never use: purple gradients, generic AI aesthetics
 
-## Navbar Links (authenticated)
-Dashboard · New Check · History · Help · Settings
