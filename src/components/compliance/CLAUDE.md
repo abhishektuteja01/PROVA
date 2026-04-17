@@ -6,18 +6,11 @@ Rules for all compliance check components under `src/components/compliance/`.
 
 ## Required Reading
 - `docs/UI_DESIGN.md` — colors, typography, UI principles
-- `src/components/CLAUDE.md` — shared component rules
-- `src/app/api/CLAUDE.md` — compliance API contract
 - `docs/SCHEMAS.md` — request/response schemas
 
 ---
 
 ## Design Rules
-- All scores/percentages: **IBM Plex Mono** (`var(--font-ibm-plex-mono)`)
-- UI labels: **Geist** (`var(--font-geist)`)
-- Colors: CSS variables only — never hardcode hex
-- Status thresholds: >=80 Compliant (green), >=60 Needs Improvement (amber), <60 Critical Gaps (red)
-- Loading: skeleton screens only, never spinners
 - Gap table: sharp corners, sorted Critical → Major → Minor
 - Severity badges: colored by severity level
 
