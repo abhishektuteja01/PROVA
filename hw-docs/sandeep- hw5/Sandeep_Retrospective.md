@@ -1,4 +1,4 @@
-# HW6 Retrospective — Custom Skill & MCP Integration
+# HW Retrospective — Custom Skill & MCP Integration
 
 **Author:** Sandeep Samuel Jayakumar
 
