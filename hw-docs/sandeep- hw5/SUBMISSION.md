@@ -1,4 +1,4 @@
-# HW6 Submission — Sandeep Samuel Jayakumar
+# HW Submission — Sandeep Samuel Jayakumar
 
 **Course:** HW6 — Custom Skill & MCP Integration
 **Author:** Sandeep Samuel Jayakumar
