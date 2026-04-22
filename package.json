@@ -9,6 +9,7 @@
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "test:ai": "jest --config jest.ai.config.ts --verbose",
     "test:e2e": "playwright test"
   },
