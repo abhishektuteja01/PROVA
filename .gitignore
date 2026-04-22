@@ -54,3 +54,7 @@ next-env.d.ts
 # Supabase local
 supabase/.branches/
 supabase/.temp/
+
+# Blog drafts
+hw-docs/Project-3/blog-post.md
+hw-docs/Project-3/blog-image-prompts.md

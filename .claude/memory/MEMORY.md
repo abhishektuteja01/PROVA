@@ -1,0 +1,5 @@
+- [Abhishek — project context](user_role.md) — grad student, pair project, strong frontend/UX instincts
+- [Agent architecture](project_agent_architecture.md) — why three parallel pillar agents + judge, not a single agent
+- [Never trust agent scores](feedback_scoring_trust.md) — always recalculate from gaps, agents are inconsistent
+- [No direct commits to main](feedback_no_direct_main.md) — enforced in CLAUDE.md, hooks, and CI after Sprint 1 incident
+- [Project docs reference](reference_project_docs.md) — which doc covers what (prompts, scoring, DB, UI, errors)

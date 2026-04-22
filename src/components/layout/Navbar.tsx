@@ -50,9 +50,11 @@ export default function Navbar() {
   const [signingOut, setSigningOut] = useState(false);
 
   // Close mobile menu on route change
-  useEffect(() => {
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
     setMenuOpen(false);
-  }, [pathname]);
+  }
 
   useEffect(() => {
     const supabase = createClient();
@@ -102,7 +104,7 @@ export default function Navbar() {
       ? pathname === href
       : pathname.startsWith(href);
 
-  const NavLinks = ({ vertical = false }: { vertical?: boolean }) => (
+  const renderNavLinks = (vertical = false) => (
     <>
       {NAV_LINKS.map(({ label, href }) => {
         const active = isActive(href);
@@ -144,7 +146,7 @@ export default function Navbar() {
     </>
   );
 
-  const SignOutButton = ({ fullWidth = false }: { fullWidth?: boolean }) => (
+  const renderSignOutButton = (fullWidth = false) => (
     <button
       onClick={handleSignOut}
       disabled={signingOut}
@@ -259,7 +261,7 @@ export default function Navbar() {
                     flexShrink: 0,
                   }}
                 />
-                <NavLinks />
+                {renderNavLinks()}
               </>
             )}
           </div>
@@ -289,7 +291,7 @@ export default function Navbar() {
               >
                 {displayName}
               </span>
-              <SignOutButton />
+              {renderSignOutButton()}
             </div>
           )}
 
@@ -340,7 +342,7 @@ export default function Navbar() {
             zIndex: 49,
           }}
         >
-          <NavLinks vertical />
+          {renderNavLinks(true)}
           <div
             style={{
               padding: "12px 20px 16px",
@@ -360,7 +362,7 @@ export default function Navbar() {
             >
               {displayName}
             </span>
-            <SignOutButton fullWidth />
+            {renderSignOutButton(true)}
           </div>
         </div>
       )}

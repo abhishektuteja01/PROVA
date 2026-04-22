@@ -36,3 +36,18 @@ Rules for all security middleware in this folder.
 - All API routes verify session server-side before any processing
 - JWT expiry managed by Supabase Auth
 - RLS enforced on all database tables
+
+---
+
+## OWASP Top 10 Coverage
+
+- **A01 Broken Access Control:** RLS on all tables (`auth.uid() = user_id`), session verified on every API route
+- **A02 Cryptographic Failures:** JWT/hashing via Supabase Auth, API keys isolated to single files
+- **A03 Injection:** Zod on all inputs, parameterized queries only, `<document>` XML delimiters for prompt injection
+- **A04 Insecure Design:** Agent outputs schema-validated, scores recalculated from gaps (never trust agent)
+- **A05 Security Misconfiguration:** Secrets in env vars only, no hardcoded keys, enforced in CLAUDE.md rules
+- **A06 Vulnerable Components:** `npm audit --audit-level=moderate` in CI (`pr.yml`, `deploy.yml`)
+- **A07 Auth Failures:** Supabase Auth with JWT expiry, rate limiting (10 checks/user/hour)
+- **A08 Data Integrity Failures:** Zod schema validation on all agent outputs, judge cross-validates pillar consistency
+- **A09 Logging/Monitoring Failures:** Sentry error monitoring (`NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_DSN`)
+- **A10 SSRF:** No outbound requests from user input — agents only call Anthropic API with sanitized text

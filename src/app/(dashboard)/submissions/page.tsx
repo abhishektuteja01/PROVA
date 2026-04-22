@@ -204,8 +204,41 @@ export default function SubmissionsPage() {
   }, []);
 
   useEffect(() => {
-    fetchSubmissions(1);
-  }, [fetchSubmissions]);
+    let active = true;
+    async function initialLoad() {
+      try {
+        const res = await fetch("/api/submissions?page=1&limit=10");
+        if (!active) return;
+        if (!res.ok) {
+          const body = (await res.json().catch(() => null)) as {
+            message?: string;
+          } | null;
+          setToast({
+            message: body?.message ?? "Failed to load submissions.",
+            type: "error",
+          });
+          return;
+        }
+        const json = (await res.json()) as SubmissionsResponse;
+        if (!active) return;
+        setSubmissions(json.data);
+        setTotal(json.total);
+        setTotalPages(json.totalPages);
+        setPage(json.page);
+      } catch {
+        if (active) {
+          setToast({
+            message: "Network error. Please check your connection.",
+            type: "error",
+          });
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    }
+    initialLoad();
+    return () => { active = false; };
+  }, []);
 
   // Delete single submission
   const handleDeleteSingle = useCallback(
