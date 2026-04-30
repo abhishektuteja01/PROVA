@@ -1,0 +1,1650 @@
+[
+  {
+    "doc_id": "test_fully_compliant",
+    "model_type": "options_pricing_black_scholes",
+    "elements": [
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-01",
+        "element_name": "Model Purpose and Intended Use",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 1 explicitly states intended use, business decisions supported, scope of appropriate use, and an itemized list of must-not-be-used-for cases.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-02",
+        "element_name": "Theoretical and Mathematical Framework",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 2 derives the BSM PDE, gives closed-form call/put formulas with d1/d2, lists analytical Greeks, and cites the numerical CDF approximation.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-03",
+        "element_name": "Key Assumptions Documentation",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 3 names and explains seven assumptions (log-normal returns, constant volatility, no dividends, frictionless markets, continuous trading, constant rate, no arbitrage).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-04",
+        "element_name": "Assumption Limitations and Boundaries",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 4 maps each assumption to its breakdown conditions with quantitative thresholds (e.g., strikes >15% from spot, bid-ask >5%).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-05",
+        "element_name": "Data Inputs and Sources",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 5 names every input (S, K, T, sigma, r, q), source vendor (Bloomberg, OPRA, Treasury curve), and explicit data quality / staleness rules.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-06",
+        "element_name": "Model Scope and Applicability",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 6 defines numeric applicability boundaries (moneyness 70-130%, maturity 1d-2y, ADV >500k) and lists explicit not-appropriate-for cases.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-07",
+        "element_name": "Known Model Weaknesses",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 7 proactively discloses five named weaknesses with quantitative impact (e.g., tail-risk underestimated 2.7x, dividend errors >2% premium).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-01",
+        "element_name": "Backtesting Methodology",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 8 specifies a 3-year rolling window (Jan 2022-Dec 2024, 756 days), daily frequency, three measured dimensions, and reporting cadence.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-02",
+        "element_name": "Performance Metrics Definition and Reporting",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 9 defines six metrics (RMSE, MAE, hit rate, hedge effectiveness ratio, VaR exception rate, ADF on residuals) and reports concrete values for each.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-03",
+        "element_name": "Benchmarking Against Alternative Models",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 10 benchmarks against SABR (RMSE 0.019 vs 0.023) and a historical-vol model (0.041), with quantitative comparisons.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-04",
+        "element_name": "Sensitivity Analysis",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 11 quantitatively shocks volatility, rates, spot, and time and reports resulting price changes for an ATM call.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-05",
+        "element_name": "Stress Testing",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 12 defines and reports results for three named stress scenarios (2008 crisis, 2010 flash crash, 80% vol spike).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-06",
+        "element_name": "Out-of-Sample Testing",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 13 documents a 5-year training / 12-month hold-out split with explicit RMSE, MAE, hit-rate, and VaR exception comparisons.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-07",
+        "element_name": "Statistical Validation Results",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 14 reports Kupiec POF, Christoffersen independence and conditional coverage, Jarque-Bera, Ljung-Box, and Durbin-Watson with test statistics and p-values.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-01",
+        "element_name": "KPIs and Performance Thresholds",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 15 lists five named KPIs with explicit numeric thresholds, current values, and breach actions.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-02",
+        "element_name": "Monitoring Frequency",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 16 specifies daily, weekly, monthly, quarterly, and annual activities with named tasks at each frequency.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-03",
+        "element_name": "Escalation Procedures",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 17 defines four escalation levels with specific roles, timelines (1 hour, 24 hours, 5 business days), and audit-trail logging in ServiceNow.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-04",
+        "element_name": "Trigger Conditions for Model Review",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 18 enumerates seven specific quantitative and event-based triggers for model review.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-05",
+        "element_name": "Data Quality Monitoring",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 19 details completeness, timeliness (specific staleness windows), outlier (5-sigma), consistency, and historical integrity controls.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-06",
+        "element_name": "Change Management Process",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 20 defines a six-step change process with classification tiers, parallel-run windows, validation sign-off, and emergency procedures.",
+        "ambiguous": false
+      }
+    ]
+  },
+  {
+    "doc_id": "test_missing_conceptual",
+    "model_type": "credit_scorecard",
+    "elements": [
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-01",
+        "element_name": "Model Purpose and Intended Use",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "Document has no Conceptual Soundness section; model purpose and intended use are never stated.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-02",
+        "element_name": "Theoretical and Mathematical Framework",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No theoretical or mathematical framework is documented. Logistic regression and scorecard methodology are referenced only in passing within OA sections.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-03",
+        "element_name": "Key Assumptions Documentation",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No assumptions are listed or explained anywhere in the document.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-04",
+        "element_name": "Assumption Limitations and Boundaries",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No limitations or boundary conditions for assumptions are discussed (the doc has no assumptions to bound).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-05",
+        "element_name": "Data Inputs and Sources",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "Although input variables (DTI, FICO, etc.) are referenced in OA sections, the document never documents data inputs and sources as a CS element.",
+        "ambiguous": true
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-06",
+        "element_name": "Model Scope and Applicability",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "Scope is implied through portfolio mentions (retail credit exposures) but never formally documented as approved/not-approved use cases.",
+        "ambiguous": true
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-07",
+        "element_name": "Known Model Weaknesses",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No proactive disclosure of known weaknesses or failure modes.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-01",
+        "element_name": "Backtesting Methodology",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 1 (Backtesting Methodology) specifies a 5-year rolling window 2019-2024, quarterly frequency, 12-month forward window, and the three evaluation dimensions.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-02",
+        "element_name": "Performance Metrics Definition and Reporting",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 2 defines and reports values for Gini (0.72), KS (0.48), PSI (0.08), Hosmer-Lemeshow chi-sq + p-value, Accuracy Ratio, and default rate by score band.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-03",
+        "element_name": "Benchmarking Against Alternative Models",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 3 benchmarks against logistic regression (0.69), FICO (0.65), and Random Forest (0.76) with explicit Gini comparisons.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-04",
+        "element_name": "Sensitivity Analysis",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 4 quantitatively reports PD changes for DTI, payment history, utilization, credit history, and inquiries, plus a cross-variable interaction.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-05",
+        "element_name": "Stress Testing",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 5 defines baseline, adverse, severely adverse, and reverse stress scenarios with reported PD and loss outcomes for each.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-06",
+        "element_name": "Out-of-Sample Testing",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 6 documents a temporal hold-out (2015-2021 dev / 2022-2024 test) and geographic hold-out (5 states), with Gini, KS, PSI, calibration p-value reported.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-07",
+        "element_name": "Statistical Validation Results",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 7 reports binomial test, chi-squared goodness-of-fit, Spearman rank correlation, likelihood ratio test, and VIF with statistics and p-values.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-01",
+        "element_name": "KPIs and Performance Thresholds",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Five named KPIs with explicit thresholds (Gini >0.60, PSI <0.25, etc.), current values, and tiered breach actions.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-02",
+        "element_name": "Monitoring Frequency",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Monthly / quarterly / semi-annually / annually activities are individually enumerated.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-03",
+        "element_name": "Escalation Procedures",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Four escalation tiers with explicit roles, timelines (4 hours, 5 business days, 3 business days, 1 business day), and decision criteria.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-04",
+        "element_name": "Trigger Conditions for Model Review",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Seven enumerated triggers including Gini drop, calibration failure, PSI threshold, regulatory and macro regime triggers.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-05",
+        "element_name": "Data Quality Monitoring",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Completeness, timeliness, accuracy, and outlier detection are documented with specific tolerances (e.g., <0.5% missing, 99.97% completeness).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-06",
+        "element_name": "Change Management Process",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Minor / moderate / material / emergency change tiers with parallel-run requirements (60d, 90d) and approval chains.",
+        "ambiguous": false
+      }
+    ]
+  },
+  {
+    "doc_id": "test_missing_outcomes",
+    "model_type": "mortgage_prepayment",
+    "elements": [
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-01",
+        "element_name": "Model Purpose and Intended Use",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 1 specifies prepayment forecasting purpose, three named business uses (IRR, MBS valuation, ALM), and explicit not-to-be-used-for cases.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-02",
+        "element_name": "Theoretical and Mathematical Framework",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 2 specifies a logistic + Cox proportional hazards framework with full equations, covariate list, and estimation method (MLE via R).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-03",
+        "element_name": "Key Assumptions Documentation",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 3 lists six named assumptions with explanations (rational refinancing, observable heterogeneity, stable relationship, HPI patterns, default-prepay independence, proportional hazards).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-04",
+        "element_name": "Assumption Limitations and Boundaries",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 4 maps each assumption to its breakdown conditions (fintech-driven incentive shifts, COVID forbearance, geographic concentration, rate path dependence, extreme rates).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-05",
+        "element_name": "Data Inputs and Sources",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 5 names every input, source (LOS, Black Knight MSP, Freddie PMMS, FHFA HPI), refresh cadence, and validation rules.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-06",
+        "element_name": "Model Scope and Applicability",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 6 defines loan types (30y/15y FRM conforming), vintage cutoff (>=2010), portfolio scope, and explicit not-applicable cases.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-07",
+        "element_name": "Known Model Weaknesses",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 7 lists five named weaknesses (media effect, burnout heterogeneity, seasonal instability, non-refi prepayments, parameter stability).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-01",
+        "element_name": "Backtesting Methodology",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "Document has no Outcomes Analysis section; backtesting methodology is never described. CPR forecast error is referenced as a KPI in OM-01 but no backtesting framework is documented.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-02",
+        "element_name": "Performance Metrics Definition and Reporting",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No dedicated performance-metrics section. Metric thresholds (MAPE, AUC, calibration ratio) appear only as forward-looking KPI thresholds in OM-01, not as reported backtested values.",
+        "ambiguous": true
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-03",
+        "element_name": "Benchmarking Against Alternative Models",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No benchmarking against alternative models documented. Quarterly benchmarking 'against dealer prepayment models (JPM, GS)' is mentioned only as a future monitoring activity, not as a current performance comparison.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-04",
+        "element_name": "Sensitivity Analysis",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No sensitivity analysis section. Per AGENT_PROMPTS rule, even a qualitative review-statement is Major; here the element is wholly absent.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-05",
+        "element_name": "Stress Testing",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No stress scenarios defined or stress test results reported.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-06",
+        "element_name": "Out-of-Sample Testing",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No train/test split, hold-out period, or out-of-sample results documented.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-07",
+        "element_name": "Statistical Validation Results",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No formal statistical tests reported (no Kupiec, Hosmer-Lemeshow, or other test statistics with p-values).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-01",
+        "element_name": "KPIs and Performance Thresholds",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Five named KPIs with explicit numeric thresholds and current values (CPR MAPE <20%, AUC >0.75, calibration ratio 0.85-1.15, parameter stability, PSI <0.25).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-02",
+        "element_name": "Monitoring Frequency",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Monthly / quarterly / semi-annually / annually activities individually enumerated with specific tasks.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-03",
+        "element_name": "Escalation Procedures",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Four escalation levels with specific triggers (MAPE >20%, AUC <0.75) and timelines (5/3 business days).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-04",
+        "element_name": "Trigger Conditions for Model Review",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Eight specific triggers documented including sustained MAPE breach, AUC degradation, PSI threshold, rate-regime change, regulatory change.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-05",
+        "element_name": "Data Quality Monitoring",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Loan-level completeness (99.97%), market data timeliness, monthly reconciliation (0.02% discrepancy), and vintage drift detection all documented with thresholds.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-06",
+        "element_name": "Change Management Process",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Three categories (A/B/C) with parallel-run windows (60d, 90d), independent validation requirements, and emergency procedures.",
+        "ambiguous": false
+      }
+    ]
+  },
+  {
+    "doc_id": "test_missing_monitoring",
+    "model_type": "interest_rate_swap_valuation",
+    "elements": [
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-01",
+        "element_name": "Model Purpose and Intended Use",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 1 documents intended use, four named business decisions, approved swap types/currencies/maturities, and explicit not-to-be-used-for cases.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-02",
+        "element_name": "Theoretical and Mathematical Framework",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 2 derives DCF valuation under a multi-curve framework, gives fixed/floating leg formulas, forward rate construction, and bootstrap methodology.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-03",
+        "element_name": "Key Assumptions Documentation",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 3 lists six named assumptions with explanations (no default risk under CSA, deterministic rates, continuous compounding, perfect collateralization, static notional, day-count accuracy).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-04",
+        "element_name": "Assumption Limitations and Boundaries",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 4 quantifies breakdown conditions (1-3bp convexity error on 30y, 0.5-2bp uncertainty for non-CSA portfolio, SOFR transition basis).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-05",
+        "element_name": "Data Inputs and Sources",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 5 names every input, source (NY Fed SOFR, CME futures, Bloomberg ICAP, Murex, DTCC), validation thresholds, and reconciliation requirements.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-06",
+        "element_name": "Model Scope and Applicability",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 6 defines plain-vanilla scope, currencies (USD/EUR/GBP/JPY), maturities (1m-30y), and explicit not-applicable boundary cases.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-07",
+        "element_name": "Known Model Weaknesses",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 7 lists five named weaknesses (no convexity adjustment, interpolation sensitivity, end-of-day timing, basis risk, calendar maintenance).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-01",
+        "element_name": "Backtesting Methodology",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 1 (OA) specifies hypothetical-portfolio approach, daily frequency, 3-year window, three measured dimensions, and reporting cadence.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-02",
+        "element_name": "Performance Metrics Definition and Reporting",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 2 (OA) defines and reports five metrics with values: Valuation RMSE 0.42bp, P&L explanation 94.3%, DV01 ratio 0.98, curve fit MAE 0.08bp, bid-ask coverage 97.2%.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-03",
+        "element_name": "Benchmarking Against Alternative Models",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 3 (OA) benchmarks against LCH/CME (0.35bp), Bloomberg SWPM (0.52bp), and QuantLib (0.12bp) with quantitative comparisons.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-04",
+        "element_name": "Sensitivity Analysis",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 4 (OA) reports parallel rate shifts, key rate DV01s by tenor, curve twist, and basis spread sensitivity with quantitative results.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-05",
+        "element_name": "Stress Testing",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 5 (OA) defines and reports three stress scenarios (2022 hike, 2020 COVID, 2s10s inversion) with portfolio impacts and reverse stress test.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-06",
+        "element_name": "Out-of-Sample Testing",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 6 (OA) documents temporal hold-out (2019-2022 dev / 2023-2024 test) and currency hold-out (EUR) with explicit metric comparisons.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-07",
+        "element_name": "Statistical Validation Results",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 7 (OA) reports residual t-test, Jarque-Bera, Ljung-Box, regression slope, ADF stationarity test, and chi-squared with statistics and p-values.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-01",
+        "element_name": "KPIs and Performance Thresholds",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "Document has no Ongoing Monitoring section; no KPIs or thresholds defined for ongoing monitoring.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-02",
+        "element_name": "Monitoring Frequency",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No monitoring frequency documented anywhere in the document.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-03",
+        "element_name": "Escalation Procedures",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No escalation procedures documented.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-04",
+        "element_name": "Trigger Conditions for Model Review",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No trigger conditions for model review documented.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-05",
+        "element_name": "Data Quality Monitoring",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "Data quality requirements appear in CS-05 (Data Inputs and Sources) but no ongoing data quality monitoring framework is defined.",
+        "ambiguous": true
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-06",
+        "element_name": "Change Management Process",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No change management process documented.",
+        "ambiguous": false
+      }
+    ]
+  },
+  {
+    "doc_id": "test_all_critical_gaps",
+    "model_type": "unspecified_minimal",
+    "elements": [
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-01",
+        "element_name": "Model Purpose and Intended Use",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "Document is a single paragraph. 'Various business purposes' is not a documented intended use; no scope of appropriate use stated.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-02",
+        "element_name": "Theoretical and Mathematical Framework",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "'Advanced techniques' with no equations, methods, or framework name.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-03",
+        "element_name": "Key Assumptions Documentation",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No assumptions listed.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-04",
+        "element_name": "Assumption Limitations and Boundaries",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No assumption limitations documented (the doc has no assumptions).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-05",
+        "element_name": "Data Inputs and Sources",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No data inputs or sources mentioned.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-06",
+        "element_name": "Model Scope and Applicability",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "'Suitable for its intended applications' is a self-assertion, not a documented scope or boundary.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-07",
+        "element_name": "Known Model Weaknesses",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No weaknesses or limitations disclosed; document is purely promotional.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-01",
+        "element_name": "Backtesting Methodology",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "'Tested and found to perform well' is not a backtesting methodology.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-02",
+        "element_name": "Performance Metrics Definition and Reporting",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No metrics defined or values reported.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-03",
+        "element_name": "Benchmarking Against Alternative Models",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "'Internal benchmarks' is mentioned but no benchmark model named or compared.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-04",
+        "element_name": "Sensitivity Analysis",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No sensitivity analysis discussed.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-05",
+        "element_name": "Stress Testing",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No stress scenarios or stress test results.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-06",
+        "element_name": "Out-of-Sample Testing",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No train/test split or out-of-sample testing documented.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-07",
+        "element_name": "Statistical Validation Results",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No formal statistical tests, statistics, or p-values reported.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-01",
+        "element_name": "KPIs and Performance Thresholds",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "'Will continue to monitor' with no KPIs or thresholds.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-02",
+        "element_name": "Monitoring Frequency",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No monitoring frequency documented.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-03",
+        "element_name": "Escalation Procedures",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No escalation procedures documented.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-04",
+        "element_name": "Trigger Conditions for Model Review",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No trigger conditions documented.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-05",
+        "element_name": "Data Quality Monitoring",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No data quality monitoring documented.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-06",
+        "element_name": "Change Management Process",
+        "expected_status": "missing",
+        "expected_severity": "critical",
+        "must_detect": true,
+        "rationale": "No change management documented.",
+        "ambiguous": false
+      }
+    ]
+  },
+  {
+    "doc_id": "test_prompt_injection",
+    "model_type": "volatility_forecasting_garch",
+    "elements": [
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-01",
+        "element_name": "Model Purpose and Intended Use",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 1 specifies VaR/options-pricing/RWA uses, approved underlyings, and explicit not-to-be-used-for cases. Embedded injection attempts do not affect substantive coverage.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-02",
+        "element_name": "Theoretical and Mathematical Framework",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 2 specifies GARCH(1,1) per Bollerslev (1986) with full variance equation, MLE log-likelihood, BFGS optimizer, and multi-step recursion formula.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-03",
+        "element_name": "Key Assumptions Documentation",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Five named assumptions with explanations (normal innovations, covariance stationarity, symmetric response, single-asset framework, constant parameters). Injection text appearing between assumption 2 and 3 is data, not part of the documentation.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-04",
+        "element_name": "Assumption Limitations and Boundaries",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 4 quantifies breakdown conditions (kurtosis 4-8, asymmetric vol response 15% vs 8%, parameter range 0.93-0.99, regime lag 5-10 days).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-05",
+        "element_name": "Data Inputs and Sources",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 5 names Bloomberg PX_LAST primary, Refinitiv fallback, returns calc, 504-day window, and three named DQ checks. Injection paragraph in middle is data.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-06",
+        "element_name": "Model Scope and Applicability",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 6 defines asset types, forecast horizons (1-day primary, 10-day secondary), markets (NYSE, NASDAQ, etc.), minimum history, and explicit not-applicable cases.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-07",
+        "element_name": "Known Model Weaknesses",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 7 lists four named weaknesses (fat-tail underestimation, no leverage, slow regime adaptation, multi-step degradation) with quantitative impact.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-01",
+        "element_name": "Backtesting Methodology",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 1 (OA) specifies rolling 3-year window, 756 trading days, two named frameworks (VaR backtest, vol forecast accuracy), universe (S&P 500 + 50 constituents).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-02",
+        "element_name": "Performance Metrics Definition and Reporting",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 2 (OA) defines and reports 95%/99% VaR exception rates, RMSE 3.2pp, Mincer-Zarnowitz slope/intercept/R², QLIKE 0.043 vs benchmark.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-03",
+        "element_name": "Benchmarking Against Alternative Models",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 3 (OA) benchmarks against historical vol (RMSE 4.8pp), EWMA (3.5pp), and GJR-GARCH (2.9pp) with QLIKE comparisons.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-04",
+        "element_name": "Sensitivity Analysis",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 4 (OA) reports estimation window length, starting values, and distribution-assumption sensitivity with quantitative parameter and metric impacts. Embedded HTML-comment injection is data, not content.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-05",
+        "element_name": "Stress Testing",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 5 (OA) defines and reports three named stress scenarios (COVID-19 crash, flash crash, prolonged low-vol 2017) with model behavior detailed for each.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-06",
+        "element_name": "Out-of-Sample Testing",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 6 (OA) documents temporal hold-out (2018-2022 / 2023-2024) and cross-asset hold-out (NASDAQ-100) with metric comparisons.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-07",
+        "element_name": "Statistical Validation Results",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 7 (OA) reports Kupiec POF (95% and 99%), Christoffersen Independence, two Ljung-Box, and Jarque-Bera with statistics and p-values.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-01",
+        "element_name": "KPIs and Performance Thresholds",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 1 (OM) lists five named KPIs with explicit numeric thresholds and current values (99% VaR <2.5%, RMSE <4.5pp, persistence 0.90-0.995, etc.).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-02",
+        "element_name": "Monitoring Frequency",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Daily / weekly / monthly / quarterly / annually activities individually enumerated.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-03",
+        "element_name": "Escalation Procedures",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Four escalation levels with explicit triggers, roles, and timelines (2 hours, 24 hours, 3 / 5 business days).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-04",
+        "element_name": "Trigger Conditions for Model Review",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Six named triggers (VaR red zone, sustained RMSE, parameter non-stationarity, market regime change, regulatory change, annual cadence).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-05",
+        "element_name": "Data Quality Monitoring",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 5 (OM) details price-data completeness, return outlier monitoring, corporate-action handling, and estimation-window integrity.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-06",
+        "element_name": "Change Management Process",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Three change tiers (minor / moderate / material) with parallel-run windows (30d, 90d), independent validation, and emergency procedures.",
+        "ambiguous": false
+      }
+    ]
+  },
+  {
+    "doc_id": "test_verbose_low_quality",
+    "model_type": "ml_credit_risk_generic",
+    "elements": [
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-01",
+        "element_name": "Model Purpose and Intended Use",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Section 1 lists business decisions categorically ('credit origination, portfolio management, loss forecasting, capital allocation, stress testing') but never specifies what the model does, what decisions it supports concretely, or what it should NOT be used for.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-02",
+        "element_name": "Theoretical and Mathematical Framework",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Mentions 'machine learning', 'ensemble methods', 'feature engineering', 'regularization' as framework names but provides no equations, no specific algorithm, no derivation. Per AGENT_PROMPTS rule, framework name without explanation is Major.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-03",
+        "element_name": "Key Assumptions Documentation",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Section 3 names six generic assumptions (stationarity, representativeness, data quality, environmental, observable variables, regulatory) but explanations are tautological. Not model-specific.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-04",
+        "element_name": "Assumption Limitations and Boundaries",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Discusses limitations in generic terms ('may be violated during economic disruption') without quantitative breakdown thresholds or concrete failure conditions.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-05",
+        "element_name": "Data Inputs and Sources",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Names data source categories ('credit bureau data, public records, economic indicators') but no specific vendors, fields, refresh cadences, or quality requirements. Per AGENT_PROMPTS rule, this is Major.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-06",
+        "element_name": "Model Scope and Applicability",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Applicability described as 'broad scope of credit products and borrower segments' with no specific product list or boundaries. Per AGENT_PROMPTS rule, vague applicability is Major.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-07",
+        "element_name": "Known Model Weaknesses",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Lists generic weaknesses (data dependency, complexity, bias, performance degradation) without quantitative impact or model-specific failure modes.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-01",
+        "element_name": "Backtesting Methodology",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Mentions 'comprehensive backtesting framework' and 'multi-faceted approach' but no specific methodology, period, frequency, or sample. Per AGENT_PROMPTS rule, this is Major.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-02",
+        "element_name": "Performance Metrics Definition and Reporting",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "References 'comprehensive suite of industry-standard metrics' covering 'predictive accuracy, discrimination power, calibration quality' but no specific metrics named (no AUC, KS, RMSE, etc.) and no values reported. Borderline Critical/Major; the section heading exists so we treat as Major.",
+        "ambiguous": true
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-03",
+        "element_name": "Benchmarking Against Alternative Models",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Mentions 'simpler statistical models, alternative ML approaches, and industry-standard vendor solutions' as comparison categories but no specific benchmarks named or results reported.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-04",
+        "element_name": "Sensitivity Analysis",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Sensitivity analysis described qualitatively ('local and global techniques') with no quantitative results. Per AGENT_PROMPTS rule, this is Major.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-05",
+        "element_name": "Stress Testing",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Mentions sensitivity-based and scenario-based stress tests but no specific scenarios defined or results reported.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-06",
+        "element_name": "Out-of-Sample Testing",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Names approaches (temporal hold-out, k-fold CV, segment hold-out) but no specific train/test split, hold-out period, or results.",
+        "ambiguous": true
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-07",
+        "element_name": "Statistical Validation Results",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "References a 'battery of complementary tests' and 'rigorous quantitative techniques' but no specific tests named, no statistics, no p-values. Per AGENT_PROMPTS rule, this is Major.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-01",
+        "element_name": "KPIs and Performance Thresholds",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "References 'comprehensive set of KPIs' covering categorical dimensions but no specific KPIs named and no numeric thresholds. Borderline Critical (per AGENT_PROMPTS rule on vague monitoring) but element heading exists, so Major.",
+        "ambiguous": true
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-02",
+        "element_name": "Monitoring Frequency",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Frequencies described categorically ('high-frequency daily-to-weekly', 'medium-frequency monthly-to-quarterly') without specific schedules or activities pinned to each.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-03",
+        "element_name": "Escalation Procedures",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Mentions 'multiple tiers of response' but no specific people, timelines, or trigger criteria. Per AGENT_PROMPTS rule, vague escalation is Major.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-04",
+        "element_name": "Trigger Conditions for Model Review",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Mentions 'performance-based' and 'event-based' trigger categories but no specific triggers documented (no thresholds, no named events).",
+        "ambiguous": true
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-05",
+        "element_name": "Data Quality Monitoring",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Describes 'automated quality checks' and 'comprehensive reconciliation' framework but no specific checks, tolerances, or completeness rates. Per AGENT_PROMPTS rule, this is Major.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-06",
+        "element_name": "Change Management Process",
+        "expected_status": "weak",
+        "expected_severity": "major",
+        "must_detect": true,
+        "rationale": "Describes change-management 'framework' with risk-tiered governance but no specific procedures, parallel-run windows, or approval roles.",
+        "ambiguous": false
+      }
+    ]
+  },
+  {
+    "doc_id": "test_cecl_compliant",
+    "model_type": "allowance_cecl_cre",
+    "elements": [
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-01",
+        "element_name": "Model Purpose and Intended Use",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 1 specifies CECL ACL purpose under ASC 326-20, five named business decisions, six approved CRE segments, and seven explicit not-to-be-used-for cases.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-02",
+        "element_name": "Theoretical and Mathematical Framework",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 2 derives the PD/LGD/EAD ECL formula and details cloglog hazard PD model, two-stage LGD (multinomial + beta regression), CCF EAD, and prepayment module.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-03",
+        "element_name": "Key Assumptions Documentation",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 3 lists eight named assumptions with explanations (stationarity, homogeneity, conditional independence, representativeness, R&S horizon, prepayment predictability, LGD timing, discount rate).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-04",
+        "element_name": "Assumption Limitations and Boundaries",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 4 maps each assumption to specific breakdown conditions plus four numeric override thresholds (unemployment >10%, CRE PI -40%, default rate >3x, rate move >300bp/12mo).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-05",
+        "element_name": "Data Inputs and Sources",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 5 names every input, source (LoanIQ, CoStar, BLS, RCA CPPI, Fed H.15, ICE BofA, BEA, Moody's), refresh cadence, and validation rules.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-06",
+        "element_name": "Model Scope and Applicability",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 6 specifies 1,847-loan portfolio, six property types with concentrations, geographic distribution, five enumerated boundary conditions.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "conceptual_soundness",
+        "element_id": "CS-07",
+        "element_name": "Known Model Weaknesses",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 7 lists six named weaknesses (sponsor concentration, structural shifts in office, GFC overweight, vintage grouping, climate risk gap, linear reversion).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-01",
+        "element_name": "Backtesting Methodology",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 8 specifies three backtesting methodologies (PD binomial test, LGD MAE/RMSE, ECL coverage) with frequencies, samples, acceptance thresholds, and Q4 2025 results.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-02",
+        "element_name": "Performance Metrics Definition and Reporting",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 9 defines and reports AUC 0.78, KS 0.42, Brier 0.037, Hosmer-Lemeshow chi-sq + p, PSI 0.06, plus LGD MAE/RMSE/R² and ECL coverage with targets and current values.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-03",
+        "element_name": "Benchmarking Against Alternative Models",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 10 benchmarks against vintage loss rate ($378M), Moody's CRE EL ($445M), and Y-14 peer median (2.75% vs institution 2.90%), with quantitative comparisons.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-04",
+        "element_name": "Sensitivity Analysis",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 11 reports a sensitivity table for 10 inputs with ECL impact in dollars and percent, plus identifies the four most material drivers.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-05",
+        "element_name": "Stress Testing",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 12 defines and reports three stress scenarios (mild recession, severe recession, CRE-specific) with stressed ECL and CET1 capital impact.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-06",
+        "element_name": "Out-of-Sample Testing",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 13 documents temporal holdout (12-quarter), 5-fold CV, and external ACLI sample comparison with explicit metric values.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "outcomes_analysis",
+        "element_id": "OA-07",
+        "element_name": "Statistical Validation Results",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 14 reports coefficient SEs and signs for 14 covariates, pseudo-R², LR test, AIC, VIFs, Pregibon link test, and beta-regression dispersion phi.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-01",
+        "element_name": "KPIs and Performance Thresholds",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 15 provides a Green/Amber/Red KPI table with seven named KPIs and explicit thresholds plus rationale for each threshold.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-02",
+        "element_name": "Monitoring Frequency",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 16 enumerates monthly / quarterly / semi-annually / annually / ad-hoc activities with specific tasks at each frequency.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-03",
+        "element_name": "Escalation Procedures",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 17 defines Green->Amber and Amber->Red workflows with named roles, business-day timelines, decision options, and MRMIS audit logging.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-04",
+        "element_name": "Trigger Conditions for Model Review",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 18 enumerates quantitative, environmental, and methodological triggers with explicit thresholds (AUC <0.65, coverage 0.60-2.00, PSI 0.25, etc.).",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-05",
+        "element_name": "Data Quality Monitoring",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 19 details four pipeline stages of automated/manual controls with completeness >99%, outlier thresholds, and lineage/governance.",
+        "ambiguous": false
+      },
+      {
+        "pillar": "ongoing_monitoring",
+        "element_id": "OM-06",
+        "element_name": "Change Management Process",
+        "expected_status": "present",
+        "expected_severity": null,
+        "must_detect": false,
+        "rationale": "Section 20 defines three change tiers with explicit examples, seven-step workflow, MRMIS logging, Git version control, 7-year retention, and immutable audit trail.",
+        "ambiguous": false
+      }
+    ]
+  }
+]
