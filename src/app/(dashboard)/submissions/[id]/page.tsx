@@ -1,10 +1,14 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import type { SubmissionDetail, Gap } from "@/lib/validation/schemas";
+import type {
+  GapWithId,
+  ReassessmentResponse,
+  SubmissionDetail,
+} from "@/lib/validation/schemas";
 import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -14,11 +18,12 @@ import { getScoreColor } from "@/components/dashboard/utils";
 import type { Status } from "@/components/dashboard/utils";
 import PillarScoreCard from "@/components/compliance/PillarScoreCard";
 import GapAnalysisTable from "@/components/compliance/GapAnalysisTable";
+import DisputeModal from "@/components/compliance/DisputeModal";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function countGapsBySeverity(
-  gaps: Gap[],
+  gaps: GapWithId[],
   prefix: "CS" | "OA" | "OM"
 ): { critical: number; major: number; minor: number } {
   const pillarGaps = gaps.filter((g) => g.element_code.startsWith(prefix));
@@ -176,6 +181,7 @@ function DetailLoadingSkeleton() {
 
 export default function SubmissionDetailPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const id = params.id;
 
   const [submission, setSubmission] = useState<SubmissionDetail | null>(null);
@@ -186,6 +192,7 @@ export default function SubmissionDetailPage() {
     type: "error";
   } | null>(null);
   const [downloadLoading, setDownloadLoading] = useState(false);
+  const [disputeGap, setDisputeGap] = useState<GapWithId | null>(null);
 
   const handleDownloadReport = async () => {
     setDownloadLoading(true);
@@ -567,7 +574,10 @@ export default function SubmissionDetailPage() {
               >
                 Gap Analysis
               </div>
-              <GapAnalysisTable gaps={submission.gap_analysis} />
+              <GapAnalysisTable
+                gaps={submission.gap_analysis}
+                onDispute={(g) => setDisputeGap(g)}
+              />
             </div>
 
             {/* Action buttons */}
@@ -596,6 +606,18 @@ export default function SubmissionDetailPage() {
             duration={5000}
           />
         )}
+
+        {/* Dispute modal */}
+        <DisputeModal
+          open={!!disputeGap}
+          onClose={() => setDisputeGap(null)}
+          assessmentId={id ?? ""}
+          gap={disputeGap}
+          onSuccess={(res: ReassessmentResponse) => {
+            setDisputeGap(null);
+            router.push(`/submissions/${id}/compare/${res.reassessment_id}`);
+          }}
+        />
       </div>
     </main>
   );

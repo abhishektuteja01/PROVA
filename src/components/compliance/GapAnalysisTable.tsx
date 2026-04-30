@@ -4,8 +4,11 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import type { Gap } from "@/lib/validation/schemas";
 
+type GapWithOptionalId = Gap & { id?: string };
+
 interface GapAnalysisTableProps {
-  gaps: Gap[];
+  gaps: GapWithOptionalId[];
+  onDispute?: (gap: GapWithOptionalId & { id: string }) => void;
 }
 
 const SEVERITY_ORDER: Record<string, number> = {
@@ -82,7 +85,7 @@ function getPillarLabel(elementCode: string): string {
   return PILLAR_LABELS[prefix] ?? prefix;
 }
 
-export default function GapAnalysisTable({ gaps }: GapAnalysisTableProps) {
+export default function GapAnalysisTable({ gaps, onDispute }: GapAnalysisTableProps) {
   const sorted = useMemo(
     () =>
       [...gaps].sort(
@@ -134,6 +137,7 @@ export default function GapAnalysisTable({ gaps }: GapAnalysisTableProps) {
               <th style={TH_STYLE}>Pillar</th>
               <th style={TH_STYLE}>Description</th>
               <th style={TH_STYLE}>Recommendation</th>
+              {onDispute ? <th style={TH_STYLE}>Action</th> : null}
             </tr>
           </thead>
           <tbody>
@@ -200,6 +204,29 @@ export default function GapAnalysisTable({ gaps }: GapAnalysisTableProps) {
                 >
                   {gap.recommendation}
                 </td>
+                {onDispute ? (
+                  <td style={{ ...TD_STYLE, whiteSpace: "nowrap" }}>
+                    {gap.id ? (
+                      <button
+                        type="button"
+                        onClick={() => onDispute({ ...gap, id: gap.id! })}
+                        style={{
+                          fontFamily: "var(--font-geist)",
+                          fontSize: "11px",
+                          fontWeight: 500,
+                          color: "var(--color-accent)",
+                          background: "transparent",
+                          border: "1px solid var(--color-border)",
+                          borderRadius: "2px",
+                          padding: "5px 10px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Dispute
+                      </button>
+                    ) : null}
+                  </td>
+                ) : null}
               </motion.tr>
             ))}
           </tbody>
