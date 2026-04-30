@@ -2,7 +2,14 @@ import { assessConceptualSoundness } from '@/lib/agents/conceptualSoundness';
 import { assessOutcomesAnalysis } from '@/lib/agents/outcomesAnalysis';
 import { assessOngoingMonitoring } from '@/lib/agents/ongoingMonitoring';
 import { runJudge } from '@/lib/agents/judge';
-import type { AgentOutput, DisputeRequest, JudgeOutput, PillarEnum } from '@/lib/validation/schemas';
+import type {
+  AgentOutput,
+  DisputeRequest,
+  DisputeResolutionItem,
+  Gap,
+  JudgeOutput,
+  PillarEnum,
+} from '@/lib/validation/schemas';
 import type { z } from 'zod';
 
 export type Pillar = z.infer<typeof PillarEnum>;
@@ -65,10 +72,95 @@ Resolution semantics:
 - "retained_insufficient_evidence": the rationale did NOT provide specific document evidence at the required tier; original finding kept unchanged.
 - "retained_evidence_supports_original": the rationale referenced the document but the cited content actually supports your original finding (e.g. confirms the gap is real); original finding kept unchanged.
 
+CONSISTENCY RULE — your gaps array and dispute_resolutions array MUST agree for every disputed element_code:
+- "retained_insufficient_evidence" / "retained_evidence_supports_original": the disputed element MUST appear in your gaps array at the SAME severity and with the SAME element_code as in the original assessment. Do NOT silently drop a gap you have declared retained.
+- "reversed_with_evidence": the disputed element_code MUST be ABSENT from your gaps array.
+- "severity_adjusted_with_evidence": the disputed element_code MUST appear in your gaps array at a DIFFERENT severity than the original.
+Any mismatch between dispute_resolutions and the gaps array is a critical error and will be reconciled by the system in favour of the dispute_resolution you stated. State retention only when you intend to keep the gap; state reversal only when you intend to remove it.
+
 DISPUTES:
 
 ${items.join('\n\n')}
 </reviewer_dispute_context>`;
+}
+
+/**
+ * Force the agent's gaps array to match the verdicts it declared in
+ * dispute_resolutions. We cannot rely on the LLM being self-consistent — for an
+ * SR 11-7 audit trail the persisted gaps must agree with the stated resolution.
+ * Returns the corrected agent output and any inconsistencies that were caught.
+ */
+export function reconcileDisputeResolutions(args: {
+  agentOutput: AgentOutput;
+  parentPillarGaps: ReadonlyArray<Gap>;
+  disputedElementCodes: ReadonlyArray<string>;
+}): { reconciled: AgentOutput; warnings: string[] } {
+  const warnings: string[] = [];
+
+  const resolutionByCode = new Map<string, DisputeResolutionItem>();
+  for (const r of args.agentOutput.dispute_resolutions ?? []) {
+    resolutionByCode.set(r.element_code, r);
+  }
+
+  const newGapsByCode = new Map<string, Gap>();
+  for (const g of args.agentOutput.gaps) {
+    newGapsByCode.set(g.element_code, g);
+  }
+
+  const parentByCode = new Map<string, Gap>();
+  for (const g of args.parentPillarGaps) {
+    parentByCode.set(g.element_code, g);
+  }
+
+  for (const code of args.disputedElementCodes) {
+    const resolution = resolutionByCode.get(code);
+    const parentGap = parentByCode.get(code);
+    if (!resolution || !parentGap) continue;
+
+    const newGap = newGapsByCode.get(code);
+
+    switch (resolution.resolution) {
+      case 'retained_insufficient_evidence':
+      case 'retained_evidence_supports_original':
+        if (!newGap) {
+          warnings.push(
+            `${code}: declared "${resolution.resolution}" but gap was missing from gaps array — restoring original.`
+          );
+          newGapsByCode.set(code, parentGap);
+        } else if (newGap.severity !== parentGap.severity) {
+          warnings.push(
+            `${code}: declared "${resolution.resolution}" but severity changed ${parentGap.severity}→${newGap.severity} — restoring original severity.`
+          );
+          newGapsByCode.set(code, parentGap);
+        }
+        break;
+      case 'reversed_with_evidence':
+        if (newGap) {
+          warnings.push(
+            `${code}: declared "reversed_with_evidence" but gap was still present — removing.`
+          );
+          newGapsByCode.delete(code);
+        }
+        break;
+      case 'severity_adjusted_with_evidence':
+        if (!newGap) {
+          warnings.push(
+            `${code}: declared "severity_adjusted_with_evidence" but gap was missing — conservatively restoring original.`
+          );
+          newGapsByCode.set(code, parentGap);
+        } else if (newGap.severity === parentGap.severity) {
+          warnings.push(
+            `${code}: declared "severity_adjusted_with_evidence" but severity is unchanged — keeping current severity, but resolution semantics are violated.`
+          );
+        }
+        break;
+    }
+  }
+
+  return {
+    reconciled: { ...args.agentOutput, gaps: Array.from(newGapsByCode.values()) },
+    warnings,
+  };
 }
 
 export interface ScopedReassessmentResult {

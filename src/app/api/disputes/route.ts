@@ -12,6 +12,7 @@ import {
 } from '@/lib/validation/schemas';
 import {
   pillarFromElementCode,
+  reconcileDisputeResolutions,
   runScopedReassessment,
   type Pillar,
 } from '@/lib/agents/scopedReassessment';
@@ -217,8 +218,43 @@ export async function POST(request: Request) {
     return errorResponse('AI_UNAVAILABLE');
   }
 
-  // 8. Recalculate scores using the canonical formula
-  const scoring = calculateScores(result.csOutput, result.oaOutput, result.omOutput);
+  // 8a. Reconcile the disputed pillar's gaps array against the agent's stated
+  // dispute_resolutions. The LLM is not always self-consistent — the gaps array
+  // can silently drift from what the agent declared in dispute_resolutions
+  // (e.g. declaring "retained_insufficient_evidence" while still removing the
+  // gap). For an SR 11-7 audit trail we force the persisted gaps to match the
+  // agent's stated intent. Any reconciliation warnings are logged.
+  const parentPillarGaps =
+    pillar === 'conceptual_soundness'
+      ? csGaps
+      : pillar === 'outcomes_analysis'
+        ? oaGaps
+        : omGaps;
+
+  const disputedAgentRaw =
+    pillar === 'conceptual_soundness'
+      ? result.csOutput
+      : pillar === 'outcomes_analysis'
+        ? result.oaOutput
+        : result.omOutput;
+
+  const { reconciled: reconciledDisputedAgent, warnings: reconciliationWarnings } =
+    reconcileDisputeResolutions({
+      agentOutput: disputedAgentRaw,
+      parentPillarGaps,
+      disputedElementCodes: [gapRow.element_code],
+    });
+
+  if (reconciliationWarnings.length > 0) {
+    console.warn('[disputes] reconciliation:', reconciliationWarnings.join(' | '));
+  }
+
+  const finalCs = pillar === 'conceptual_soundness' ? reconciledDisputedAgent : result.csOutput;
+  const finalOa = pillar === 'outcomes_analysis' ? reconciledDisputedAgent : result.oaOutput;
+  const finalOm = pillar === 'ongoing_monitoring' ? reconciledDisputedAgent : result.omOutput;
+
+  // 8b. Recalculate scores using the canonical formula on the reconciled gaps
+  const scoring = calculateScores(finalCs, finalOa, finalOm);
 
   // 9. Persist the new submission row, linked via parent_assessment_id.
   // Re-assessments preferably share their parent's version_number — the partial
@@ -227,9 +263,9 @@ export async function POST(request: Request) {
   // not fully applied) we fall back to the next available version_number so the
   // feature still works.
   const newAllGaps: Gap[] = [
-    ...result.csOutput.gaps,
-    ...result.oaOutput.gaps,
-    ...result.omOutput.gaps,
+    ...finalCs.gaps,
+    ...finalOa.gaps,
+    ...finalOm.gaps,
   ];
 
   const baseInsert = {
@@ -305,7 +341,7 @@ export async function POST(request: Request) {
 
   // 10. Persist gaps for the new submission row
   const newGapRows = [
-    ...result.csOutput.gaps.map((g) => ({
+    ...finalCs.gaps.map((g) => ({
       submission_id: reassessmentId,
       user_id: userId,
       pillar: 'conceptual_soundness' as const,
@@ -315,7 +351,7 @@ export async function POST(request: Request) {
       description: g.description,
       recommendation: g.recommendation,
     })),
-    ...result.oaOutput.gaps.map((g) => ({
+    ...finalOa.gaps.map((g) => ({
       submission_id: reassessmentId,
       user_id: userId,
       pillar: 'outcomes_analysis' as const,
@@ -325,7 +361,7 @@ export async function POST(request: Request) {
       description: g.description,
       recommendation: g.recommendation,
     })),
-    ...result.omOutput.gaps.map((g) => ({
+    ...finalOm.gaps.map((g) => ({
       submission_id: reassessmentId,
       user_id: userId,
       pillar: 'ongoing_monitoring' as const,
@@ -354,7 +390,7 @@ export async function POST(request: Request) {
   const { error: evalError } = await db.from('evals').insert({
     submission_id: reassessmentId,
     input_text_hash: inputTextHash,
-    agent_outputs: { cs: result.csOutput, oa: result.oaOutput, om: result.omOutput },
+    agent_outputs: { cs: finalCs, oa: finalOa, om: finalOm },
     judge_output: result.judgeOutput,
     retry_count: result.retryCount,
     total_latency_ms: Date.now() - requestStartTime,
@@ -368,12 +404,7 @@ export async function POST(request: Request) {
     Sentry.captureException(evalError);
   }
 
-  const disputedAgent = disputedPillarOutput(
-    pillar,
-    result.csOutput,
-    result.oaOutput,
-    result.omOutput
-  );
+  const disputedAgent = disputedPillarOutput(pillar, finalCs, finalOa, finalOm);
   const disputeResolutions: DisputeResolutionItem[] = disputedAgent.dispute_resolutions ?? [];
 
   return NextResponse.json(
