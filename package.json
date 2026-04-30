@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:coverage": "jest --coverage",
-    "test:ai": "jest --config jest.ai.config.ts --verbose",
+    "test:ai": "jest --config jest.ai.config.ts --verbose runner.test.ts",
+    "test:ai:calibration": "jest --config jest.ai.config.ts calibration.test.ts",
     "test:e2e": "playwright test"
   },
   "dependencies": {

@@ -7,7 +7,10 @@ const config: Config = {
     "^@/(.*)$": "<rootDir>/src/$1",
     "^server-only$": "<rootDir>/tests/synthetic/__mocks__/server-only.ts",
   },
-  testMatch: ["<rootDir>/tests/synthetic/runner.test.ts"],
+  testMatch: [
+    "<rootDir>/tests/synthetic/runner.test.ts",
+    "<rootDir>/tests/synthetic/calibration.test.ts",
+  ],
   transform: {
     "^.+\\.tsx?$": ["ts-jest", { tsconfig: { module: "commonjs" } }],
   },
