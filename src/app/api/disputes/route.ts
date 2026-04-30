@@ -16,6 +16,10 @@ import {
 import { calculateScores } from '@/lib/scoring/calculator';
 import { AgentParseError, AgentSchemaError } from '@/lib/agents/errors';
 
+function isUniqueViolation(err: { code?: string } | null | undefined): boolean {
+  return err?.code === '23505';
+}
+
 function gapsForPillar(gaps: Gap[], pillar: Pillar): Gap[] {
   const prefix =
     pillar === 'conceptual_soundness'
@@ -87,6 +91,7 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (parentErr) {
+    console.error('[disputes] parent submission lookup failed:', parentErr);
     Sentry.captureException(parentErr);
     return errorResponse('DATABASE_ERROR');
   }
@@ -102,6 +107,7 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (gapErr) {
+    console.error('[disputes] gap lookup failed:', gapErr);
     Sentry.captureException(gapErr);
     return errorResponse('DATABASE_ERROR');
   }
@@ -135,6 +141,7 @@ export async function POST(request: Request) {
     .single();
 
   if (disputeErr || !disputeEvent) {
+    console.error('[disputes] dispute_events insert failed:', disputeErr);
     Sentry.captureException(disputeErr ?? new Error('Failed to insert dispute event'));
     return errorResponse('DATABASE_ERROR');
   }
@@ -197,41 +204,87 @@ export async function POST(request: Request) {
   const scoring = calculateScores(result.csOutput, result.oaOutput, result.omOutput);
 
   // 9. Persist the new submission row, linked via parent_assessment_id.
-  // Re-assessments share their parent's version_number (the partial unique index
-  // added in the migration only enforces uniqueness for parent_assessment_id IS NULL).
+  // Re-assessments preferably share their parent's version_number — the partial
+  // unique index added in the migration only enforces uniqueness for
+  // parent_assessment_id IS NULL. If that index isn't in place (e.g. migration
+  // not fully applied) we fall back to the next available version_number so the
+  // feature still works.
   const newAllGaps: Gap[] = [
     ...result.csOutput.gaps,
     ...result.oaOutput.gaps,
     ...result.omOutput.gaps,
   ];
 
-  const { data: newSub, error: insertErr } = await db
-    .from('submissions')
-    .insert({
-      model_id: parentSub.model_id,
-      user_id: userId,
-      version_number: parentSub.version_number,
-      parent_assessment_id: parentSub.id,
-      document_text: parentSub.document_text,
-      conceptual_score: scoring.pillar_scores.conceptual_soundness,
-      outcomes_score: scoring.pillar_scores.outcomes_analysis,
-      monitoring_score: scoring.pillar_scores.ongoing_monitoring,
-      final_score: scoring.final_score,
-      gap_analysis: newAllGaps,
-      judge_confidence: result.judgeOutput.confidence,
-      assessment_confidence_label: result.judgeOutput.confidence_label,
-      retry_count: result.retryCount,
-      low_confidence_manual_review: result.lowConfidenceManualReview,
-    })
-    .select('id, created_at')
-    .single();
+  const baseInsert = {
+    model_id: parentSub.model_id,
+    user_id: userId,
+    parent_assessment_id: parentSub.id,
+    document_text: parentSub.document_text,
+    conceptual_score: scoring.pillar_scores.conceptual_soundness,
+    outcomes_score: scoring.pillar_scores.outcomes_analysis,
+    monitoring_score: scoring.pillar_scores.ongoing_monitoring,
+    final_score: scoring.final_score,
+    gap_analysis: newAllGaps,
+    judge_confidence: result.judgeOutput.confidence,
+    assessment_confidence_label: result.judgeOutput.confidence_label,
+    retry_count: result.retryCount,
+    low_confidence_manual_review: result.lowConfidenceManualReview,
+  };
 
-  if (insertErr || !newSub) {
-    Sentry.captureException(insertErr ?? new Error('Failed to insert reassessment submission'));
-    return errorResponse('DATABASE_ERROR');
+  let newSub: { id: string; created_at: string } | null = null;
+  let lastInsertErr: unknown = null;
+
+  // First attempt: share parent's version_number
+  {
+    const { data, error } = await db
+      .from('submissions')
+      .insert({ ...baseInsert, version_number: parentSub.version_number })
+      .select('id, created_at')
+      .single();
+
+    if (!error && data) {
+      newSub = data as { id: string; created_at: string };
+    } else if (error && !isUniqueViolation(error)) {
+      console.error('[disputes] submissions insert failed (parent version):', error);
+      lastInsertErr = error;
+    } else if (error) {
+      lastInsertErr = error;
+    }
   }
 
-  const reassessmentId = String((newSub as { id: string }).id);
+  // Fallback: next available version_number (covers the case where the partial
+  // unique index didn't get applied during migration)
+  if (!newSub) {
+    const { count, error: countError } = await db
+      .from('submissions')
+      .select('id', { count: 'exact', head: true })
+      .eq('model_id', parentSub.model_id)
+      .eq('user_id', userId);
+
+    if (countError) {
+      console.error('[disputes] version count lookup failed:', countError);
+      Sentry.captureException(countError);
+      return errorResponse('DATABASE_ERROR');
+    }
+
+    const nextVersion = (count ?? 0) + 1;
+
+    const { data, error } = await db
+      .from('submissions')
+      .insert({ ...baseInsert, version_number: nextVersion })
+      .select('id, created_at')
+      .single();
+
+    if (error || !data) {
+      console.error('[disputes] submissions insert failed (fallback version):', error ?? lastInsertErr);
+      Sentry.captureException(error ?? lastInsertErr ?? new Error('Failed to insert reassessment submission'));
+      return errorResponse('DATABASE_ERROR');
+    }
+
+    newSub = data as { id: string; created_at: string };
+  }
+
+  const reassessmentId = String(newSub.id);
 
   // 10. Persist gaps for the new submission row
   const newGapRows = [
@@ -270,6 +323,7 @@ export async function POST(request: Request) {
   if (newGapRows.length > 0) {
     const { error: gapsInsertErr } = await db.from('gaps').insert(newGapRows);
     if (gapsInsertErr) {
+      console.error('[disputes] gaps insert failed:', gapsInsertErr);
       Sentry.captureException(gapsInsertErr);
       // Compensating delete to avoid orphan submission row
       await db.from('submissions').delete().eq('id', reassessmentId);
@@ -287,7 +341,7 @@ export async function POST(request: Request) {
       judge_confidence_label: result.judgeOutput.confidence_label,
       low_confidence_manual_review: result.lowConfidenceManualReview,
       dispute_event_id: (disputeEvent as { id: string }).id,
-      created_at: String((newSub as { created_at: string }).created_at),
+      created_at: String(newSub.created_at),
     },
     { status: 200 }
   );
