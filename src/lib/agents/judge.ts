@@ -37,6 +37,13 @@ Did the OM agent address all 6 elements (OM-01 through OM-06)?
 7. SEVERITY CALIBRATION
 Are the severity ratings appropriate? Critical should mean the element is completely absent. If an agent marked something Critical but the description suggests the element is present but incomplete, flag this as miscalibrated.
 
+8. DISPUTE RESOLUTION QUALITY (only when the user prompt contains a <reviewer_dispute_context> block)
+The disputed pillar agent produced a "dispute_resolutions" array — one entry per disputed gap — under the rules in that block. Verify each resolution is well-reasoned:
+- "reversed_with_evidence" / "severity_adjusted_with_evidence" require the agent's note to cite specific document content (section, paragraph, table, figure, or quote). If the rationale was vague (e.g. "smoke test", "I disagree") and the agent still reversed or adjusted, flag this as insufficient evidence.
+- "retained_insufficient_evidence" / "retained_evidence_supports_original" require the agent's note to explain why the rationale failed the evidentiary tier OR which document content supports the original finding.
+- Severity tiers: Critical reversals demand directly addressing content; Major reversals demand relevant content; Minor reversals demand a reasonable document reference. Flag mismatches.
+Add issues to the disputed pillar's agent_feedback.issues when dispute_resolutions are not well-reasoned. This check does not apply when no <reviewer_dispute_context> block is present.
+
 CONFIDENCE SCORING RULES:
 - 0.9-1.0: All consistency checks pass, math checks out, no anomalies detected
 - 0.7-0.89: Minor issues found (1-2 small inconsistencies), overall assessment trustworthy

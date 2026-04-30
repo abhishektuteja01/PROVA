@@ -3,7 +3,7 @@ import * as Sentry from '@sentry/nextjs';
 import { createServerClient } from '@/lib/supabase/server';
 import { errorResponse } from '@/lib/errors/messages';
 import { UuidParamSchema } from '@/lib/validation/schemas';
-import type { SubmissionDetail, Gap } from '@/lib/validation/schemas';
+import type { SubmissionDetail, GapWithId } from '@/lib/validation/schemas';
 import { deriveStatus } from '@/lib/scoring/calculator';
 
 export async function GET(
@@ -60,7 +60,7 @@ export async function GET(
     // Fetch gaps from normalized table
     const { data: gapRows, error: gapsError } = await supabase
       .from('gaps')
-      .select('element_code, element_name, severity, description, recommendation')
+      .select('id, element_code, element_name, severity, description, recommendation')
       .eq('submission_id', submissionId);
 
     if (gapsError) {
@@ -83,7 +83,7 @@ export async function GET(
       assessment_confidence_label: row.assessment_confidence_label as SubmissionDetail['assessment_confidence_label'],
       created_at: row.created_at,
       document_text: row.document_text,
-      gap_analysis: (gapRows ?? []) as Gap[],
+      gap_analysis: (gapRows ?? []) as GapWithId[],
       judge_confidence: Number(row.judge_confidence),
     };
 

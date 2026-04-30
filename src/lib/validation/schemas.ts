@@ -107,6 +107,25 @@ export const GapSchema = z.object({
 
 export type Gap = z.infer<typeof GapSchema>;
 
+// ─── Dispute resolution (agent's per-gap verdict on a reviewer dispute) ─────
+
+export const DisputeResolutionEnum = z.enum([
+  "reversed_with_evidence",
+  "severity_adjusted_with_evidence",
+  "retained_insufficient_evidence",
+  "retained_evidence_supports_original",
+]);
+
+export type DisputeResolution = z.infer<typeof DisputeResolutionEnum>;
+
+export const DisputeResolutionItemSchema = z.object({
+  element_code: ElementCodeEnum,
+  resolution: DisputeResolutionEnum,
+  note: z.string().max(500).optional(),
+});
+
+export type DisputeResolutionItem = z.infer<typeof DisputeResolutionItemSchema>;
+
 // ─── Agent output schema ──────────────────────────────────────────────────────
 
 export const AgentOutputSchema = z.object({
@@ -115,6 +134,9 @@ export const AgentOutputSchema = z.object({
   confidence: z.number().min(0).max(1),
   gaps: z.array(GapSchema),
   summary: z.string().min(1).max(2000),
+  // Populated only on dispute re-runs. One entry per disputed gap, mapping
+  // the original element_code to the agent's verdict on the reviewer's dispute.
+  dispute_resolutions: z.array(DisputeResolutionItemSchema).optional(),
 });
 
 export type AgentOutput = z.infer<typeof AgentOutputSchema>;
@@ -242,9 +264,15 @@ export const SubmissionListItemSchema = z.object({
 
 export type SubmissionListItem = z.infer<typeof SubmissionListItemSchema>;
 
+export const GapWithIdSchema = GapSchema.extend({
+  id: z.string().uuid(),
+});
+
+export type GapWithId = z.infer<typeof GapWithIdSchema>;
+
 export const SubmissionDetailSchema = SubmissionListItemSchema.extend({
   document_text: z.string().min(100).max(50000),
-  gap_analysis: z.array(GapSchema),
+  gap_analysis: z.array(GapWithIdSchema),
   judge_confidence: z.number().min(0).max(1),
 });
 
@@ -336,3 +364,90 @@ export const DeleteAllConfirmSchema = z.object({
 });
 
 export type DeleteAllConfirm = z.infer<typeof DeleteAllConfirmSchema>;
+
+// ─── Dispute / scoped re-assessment schemas ─────────────────────────────────
+
+export const DisputeTypeEnum = z.enum([
+  "false_positive",
+  "wrong_severity",
+  "missing_context",
+]);
+
+export type DisputeType = z.infer<typeof DisputeTypeEnum>;
+
+export const DisputeRequestSchema = z.object({
+  assessment_id: z.string().uuid("Invalid submission ID"),
+  gap_id: z.string().uuid("Invalid gap ID"),
+  dispute_type: DisputeTypeEnum,
+  reviewer_rationale: z
+    .string()
+    .min(10, "Rationale must be at least 10 characters")
+    .max(2000, "Rationale must be under 2,000 characters"),
+  proposed_resolution: z
+    .string()
+    .max(2000, "Proposed resolution must be under 2,000 characters")
+    .optional(),
+});
+
+export type DisputeRequest = z.infer<typeof DisputeRequestSchema>;
+
+export const DisputeEventRowSchema = z.object({
+  id: z.string().uuid(),
+  assessment_id: z.string().uuid().nullable(),
+  gap_id: z.string().uuid().nullable(),
+  user_id: z.string().uuid(),
+  dispute_type: DisputeTypeEnum,
+  reviewer_rationale: z.string(),
+  proposed_resolution: z.string().nullable(),
+  created_at: z.string().datetime(),
+});
+
+export type DisputeEventRow = z.infer<typeof DisputeEventRowSchema>;
+
+export const ReassessmentResponseSchema = z.object({
+  reassessment_id: z.string().uuid(),
+  parent_assessment_id: z.string().uuid(),
+  pillar_reassessed: PillarEnum,
+  scoring: ScoringResultSchema,
+  judge_confidence: z.number().min(0).max(1),
+  judge_confidence_label: ConfidenceLabelEnum,
+  low_confidence_manual_review: z.boolean(),
+  dispute_event_id: z.string().uuid(),
+  dispute_resolutions: z.array(DisputeResolutionItemSchema),
+  created_at: z.string().datetime(),
+});
+
+export type ReassessmentResponse = z.infer<typeof ReassessmentResponseSchema>;
+
+export const CompareResponseSchema = z.object({
+  parent: SubmissionDetailSchema,
+  reassessment: SubmissionDetailSchema.extend({
+    parent_assessment_id: z.string().uuid(),
+    low_confidence_manual_review: z.boolean(),
+  }),
+  pillar_reassessed: PillarEnum,
+  pillar_score_deltas: z.object({
+    conceptual_soundness: z.number(),
+    outcomes_analysis: z.number(),
+    ongoing_monitoring: z.number(),
+    final_score: z.number(),
+  }),
+  gap_diff: z.object({
+    added: z.array(GapWithIdSchema),
+    removed: z.array(GapWithIdSchema),
+    severity_changed: z.array(
+      z.object({
+        element_code: ElementCodeEnum,
+        element_name: z.string(),
+        before: SeverityEnum,
+        after: SeverityEnum,
+      })
+    ),
+  }),
+  dispute_events: z.array(DisputeEventRowSchema),
+  // Per-disputed-gap verdict from the disputed pillar agent. Keyed by
+  // element_code so the UI can join with each dispute_event.gap_id ↔ parent gap.
+  dispute_resolutions: z.array(DisputeResolutionItemSchema),
+});
+
+export type CompareResponse = z.infer<typeof CompareResponseSchema>;
