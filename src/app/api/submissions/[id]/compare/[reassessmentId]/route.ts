@@ -132,28 +132,42 @@ export async function GET(
     const parentGaps = (parentGapsRaw ?? []) as GapWithId[];
     const reGaps = (reGapsRaw ?? []) as GapWithId[];
 
-    // Fetch dispute events that triggered this re-assessment.
-    // Filter by parent.id and the parent's gap ids — multiple disputes may exist
-    // for one assessment, but only those linked to gaps belonging to this re-run
-    // are surfaced. For the v1 single-dispute flow this collapses to one row.
-    const parentGapIds = parentGaps.map((g) => g.id);
-    let disputeEvents: DisputeEventRow[] = [];
-    if (parentGapIds.length > 0) {
-      const { data: deRaw, error: deErr } = await supabase
-        .from('dispute_events')
-        .select(
-          'id, assessment_id, gap_id, user_id, dispute_type, reviewer_rationale, proposed_resolution, created_at'
-        )
-        .eq('assessment_id', parentRow.id)
-        .lte('created_at', reRow.created_at)
-        .order('created_at', { ascending: true });
+    // Fetch dispute events that triggered THIS specific re-assessment.
+    // Without a foreign key from dispute_events to the produced re-run, we scope
+    // by time window: disputes filed after the previous re-assessment of this
+    // parent (or after the parent itself if this is the first re-run) and at or
+    // before this re-assessment's creation time.
+    const { data: prevReRaw, error: prevReErr } = await supabase
+      .from('submissions')
+      .select('created_at')
+      .eq('parent_assessment_id', parentRow.id)
+      .lt('created_at', reRow.created_at)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-      if (deErr) {
-        Sentry.captureException(deErr);
-        return errorResponse('DATABASE_ERROR');
-      }
-      disputeEvents = (deRaw ?? []) as DisputeEventRow[];
+    if (prevReErr) {
+      Sentry.captureException(prevReErr);
+      return errorResponse('DATABASE_ERROR');
     }
+
+    const lowerBound = (prevReRaw?.created_at as string | undefined) ?? parentRow.created_at;
+
+    const { data: deRaw, error: deErr } = await supabase
+      .from('dispute_events')
+      .select(
+        'id, assessment_id, gap_id, user_id, dispute_type, reviewer_rationale, proposed_resolution, created_at'
+      )
+      .eq('assessment_id', parentRow.id)
+      .gt('created_at', lowerBound)
+      .lte('created_at', reRow.created_at)
+      .order('created_at', { ascending: true });
+
+    if (deErr) {
+      Sentry.captureException(deErr);
+      return errorResponse('DATABASE_ERROR');
+    }
+    const disputeEvents = (deRaw ?? []) as DisputeEventRow[];
 
     // Compute pillar reassessed (from the dispute event if present, else infer
     // from the first changed pillar score)
