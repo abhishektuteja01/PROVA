@@ -1,15 +1,30 @@
 import { NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
-import { createServerClient } from '@/lib/supabase/server';
+import { createServerClient, createServiceClient } from '@/lib/supabase/server';
 import { errorResponse } from '@/lib/errors/messages';
 import {
+  DisputeResolutionItemSchema,
   UuidParamSchema,
-  type GapWithId,
   type DisputeEventRow,
+  type DisputeResolutionItem,
+  type GapWithId,
   type SubmissionDetail,
 } from '@/lib/validation/schemas';
 import { deriveStatus } from '@/lib/scoring/calculator';
-import { pillarFromElementCode } from '@/lib/agents/scopedReassessment';
+import { pillarFromElementCode, type Pillar } from '@/lib/agents/scopedReassessment';
+import { z } from 'zod';
+
+const AgentOutputsBlobSchema = z.object({
+  cs: z.object({ dispute_resolutions: z.array(DisputeResolutionItemSchema).optional() }).passthrough(),
+  oa: z.object({ dispute_resolutions: z.array(DisputeResolutionItemSchema).optional() }).passthrough(),
+  om: z.object({ dispute_resolutions: z.array(DisputeResolutionItemSchema).optional() }).passthrough(),
+});
+
+function pillarKey(pillar: Pillar): 'cs' | 'oa' | 'om' {
+  if (pillar === 'conceptual_soundness') return 'cs';
+  if (pillar === 'outcomes_analysis') return 'oa';
+  return 'om';
+}
 
 interface RawSubmissionRow {
   id: string;
@@ -225,6 +240,32 @@ export async function GET(
       }
     });
 
+    // Fetch dispute_resolutions from the eval row that the disputes route
+    // wrote when this re-assessment was created. evals is service-role only,
+    // so use the service client. Ownership has already been verified above.
+    let disputeResolutions: DisputeResolutionItem[] = [];
+    {
+      const serviceDb = createServiceClient();
+      const { data: evalRow, error: evalErr } = await serviceDb
+        .from('evals')
+        .select('agent_outputs')
+        .eq('submission_id', reRow.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (evalErr) {
+        // Non-fatal — surface empty list and continue
+        Sentry.captureException(evalErr);
+      } else if (evalRow?.agent_outputs) {
+        const parsed = AgentOutputsBlobSchema.safeParse(evalRow.agent_outputs);
+        if (parsed.success) {
+          const key = pillarKey(pillarReassessed);
+          disputeResolutions = parsed.data[key].dispute_resolutions ?? [];
+        }
+      }
+    }
+
     return NextResponse.json({
       parent: rowToDetail(parentRow, parentGaps),
       reassessment: {
@@ -240,6 +281,7 @@ export async function GET(
         severity_changed: severityChanged,
       },
       dispute_events: disputeEvents,
+      dispute_resolutions: disputeResolutions,
     });
   } catch (err) {
     Sentry.captureException(err);

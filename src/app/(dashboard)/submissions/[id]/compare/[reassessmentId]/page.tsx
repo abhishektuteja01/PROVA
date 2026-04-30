@@ -21,6 +21,23 @@ const DISPUTE_TYPE_LABELS: Record<string, string> = {
   missing_context: "Missing context",
 };
 
+const RESOLUTION_LABELS: Record<string, string> = {
+  reversed_with_evidence: "Reversed: reviewer evidence accepted",
+  severity_adjusted_with_evidence:
+    "Severity adjusted: reviewer evidence accepted",
+  retained_insufficient_evidence:
+    "Retained: reviewer rationale lacked specific document evidence",
+  retained_evidence_supports_original:
+    "Retained: document evidence supports original finding",
+};
+
+const RESOLUTION_COLORS: Record<string, string> = {
+  reversed_with_evidence: "var(--color-compliant)",
+  severity_adjusted_with_evidence: "var(--color-warning)",
+  retained_insufficient_evidence: "var(--color-critical)",
+  retained_evidence_supports_original: "var(--color-text-secondary)",
+};
+
 const SECTION_HEADER_STYLE: React.CSSProperties = {
   fontFamily: "var(--font-playfair)",
   fontSize: "18px",
@@ -464,58 +481,148 @@ export default function ComparePage() {
                     border: "1px solid var(--color-border)",
                   }}
                 >
-                  {data.dispute_events.map((d) => (
-                    <div
-                      key={d.id}
-                      style={{
-                        padding: "14px 16px",
-                        borderBottom: "1px solid var(--color-border)",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "6px",
-                      }}
-                    >
+                  {data.dispute_events.map((d) => {
+                    const parentGap = data.parent.gap_analysis.find(
+                      (g) => g.id === d.gap_id
+                    );
+                    const resolution = parentGap
+                      ? data.dispute_resolutions.find(
+                          (r) => r.element_code === parentGap.element_code
+                        )
+                      : undefined;
+                    const resolutionLabel = resolution
+                      ? RESOLUTION_LABELS[resolution.resolution]
+                      : null;
+                    const resolutionColor = resolution
+                      ? RESOLUTION_COLORS[resolution.resolution] ??
+                        "var(--color-text-secondary)"
+                      : "var(--color-text-secondary)";
+                    return (
                       <div
+                        key={d.id}
                         style={{
-                          fontFamily: "var(--font-geist)",
-                          fontSize: "11px",
-                          color: "var(--color-text-secondary)",
-                          letterSpacing: "0.06em",
-                          textTransform: "uppercase",
+                          padding: "14px 16px",
+                          borderBottom: "1px solid var(--color-border)",
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "6px",
                         }}
                       >
-                        {DISPUTE_TYPE_LABELS[d.dispute_type] ?? d.dispute_type}
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: "var(--font-geist)",
-                          fontSize: "13px",
-                          color: "var(--color-text-primary)",
-                          lineHeight: 1.5,
-                        }}
-                      >
-                        {d.reviewer_rationale}
-                      </div>
-                      {d.proposed_resolution ? (
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "10px",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <span
+                            style={{
+                              fontFamily: "var(--font-geist)",
+                              fontSize: "11px",
+                              color: "var(--color-text-secondary)",
+                              letterSpacing: "0.06em",
+                              textTransform: "uppercase",
+                            }}
+                          >
+                            {DISPUTE_TYPE_LABELS[d.dispute_type] ?? d.dispute_type}
+                          </span>
+                          {parentGap ? (
+                            <span
+                              style={{
+                                fontFamily: "var(--font-ibm-plex-mono)",
+                                fontSize: "11px",
+                                color: "var(--color-accent)",
+                              }}
+                            >
+                              {parentGap.element_code}
+                            </span>
+                          ) : null}
+                        </div>
                         <div
                           style={{
                             fontFamily: "var(--font-geist)",
-                            fontSize: "12px",
-                            color: "var(--color-text-secondary)",
+                            fontSize: "13px",
+                            color: "var(--color-text-primary)",
                             lineHeight: 1.5,
-                            paddingTop: "4px",
-                            borderTop: "1px dashed var(--color-border)",
-                            marginTop: "4px",
                           }}
                         >
-                          <span style={{ color: "var(--color-text-secondary)" }}>
-                            Proposed resolution:{" "}
-                          </span>
-                          {d.proposed_resolution}
+                          {d.reviewer_rationale}
                         </div>
-                      ) : null}
-                    </div>
-                  ))}
+                        {d.proposed_resolution ? (
+                          <div
+                            style={{
+                              fontFamily: "var(--font-geist)",
+                              fontSize: "12px",
+                              color: "var(--color-text-secondary)",
+                              lineHeight: 1.5,
+                            }}
+                          >
+                            <span style={{ color: "var(--color-text-secondary)" }}>
+                              Proposed resolution:{" "}
+                            </span>
+                            {d.proposed_resolution}
+                          </div>
+                        ) : null}
+                        {resolutionLabel ? (
+                          <div
+                            style={{
+                              marginTop: "4px",
+                              paddingTop: "8px",
+                              borderTop: "1px dashed var(--color-border)",
+                              display: "flex",
+                              flexDirection: "column",
+                              gap: "4px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "8px",
+                              }}
+                            >
+                              <span
+                                style={{
+                                  display: "block",
+                                  width: "8px",
+                                  height: "8px",
+                                  borderRadius: "50%",
+                                  background: resolutionColor,
+                                  flexShrink: 0,
+                                }}
+                              />
+                              <span
+                                style={{
+                                  fontFamily: "var(--font-geist)",
+                                  fontSize: "12px",
+                                  fontWeight: 500,
+                                  color: resolutionColor,
+                                  lineHeight: 1.4,
+                                }}
+                              >
+                                {resolutionLabel}
+                              </span>
+                            </div>
+                            {resolution?.note ? (
+                              <div
+                                style={{
+                                  fontFamily: "var(--font-geist)",
+                                  fontSize: "11px",
+                                  fontStyle: "italic",
+                                  color: "var(--color-text-secondary)",
+                                  lineHeight: 1.5,
+                                  paddingLeft: "16px",
+                                }}
+                              >
+                                {resolution.note}
+                              </div>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>

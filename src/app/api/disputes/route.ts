@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { createServerClient, createServiceClient } from '@/lib/supabase/server';
@@ -5,6 +6,7 @@ import { errorResponse } from '@/lib/errors/messages';
 import {
   DisputeRequestSchema,
   type DisputeRequest,
+  type DisputeResolutionItem,
   type Gap,
   type AgentOutput,
 } from '@/lib/validation/schemas';
@@ -15,6 +17,19 @@ import {
 } from '@/lib/agents/scopedReassessment';
 import { calculateScores } from '@/lib/scoring/calculator';
 import { AgentParseError, AgentSchemaError } from '@/lib/agents/errors';
+
+const MODEL_USED = 'claude-haiku-4-5-20251001';
+
+function disputedPillarOutput(
+  pillar: Pillar,
+  cs: AgentOutput,
+  oa: AgentOutput,
+  om: AgentOutput
+): AgentOutput {
+  if (pillar === 'conceptual_soundness') return cs;
+  if (pillar === 'outcomes_analysis') return oa;
+  return om;
+}
 
 function isUniqueViolation(err: { code?: string } | null | undefined): boolean {
   return err?.code === '23505';
@@ -46,6 +61,8 @@ function buildPriorAgentOutput(
 }
 
 export async function POST(request: Request) {
+  const requestStartTime = Date.now();
+
   // 1. Verify session
   let supabase;
   try {
@@ -331,6 +348,34 @@ export async function POST(request: Request) {
     }
   }
 
+  // 11. Persist eval row so the disputed pillar's dispute_resolutions are
+  // recoverable for the compare view (evals.agent_outputs is JSONB).
+  const inputTextHash = createHash('sha256').update(parentSub.document_text).digest('hex');
+  const { error: evalError } = await db.from('evals').insert({
+    submission_id: reassessmentId,
+    input_text_hash: inputTextHash,
+    agent_outputs: { cs: result.csOutput, oa: result.oaOutput, om: result.omOutput },
+    judge_output: result.judgeOutput,
+    retry_count: result.retryCount,
+    total_latency_ms: Date.now() - requestStartTime,
+    model_used: MODEL_USED,
+  });
+
+  if (evalError) {
+    // Non-fatal: dispute_resolutions won't surface in the compare view, but
+    // the re-assessment itself succeeded.
+    console.error('[disputes] evals insert failed (non-fatal):', evalError);
+    Sentry.captureException(evalError);
+  }
+
+  const disputedAgent = disputedPillarOutput(
+    pillar,
+    result.csOutput,
+    result.oaOutput,
+    result.omOutput
+  );
+  const disputeResolutions: DisputeResolutionItem[] = disputedAgent.dispute_resolutions ?? [];
+
   return NextResponse.json(
     {
       reassessment_id: reassessmentId,
@@ -341,6 +386,7 @@ export async function POST(request: Request) {
       judge_confidence_label: result.judgeOutput.confidence_label,
       low_confidence_manual_review: result.lowConfidenceManualReview,
       dispute_event_id: (disputeEvent as { id: string }).id,
+      dispute_resolutions: disputeResolutions,
       created_at: String(newSub.created_at),
     },
     { status: 200 }

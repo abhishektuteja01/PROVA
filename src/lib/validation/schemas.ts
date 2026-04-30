@@ -107,6 +107,25 @@ export const GapSchema = z.object({
 
 export type Gap = z.infer<typeof GapSchema>;
 
+// ─── Dispute resolution (agent's per-gap verdict on a reviewer dispute) ─────
+
+export const DisputeResolutionEnum = z.enum([
+  "reversed_with_evidence",
+  "severity_adjusted_with_evidence",
+  "retained_insufficient_evidence",
+  "retained_evidence_supports_original",
+]);
+
+export type DisputeResolution = z.infer<typeof DisputeResolutionEnum>;
+
+export const DisputeResolutionItemSchema = z.object({
+  element_code: ElementCodeEnum,
+  resolution: DisputeResolutionEnum,
+  note: z.string().max(500).optional(),
+});
+
+export type DisputeResolutionItem = z.infer<typeof DisputeResolutionItemSchema>;
+
 // ─── Agent output schema ──────────────────────────────────────────────────────
 
 export const AgentOutputSchema = z.object({
@@ -115,6 +134,9 @@ export const AgentOutputSchema = z.object({
   confidence: z.number().min(0).max(1),
   gaps: z.array(GapSchema),
   summary: z.string().min(1).max(2000),
+  // Populated only on dispute re-runs. One entry per disputed gap, mapping
+  // the original element_code to the agent's verdict on the reviewer's dispute.
+  dispute_resolutions: z.array(DisputeResolutionItemSchema).optional(),
 });
 
 export type AgentOutput = z.infer<typeof AgentOutputSchema>;
@@ -391,6 +413,7 @@ export const ReassessmentResponseSchema = z.object({
   judge_confidence_label: ConfidenceLabelEnum,
   low_confidence_manual_review: z.boolean(),
   dispute_event_id: z.string().uuid(),
+  dispute_resolutions: z.array(DisputeResolutionItemSchema),
   created_at: z.string().datetime(),
 });
 
@@ -422,6 +445,9 @@ export const CompareResponseSchema = z.object({
     ),
   }),
   dispute_events: z.array(DisputeEventRowSchema),
+  // Per-disputed-gap verdict from the disputed pillar agent. Keyed by
+  // element_code so the UI can join with each dispute_event.gap_id ↔ parent gap.
+  dispute_resolutions: z.array(DisputeResolutionItemSchema),
 });
 
 export type CompareResponse = z.infer<typeof CompareResponseSchema>;

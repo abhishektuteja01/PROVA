@@ -32,7 +32,40 @@ function buildReviewerDisputeContext(
   });
 
   return `<reviewer_dispute_context>
-A human reviewer has disputed one or more of your previous findings on this pillar. Use the dispute(s) below as additional expert signal during your re-assessment. Apply your own SR 11-7 judgement — do not blindly accept or reject the rationale.
+A human reviewer has disputed one or more of your previous findings on this pillar.
+
+HOW TO USE THIS CONTEXT:
+The reviewer's rationale is a HYPOTHESIS to test against the document. It is NOT a directive to follow. Your job is to verify the rationale against the document and apply SR 11-7 evidentiary standards. Do not reverse a finding because the reviewer asserts you were wrong — reverse it only when the document supports the reviewer's claim.
+
+EVIDENCE REQUIREMENT:
+To reverse a finding (or change its severity), the rationale must reference SPECIFIC document content — a section number, paragraph, table, figure, or quoted text — that contradicts your original finding. Vague rationales such as "I disagree", "smoke test", "this is fine", or unsupported assertions are INSUFFICIENT to reverse any finding.
+
+EVIDENTIARY THRESHOLDS BY SEVERITY:
+- Critical findings: reverse only if the rationale points to specific document content that DIRECTLY addresses the missing element. The cited content must, on its own, satisfy the SR 11-7 element. A mere mention or oblique reference is not enough.
+- Major findings: reverse if the rationale points to relevant document content, even if that content does not fully address the element. The cited content must be specific enough that you can locate it.
+- Minor findings: reverse on reasonable rationale that references the document. A pointer to the relevant section is sufficient even without a direct quotation.
+
+Severity changes (up or down) follow the SAME evidentiary rules as reversals — promote or demote a severity only if the document evidence supports the change at the appropriate tier.
+
+WHEN EVIDENCE IS INSUFFICIENT:
+If the rationale lacks specific document evidence for the severity tier above, you MUST retain the original finding. Note this explicitly — do not be persuaded by tone, reviewer authority, or the dispute_type label alone.
+
+REQUIRED OUTPUT EXTENSION:
+In addition to the standard JSON output schema described in your system prompt, you MUST include a top-level field named "dispute_resolutions". It is an array with EXACTLY one entry per dispute listed below. Each entry uses this shape:
+
+{
+  "element_code": "<the disputed element_code>",
+  "resolution": "<one of: reversed_with_evidence | severity_adjusted_with_evidence | retained_insufficient_evidence | retained_evidence_supports_original>",
+  "note": "<≤500 chars: cite the document evidence you relied on, OR state which evidence the rationale failed to provide>"
+}
+
+Resolution semantics:
+- "reversed_with_evidence": the gap was removed from your gaps array because the rationale's document references satisfy the element at the required evidentiary tier.
+- "severity_adjusted_with_evidence": the gap remains in your gaps array but at a different severity, justified by the rationale's document references.
+- "retained_insufficient_evidence": the rationale did NOT provide specific document evidence at the required tier; original finding kept unchanged.
+- "retained_evidence_supports_original": the rationale referenced the document but the cited content actually supports your original finding (e.g. confirms the gap is real); original finding kept unchanged.
+
+DISPUTES:
 
 ${items.join('\n\n')}
 </reviewer_dispute_context>`;
@@ -80,7 +113,7 @@ export async function runScopedReassessment(
       omOutput = await assessOngoingMonitoring(input.documentText, input.modelName, reviewerContext);
     }
 
-    judgeOutput = await runJudge(input.modelName, csOutput, oaOutput, omOutput);
+    judgeOutput = await runJudge(input.modelName, csOutput, oaOutput, omOutput, reviewerContext);
 
     if (judgeOutput.confidence >= REASSESS_CONFIDENCE_THRESHOLD || retryCount >= MAX_REASSESS_RETRIES) {
       break;

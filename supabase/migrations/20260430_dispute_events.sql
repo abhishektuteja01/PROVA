@@ -34,7 +34,7 @@ CREATE UNIQUE INDEX submissions_model_version_unique
 -- 2. Create dispute_events ----------------------------------------------------
 
 CREATE TABLE public.dispute_events (
-  id                   UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   assessment_id        UUID REFERENCES public.submissions(id) ON DELETE SET NULL,
   gap_id               UUID REFERENCES public.gaps(id)        ON DELETE SET NULL,
   user_id              UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
