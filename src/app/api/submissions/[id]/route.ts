@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { createServerClient } from '@/lib/supabase/server';
 import { errorResponse } from '@/lib/errors/messages';
-import { UuidParamSchema } from '@/lib/validation/schemas';
+import { UuidParamSchema, ModelTypeEnum } from '@/lib/validation/schemas';
 import type { SubmissionDetail, GapWithId } from '@/lib/validation/schemas';
 import { deriveStatus } from '@/lib/scoring/calculator';
 
@@ -42,7 +42,7 @@ export async function GET(
     const { data: row, error: fetchError } = await supabase
       .from('submissions')
       .select(
-        'id, user_id, version_number, document_text, conceptual_score, outcomes_score, monitoring_score, final_score, judge_confidence, assessment_confidence_label, created_at, models(model_name)'
+        'id, user_id, version_number, document_text, conceptual_score, outcomes_score, monitoring_score, final_score, judge_confidence, assessment_confidence_label, model_type, is_synthetic, created_at, models(model_name)'
       )
       .eq('id', submissionId)
       .maybeSingle();
@@ -74,6 +74,8 @@ export async function GET(
     const detail: SubmissionDetail = {
       id: row.id,
       model_name: models?.model_name ?? 'Unknown',
+      model_type: ModelTypeEnum.catch('other').parse(row.model_type),
+      is_synthetic: Boolean(row.is_synthetic),
       version_number: row.version_number,
       conceptual_score: Number(row.conceptual_score),
       outcomes_score: Number(row.outcomes_score),

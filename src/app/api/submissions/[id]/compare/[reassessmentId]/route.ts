@@ -4,6 +4,7 @@ import { createServerClient, createServiceClient } from '@/lib/supabase/server';
 import { errorResponse } from '@/lib/errors/messages';
 import {
   DisputeResolutionItemSchema,
+  ModelTypeEnum,
   UuidParamSchema,
   type DisputeEventRow,
   type DisputeResolutionItem,
@@ -37,6 +38,8 @@ interface RawSubmissionRow {
   final_score: number | string;
   judge_confidence: number | string;
   assessment_confidence_label: SubmissionDetail['assessment_confidence_label'];
+  model_type: string;
+  is_synthetic: boolean;
   created_at: string;
   parent_assessment_id: string | null;
   low_confidence_manual_review: boolean;
@@ -44,13 +47,15 @@ interface RawSubmissionRow {
 }
 
 const SUBMISSION_SELECT =
-  'id, user_id, version_number, document_text, conceptual_score, outcomes_score, monitoring_score, final_score, judge_confidence, assessment_confidence_label, created_at, parent_assessment_id, low_confidence_manual_review, models(model_name)';
+  'id, user_id, version_number, document_text, conceptual_score, outcomes_score, monitoring_score, final_score, judge_confidence, assessment_confidence_label, model_type, is_synthetic, created_at, parent_assessment_id, low_confidence_manual_review, models(model_name)';
 
 function rowToDetail(row: RawSubmissionRow, gaps: GapWithId[]): SubmissionDetail {
   const finalScore = Number(row.final_score);
   return {
     id: row.id,
     model_name: row.models?.model_name ?? 'Unknown',
+    model_type: ModelTypeEnum.catch('other').parse(row.model_type),
+    is_synthetic: Boolean(row.is_synthetic),
     version_number: row.version_number,
     conceptual_score: Number(row.conceptual_score),
     outcomes_score: Number(row.outcomes_score),

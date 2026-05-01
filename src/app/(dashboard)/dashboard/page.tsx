@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createServerClient } from "@/lib/supabase/server";
-import { UserPreferencesSchema } from "@/lib/validation/schemas";
+import {
+  UserPreferencesSchema,
+  ModelTypeEnum,
+} from "@/lib/validation/schemas";
 import type { SubmissionListItem } from "@/lib/validation/schemas";
 import OverviewPanel from "@/components/dashboard/OverviewPanel";
 import ModelInventoryTable from "@/components/dashboard/ModelInventoryTable";
@@ -17,6 +20,8 @@ interface SubmissionJoinRow {
   monitoring_score: number;
   final_score: number;
   assessment_confidence_label: string;
+  model_type: string;
+  is_synthetic: boolean;
   created_at: string;
   models: { model_name: string } | null;
 }
@@ -34,7 +39,7 @@ export default async function DashboardPage() {
     supabase
       .from("submissions")
       .select(
-        "id, version_number, conceptual_score, outcomes_score, monitoring_score, final_score, assessment_confidence_label, created_at, models(model_name)"
+        "id, version_number, conceptual_score, outcomes_score, monitoring_score, final_score, assessment_confidence_label, model_type, is_synthetic, created_at, models(model_name)"
       )
       .order("created_at", { ascending: false }),
     supabase
@@ -59,6 +64,8 @@ export default async function DashboardPage() {
     return {
       id: r.id,
       model_name: r.models?.model_name ?? "Unknown Model",
+      model_type: ModelTypeEnum.catch("other").parse(r.model_type),
+      is_synthetic: Boolean(r.is_synthetic),
       version_number: r.version_number,
       conceptual_score: r.conceptual_score,
       outcomes_score: r.outcomes_score,
