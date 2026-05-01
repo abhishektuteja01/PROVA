@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import type { ComplianceResponse } from "@/lib/validation/schemas";
+import type { ComplianceResponse, ModelType } from "@/lib/validation/schemas";
 import Card from "@/components/ui/Card";
 import Skeleton from "@/components/ui/Skeleton";
 import Toast from "@/components/ui/Toast";
@@ -23,6 +23,7 @@ export default function CheckPage() {
   const handleSubmit = useCallback(
     async (data: {
       modelName: string;
+      modelType: ModelType;
       documentText?: string;
       file?: File;
     }) => {
@@ -37,6 +38,7 @@ export default function CheckPage() {
           // File upload — multipart/form-data
           const formData = new FormData();
           formData.append("model_name", data.modelName);
+          formData.append("model_type", data.modelType);
           formData.append("file", data.file);
           response = await fetch("/api/compliance", {
             method: "POST",
@@ -49,6 +51,7 @@ export default function CheckPage() {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               model_name: data.modelName,
+              model_type: data.modelType,
               document_text: data.documentText,
             }),
           });

@@ -24,6 +24,12 @@ import {
   ModelRowSchema,
   SubmissionRowSchema,
   GapRowSchema,
+  ModelTypeEnum,
+  MODEL_TYPE_LABELS,
+  BenchmarkStatsSchema,
+  CorpusDisclosureSchema,
+  BenchmarkQuerySchema,
+  BENCHMARK_MIN_CORPUS_N,
 } from "./schemas";
 
 // ─── loginSchema ──────────────────────────────────────────────────────────────
@@ -722,6 +728,8 @@ describe("SubmissionListItemSchema", () => {
   const validItem = {
     id: "550e8400-e29b-41d4-a716-446655440000",
     model_name: "Black-Scholes",
+    model_type: "other",
+    is_synthetic: false,
     version_number: 1,
     conceptual_score: 80,
     outcomes_score: 70,
@@ -851,6 +859,8 @@ describe("SubmissionDetailSchema", () => {
   const validDetail = {
     id: "550e8400-e29b-41d4-a716-446655440000",
     model_name: "Black-Scholes",
+    model_type: "other",
+    is_synthetic: false,
     version_number: 1,
     conceptual_score: 80,
     outcomes_score: 70,
@@ -933,6 +943,8 @@ describe("SubmissionRowSchema", () => {
     gap_analysis: [],
     judge_confidence: 0.9,
     assessment_confidence_label: "High",
+    model_type: "other",
+    is_synthetic: false,
     created_at: "2026-03-23T10:00:00.000Z",
   };
 
@@ -989,5 +1001,152 @@ describe("GapRowSchema", () => {
 
   it("rejects a non-UUID submission_id", () => {
     expect(GapRowSchema.safeParse({ ...validRow, submission_id: "not-a-uuid" }).success).toBe(false);
+  });
+});
+
+// ─── ModelTypeEnum + MODEL_TYPE_LABELS ───────────────────────────────────────
+
+describe("ModelTypeEnum", () => {
+  const expected = [
+    "credit_risk_pd_lgd_ead",
+    "allowance_cecl_ifrs9",
+    "market_risk_var",
+    "alm_irrbb",
+    "stress_testing_ccar",
+    "aml_fraud",
+    "credit_decisioning",
+    "other",
+  ];
+
+  it("contains exactly the eight specified values", () => {
+    expect(ModelTypeEnum.options.slice().sort()).toEqual(expected.slice().sort());
+  });
+
+  it("rejects unknown model types", () => {
+    expect(ModelTypeEnum.safeParse("not_a_real_type").success).toBe(false);
+  });
+
+  it("has a human-readable label for every enum value", () => {
+    for (const value of expected) {
+      expect(MODEL_TYPE_LABELS[value as keyof typeof MODEL_TYPE_LABELS]).toBeTruthy();
+    }
+  });
+});
+
+// ─── BenchmarkStatsSchema ────────────────────────────────────────────────────
+
+describe("BenchmarkStatsSchema", () => {
+  const validStats = {
+    model_type: "credit_risk_pd_lgd_ead",
+    include_synthetic: true,
+    corpus_n: 10,
+    synthetic_n: 4,
+    real_n: 6,
+    cs_median: 78,
+    oa_median: 65,
+    om_median: 70,
+    final_median: 72,
+    top_gaps: [
+      { element_code: "CS-03", element_name: "Key Assumptions", frequency: 7 },
+    ],
+  };
+
+  it("accepts a valid stats object", () => {
+    expect(BenchmarkStatsSchema.safeParse(validStats).success).toBe(true);
+  });
+
+  it("accepts nullable medians (insufficient corpus signal)", () => {
+    expect(
+      BenchmarkStatsSchema.safeParse({
+        ...validStats,
+        corpus_n: 0,
+        cs_median: null,
+        oa_median: null,
+        om_median: null,
+        final_median: null,
+        top_gaps: [],
+      }).success
+    ).toBe(true);
+  });
+
+  it("rejects an invalid element_code in top_gaps", () => {
+    expect(
+      BenchmarkStatsSchema.safeParse({
+        ...validStats,
+        top_gaps: [
+          { element_code: "ZZ-99", element_name: "Bogus", frequency: 1 },
+        ],
+      }).success
+    ).toBe(false);
+  });
+
+  it("exposes a minimum-N threshold of at least 5", () => {
+    expect(BENCHMARK_MIN_CORPUS_N).toBeGreaterThanOrEqual(5);
+  });
+});
+
+describe("CorpusDisclosureSchema", () => {
+  it("accepts non-negative integer counts", () => {
+    expect(
+      CorpusDisclosureSchema.safeParse({ total_n: 7, synthetic_n: 3, real_n: 4 }).success
+    ).toBe(true);
+  });
+
+  it("rejects negative counts", () => {
+    expect(
+      CorpusDisclosureSchema.safeParse({ total_n: -1, synthetic_n: 0, real_n: 0 }).success
+    ).toBe(false);
+  });
+});
+
+describe("BenchmarkQuerySchema", () => {
+  it("requires model_type", () => {
+    expect(BenchmarkQuerySchema.safeParse({}).success).toBe(false);
+  });
+
+  it("defaults include_synthetic to true", () => {
+    const r = BenchmarkQuerySchema.safeParse({ model_type: "other" });
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.include_synthetic).toBe(true);
+  });
+});
+
+// ─── ComplianceRequestSchema model_type / is_synthetic ──────────────────────
+
+describe("ComplianceRequestSchema model_type + is_synthetic", () => {
+  const base = {
+    model_name: "Test Model",
+    document_text: "A".repeat(120),
+  };
+
+  it("defaults model_type to 'other' when omitted", () => {
+    const r = ComplianceRequestSchema.safeParse(base);
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.model_type).toBe("other");
+  });
+
+  it("defaults is_synthetic to false when omitted", () => {
+    const r = ComplianceRequestSchema.safeParse(base);
+    expect(r.success).toBe(true);
+    if (r.success) expect(r.data.is_synthetic).toBe(false);
+  });
+
+  it("accepts an explicit is_synthetic=true", () => {
+    const r = ComplianceRequestSchema.safeParse({
+      ...base,
+      is_synthetic: true,
+      model_type: "allowance_cecl_ifrs9",
+    });
+    expect(r.success).toBe(true);
+    if (r.success) {
+      expect(r.data.is_synthetic).toBe(true);
+      expect(r.data.model_type).toBe("allowance_cecl_ifrs9");
+    }
+  });
+
+  it("rejects an invalid model_type", () => {
+    expect(
+      ComplianceRequestSchema.safeParse({ ...base, model_type: "credit_risk_xyz" }).success
+    ).toBe(false);
   });
 });

@@ -89,6 +89,8 @@ const MOCK_SUBMISSION_ROW = {
   final_score: 82,
   judge_confidence: 0.9,
   assessment_confidence_label: 'High',
+  model_type: 'other',
+  is_synthetic: false,
   created_at: '2026-01-01T00:00:00.000Z',
   models: { model_name: 'Test Model' },
 };

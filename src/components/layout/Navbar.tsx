@@ -8,6 +8,7 @@ import type { User } from "@supabase/supabase-js";
 
 const NAV_LINKS = [
   { label: "Dashboard", href: "/dashboard" },
+  { label: "Benchmarks", href: "/dashboard/benchmarks" },
   { label: "New Check", href: "/check" },
   { label: "History", href: "/submissions" },
   { label: "Help", href: "/help" },
@@ -24,7 +25,7 @@ function NavSkeleton() {
       style={{ display: "flex", alignItems: "center", gap: "4px", flex: 1 }}
       aria-hidden="true"
     >
-      {[72, 90, 68, 48, 76].map((w, i) => (
+      {[72, 86, 72, 60, 48, 76].map((w, i) => (
         <div
           key={i}
           className="animate-pulse"

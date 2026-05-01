@@ -4,11 +4,21 @@ import { useState } from "react";
 import TextArea from "@/components/ui/TextArea";
 import Button from "@/components/ui/Button";
 import FileUpload from "./FileUpload";
+import {
+  ModelTypeEnum,
+  MODEL_TYPE_LABELS,
+  type ModelType,
+} from "@/lib/validation/schemas";
 
 type InputMode = "text" | "file";
 
 interface DocumentInputProps {
-  onSubmit: (data: { modelName: string; documentText?: string; file?: File }) => void;
+  onSubmit: (data: {
+    modelName: string;
+    modelType: ModelType;
+    documentText?: string;
+    file?: File;
+  }) => void;
   isLoading: boolean;
 }
 
@@ -18,6 +28,7 @@ export default function DocumentInput({
 }: DocumentInputProps) {
   const [mode, setMode] = useState<InputMode>("text");
   const [modelName, setModelName] = useState("");
+  const [modelType, setModelType] = useState<ModelType>("other");
   const [documentText, setDocumentText] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -45,9 +56,9 @@ export default function DocumentInput({
     if (!canSubmit) return;
 
     if (mode === "text") {
-      onSubmit({ modelName: modelName.trim(), documentText });
+      onSubmit({ modelName: modelName.trim(), modelType, documentText });
     } else if (file) {
-      onSubmit({ modelName: modelName.trim(), file });
+      onSubmit({ modelName: modelName.trim(), modelType, file });
     }
   }
 
@@ -100,6 +111,61 @@ export default function DocumentInput({
             {modelNameError}
           </div>
         )}
+      </div>
+
+      {/* Model Type */}
+      <div>
+        <label
+          htmlFor="model-type-select"
+          style={{
+            display: "block",
+            fontFamily: "var(--font-geist)",
+            fontSize: "12px",
+            fontWeight: 500,
+            color: "var(--color-text-secondary)",
+            marginBottom: "8px",
+            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+          }}
+        >
+          Model Type
+        </label>
+        <select
+          id="model-type-select"
+          value={modelType}
+          onChange={(e) => setModelType(e.target.value as ModelType)}
+          className="focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+          style={{
+            fontFamily: "var(--font-geist)",
+            fontSize: "14px",
+            color: "var(--color-text-primary)",
+            background: "var(--color-bg-tertiary)",
+            border: "1px solid var(--color-border)",
+            borderRadius: "2px",
+            padding: "10px 14px",
+            width: "100%",
+            transition: "border-color 0.15s ease",
+            appearance: "none",
+            cursor: "pointer",
+          }}
+        >
+          {ModelTypeEnum.options.map((value) => (
+            <option key={value} value={value}>
+              {MODEL_TYPE_LABELS[value]}
+            </option>
+          ))}
+        </select>
+        <div
+          style={{
+            fontFamily: "var(--font-geist)",
+            fontSize: "11px",
+            color: "var(--color-text-secondary)",
+            marginTop: "6px",
+            opacity: 0.7,
+          }}
+        >
+          Used to compare your assessment against similar models in the corpus.
+        </div>
       </div>
 
       {/* Mode toggle */}

@@ -6,6 +6,7 @@ import {
   PaginationParamsSchema,
   DeleteAllConfirmSchema,
   ConfidenceLabelEnum,
+  ModelTypeEnum,
 } from '@/lib/validation/schemas';
 import type { SubmissionListItem } from '@/lib/validation/schemas';
 import { deriveStatus } from '@/lib/scoring/calculator';
@@ -62,7 +63,7 @@ export async function GET(request: Request) {
     const { data: rows, error: dataError } = await supabase
       .from('submissions')
       .select(
-        'id, version_number, conceptual_score, outcomes_score, monitoring_score, final_score, assessment_confidence_label, created_at, models(model_name)'
+        'id, version_number, conceptual_score, outcomes_score, monitoring_score, final_score, assessment_confidence_label, model_type, is_synthetic, created_at, models(model_name)'
       )
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
@@ -81,6 +82,8 @@ export async function GET(request: Request) {
       return {
         id: row.id,
         model_name: models?.model_name ?? 'Unknown',
+        model_type: ModelTypeEnum.catch('other').parse(row.model_type),
+        is_synthetic: Boolean(row.is_synthetic),
         version_number: row.version_number,
         conceptual_score: Number(row.conceptual_score),
         outcomes_score: Number(row.outcomes_score),

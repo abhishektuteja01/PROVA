@@ -9,8 +9,12 @@ import { parseDOCX } from '@/lib/parsers/docx';
 import { runCompliance } from '@/lib/agents/orchestrator';
 import { calculateScores } from '@/lib/scoring/calculator';
 import { AgentParseError, AgentSchemaError } from '@/lib/agents/errors';
-import { ComplianceRequestSchema, MAX_FILE_SIZE_BYTES } from '@/lib/validation/schemas';
-import type { Gap } from '@/lib/validation/schemas';
+import {
+  ComplianceRequestSchema,
+  MAX_FILE_SIZE_BYTES,
+  ModelTypeEnum,
+} from '@/lib/validation/schemas';
+import type { Gap, ModelType } from '@/lib/validation/schemas';
 import { errorResponse } from '@/lib/errors/messages';
 
 const MODEL_USED = 'claude-haiku-4-5-20251001';
@@ -70,6 +74,8 @@ export async function POST(request: Request) {
   // 3. Parse request body
   let documentText: string;
   let modelName: string;
+  let modelType: ModelType = 'other';
+  let isSynthetic = false;
 
   const contentType = request.headers.get('content-type') ?? '';
   const contentLength = parseInt(request.headers.get('content-length') ?? '0', 10);
@@ -100,6 +106,20 @@ export async function POST(request: Request) {
       });
     }
     modelName = nameResult.data.model_name;
+
+    // Validate model_type (optional in form-data — defaults to 'other')
+    const rawModelType = formData.get('model_type');
+    if (rawModelType !== null) {
+      const typeResult = ModelTypeEnum.safeParse(rawModelType);
+      if (!typeResult.success) {
+        return errorResponse('VALIDATION_ERROR', { message: 'Invalid model type.' });
+      }
+      modelType = typeResult.data;
+    }
+
+    // is_synthetic — only "true" (string) flips the flag; everything else is false
+    const rawIsSynthetic = formData.get('is_synthetic');
+    isSynthetic = rawIsSynthetic === 'true';
 
     // Validate file presence
     const file = formData.get('file');
@@ -160,6 +180,8 @@ export async function POST(request: Request) {
     }
 
     modelName = result.data.model_name;
+    modelType = result.data.model_type;
+    isSynthetic = result.data.is_synthetic;
     documentText = result.data.document_text;
   }
 
@@ -283,6 +305,8 @@ export async function POST(request: Request) {
           judge_confidence: judgeOutput.confidence,
           assessment_confidence_label: judgeOutput.confidence_label,
           retry_count: retryCount,
+          model_type: modelType,
+          is_synthetic: isSynthetic,
         })
         .select('id, created_at')
         .single();

@@ -59,6 +59,32 @@ export type Status = z.infer<typeof StatusEnum>;
 
 export const ConfidenceLabelEnum = z.enum(["High", "Medium", "Low"]);
 
+// Model type — must stay in lockstep with the public.model_type SQL enum
+// (see supabase/migrations/20260430_model_type_benchmarks.sql).
+export const ModelTypeEnum = z.enum([
+  "credit_risk_pd_lgd_ead",
+  "allowance_cecl_ifrs9",
+  "market_risk_var",
+  "alm_irrbb",
+  "stress_testing_ccar",
+  "aml_fraud",
+  "credit_decisioning",
+  "other",
+]);
+
+export type ModelType = z.infer<typeof ModelTypeEnum>;
+
+export const MODEL_TYPE_LABELS: Record<ModelType, string> = {
+  credit_risk_pd_lgd_ead: "Credit Risk — PD/LGD/EAD",
+  allowance_cecl_ifrs9: "CECL / IFRS 9 Allowance",
+  market_risk_var: "Market Risk — VaR / ES",
+  alm_irrbb: "ALM / Interest Rate Risk (IRRBB)",
+  stress_testing_ccar: "Stress Testing — CCAR/DFAST",
+  aml_fraud: "AML / Fraud / Transaction Monitoring",
+  credit_decisioning: "Credit Decisioning / Scoring",
+  other: "Other",
+};
+
 // SR 11-7 element codes — exactly the codes defined in PRD Section 14.5
 export const CSElementCodeEnum = z.enum([
   "CS-01",
@@ -211,6 +237,12 @@ export const ComplianceRequestSchema = z.object({
       /^[a-zA-Z0-9 \-_().]+$/,
       "Model name contains invalid characters"
     ),
+  model_type: ModelTypeEnum.default("other"),
+  // is_synthetic must be settable at submission time so the test suite can tag
+  // synthetic-corpus runs without polluting real-corpus benchmark stats. The
+  // route handler is the trust boundary — clients may pass true, but only
+  // authenticated users can submit at all and synthetic-tagging is benign.
+  is_synthetic: z.boolean().default(false),
   // file is handled as multipart/form-data — not in this schema
   document_text: z
     .string()
@@ -252,6 +284,8 @@ export type ComplianceResponse = z.infer<typeof ComplianceResponseSchema>;
 export const SubmissionListItemSchema = z.object({
   id: z.string().uuid(),
   model_name: z.string(),
+  model_type: ModelTypeEnum,
+  is_synthetic: z.boolean(),
   version_number: z.number().int().min(1),
   conceptual_score: z.number().min(0).max(100),
   outcomes_score: z.number().min(0).max(100),
@@ -302,6 +336,8 @@ export const SubmissionRowSchema = z.object({
   gap_analysis: z.array(GapSchema).nullable(),
   judge_confidence: z.number(),
   assessment_confidence_label: ConfidenceLabelEnum,
+  model_type: ModelTypeEnum,
+  is_synthetic: z.boolean(),
   created_at: z.string().datetime(),
 });
 
@@ -451,3 +487,52 @@ export const CompareResponseSchema = z.object({
 });
 
 export type CompareResponse = z.infer<typeof CompareResponseSchema>;
+
+// ─── Benchmark schemas ───────────────────────────────────────────────────────
+
+// Minimum corpus size below which we suppress medians and refuse to render the
+// comparison plot. N=1 in a model_type bucket would let a viewer recover
+// another user's exact pillar score from the median; N<5 also yields
+// statistically meaningless comparisons. The DB function still returns the
+// raw counts so the UI can render an honest "Insufficient corpus" message.
+export const BENCHMARK_MIN_CORPUS_N = 5;
+
+export const TopGapEntrySchema = z.object({
+  element_code: ElementCodeEnum,
+  element_name: z.string(),
+  frequency: z.number().int().min(0),
+});
+
+export type TopGapEntry = z.infer<typeof TopGapEntrySchema>;
+
+export const BenchmarkStatsSchema = z.object({
+  model_type: ModelTypeEnum,
+  include_synthetic: z.boolean(),
+  corpus_n: z.number().int().min(0),
+  synthetic_n: z.number().int().min(0),
+  real_n: z.number().int().min(0),
+  // Medians are nullable: suppressed when corpus_n < BENCHMARK_MIN_CORPUS_N
+  // (server-side enforcement on top of any client-side guard).
+  cs_median: z.number().min(0).max(100).nullable(),
+  oa_median: z.number().min(0).max(100).nullable(),
+  om_median: z.number().min(0).max(100).nullable(),
+  final_median: z.number().min(0).max(100).nullable(),
+  top_gaps: z.array(TopGapEntrySchema),
+});
+
+export type BenchmarkStats = z.infer<typeof BenchmarkStatsSchema>;
+
+export const CorpusDisclosureSchema = z.object({
+  total_n: z.number().int().min(0),
+  synthetic_n: z.number().int().min(0),
+  real_n: z.number().int().min(0),
+});
+
+export type CorpusDisclosure = z.infer<typeof CorpusDisclosureSchema>;
+
+export const BenchmarkQuerySchema = z.object({
+  model_type: ModelTypeEnum,
+  include_synthetic: z.coerce.boolean().default(true),
+});
+
+export type BenchmarkQuery = z.infer<typeof BenchmarkQuerySchema>;
