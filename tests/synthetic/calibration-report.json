@@ -1,0 +1,381 @@
+{
+  "generated_at": "2026-04-30T23:47:28.810Z",
+  "doc_count": 8,
+  "thresholds": {
+    "recall_fail": 0.7,
+    "recall_watchlist": 0.85
+  },
+  "per_element": [
+    {
+      "pillar": "conceptual_soundness",
+      "element_id": "CS-01",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 3,
+      "agent_flags_matching_label": 3,
+      "precision": 1,
+      "matched_with_severity": 3,
+      "severity_agreements": 2,
+      "severity_agreement": 0.6666666666666666,
+      "watchlist": false
+    },
+    {
+      "pillar": "conceptual_soundness",
+      "element_id": "CS-02",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 3,
+      "agent_flags_matching_label": 3,
+      "precision": 1,
+      "matched_with_severity": 3,
+      "severity_agreements": 2,
+      "severity_agreement": 0.6666666666666666,
+      "watchlist": false
+    },
+    {
+      "pillar": "conceptual_soundness",
+      "element_id": "CS-03",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 3,
+      "agent_flags_matching_label": 3,
+      "precision": 1,
+      "matched_with_severity": 3,
+      "severity_agreements": 3,
+      "severity_agreement": 1,
+      "watchlist": false
+    },
+    {
+      "pillar": "conceptual_soundness",
+      "element_id": "CS-04",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 8,
+      "agent_flags_matching_label": 3,
+      "precision": 0.375,
+      "matched_with_severity": 3,
+      "severity_agreements": 3,
+      "severity_agreement": 1,
+      "watchlist": false
+    },
+    {
+      "pillar": "conceptual_soundness",
+      "element_id": "CS-05",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 3,
+      "agent_flags_matching_label": 3,
+      "precision": 1,
+      "matched_with_severity": 3,
+      "severity_agreements": 2,
+      "severity_agreement": 0.6666666666666666,
+      "watchlist": false
+    },
+    {
+      "pillar": "conceptual_soundness",
+      "element_id": "CS-06",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 3,
+      "agent_flags_matching_label": 3,
+      "precision": 1,
+      "matched_with_severity": 3,
+      "severity_agreements": 2,
+      "severity_agreement": 0.6666666666666666,
+      "watchlist": false
+    },
+    {
+      "pillar": "conceptual_soundness",
+      "element_id": "CS-07",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 3,
+      "agent_flags_matching_label": 3,
+      "precision": 1,
+      "matched_with_severity": 3,
+      "severity_agreements": 2,
+      "severity_agreement": 0.6666666666666666,
+      "watchlist": false
+    },
+    {
+      "pillar": "ongoing_monitoring",
+      "element_id": "OM-01",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 5,
+      "agent_flags_matching_label": 3,
+      "precision": 0.6,
+      "matched_with_severity": 3,
+      "severity_agreements": 2,
+      "severity_agreement": 0.6666666666666666,
+      "watchlist": false
+    },
+    {
+      "pillar": "ongoing_monitoring",
+      "element_id": "OM-02",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 5,
+      "agent_flags_matching_label": 3,
+      "precision": 0.6,
+      "matched_with_severity": 3,
+      "severity_agreements": 3,
+      "severity_agreement": 1,
+      "watchlist": false
+    },
+    {
+      "pillar": "ongoing_monitoring",
+      "element_id": "OM-03",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 3,
+      "agent_flags_matching_label": 3,
+      "precision": 1,
+      "matched_with_severity": 3,
+      "severity_agreements": 3,
+      "severity_agreement": 1,
+      "watchlist": false
+    },
+    {
+      "pillar": "ongoing_monitoring",
+      "element_id": "OM-04",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 3,
+      "agent_flags_matching_label": 3,
+      "precision": 1,
+      "matched_with_severity": 3,
+      "severity_agreements": 2,
+      "severity_agreement": 0.6666666666666666,
+      "watchlist": false
+    },
+    {
+      "pillar": "ongoing_monitoring",
+      "element_id": "OM-05",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 6,
+      "agent_flags_matching_label": 3,
+      "precision": 0.5,
+      "matched_with_severity": 3,
+      "severity_agreements": 2,
+      "severity_agreement": 0.6666666666666666,
+      "watchlist": false
+    },
+    {
+      "pillar": "ongoing_monitoring",
+      "element_id": "OM-06",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 3,
+      "agent_flags_matching_label": 3,
+      "precision": 1,
+      "matched_with_severity": 3,
+      "severity_agreements": 3,
+      "severity_agreement": 1,
+      "watchlist": false
+    },
+    {
+      "pillar": "outcomes_analysis",
+      "element_id": "OA-01",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 3,
+      "agent_flags_matching_label": 3,
+      "precision": 1,
+      "matched_with_severity": 3,
+      "severity_agreements": 2,
+      "severity_agreement": 0.6666666666666666,
+      "watchlist": false
+    },
+    {
+      "pillar": "outcomes_analysis",
+      "element_id": "OA-02",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 3,
+      "agent_flags_matching_label": 3,
+      "precision": 1,
+      "matched_with_severity": 3,
+      "severity_agreements": 1,
+      "severity_agreement": 0.3333333333333333,
+      "watchlist": false
+    },
+    {
+      "pillar": "outcomes_analysis",
+      "element_id": "OA-03",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 3,
+      "agent_flags_matching_label": 3,
+      "precision": 1,
+      "matched_with_severity": 3,
+      "severity_agreements": 1,
+      "severity_agreement": 0.3333333333333333,
+      "watchlist": false
+    },
+    {
+      "pillar": "outcomes_analysis",
+      "element_id": "OA-04",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 4,
+      "agent_flags_matching_label": 3,
+      "precision": 0.75,
+      "matched_with_severity": 3,
+      "severity_agreements": 2,
+      "severity_agreement": 0.6666666666666666,
+      "watchlist": false
+    },
+    {
+      "pillar": "outcomes_analysis",
+      "element_id": "OA-05",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 7,
+      "agent_flags_matching_label": 3,
+      "precision": 0.42857142857142855,
+      "matched_with_severity": 3,
+      "severity_agreements": 1,
+      "severity_agreement": 0.3333333333333333,
+      "watchlist": false
+    },
+    {
+      "pillar": "outcomes_analysis",
+      "element_id": "OA-06",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 3,
+      "agent_flags_matching_label": 3,
+      "precision": 1,
+      "matched_with_severity": 3,
+      "severity_agreements": 2,
+      "severity_agreement": 0.6666666666666666,
+      "watchlist": false
+    },
+    {
+      "pillar": "outcomes_analysis",
+      "element_id": "OA-07",
+      "must_detect_total": 3,
+      "must_detect_caught": 3,
+      "recall": 1,
+      "agent_flags_total": 4,
+      "agent_flags_matching_label": 3,
+      "precision": 0.75,
+      "matched_with_severity": 3,
+      "severity_agreements": 2,
+      "severity_agreement": 0.6666666666666666,
+      "watchlist": false
+    }
+  ],
+  "per_pillar": [
+    {
+      "pillar": "conceptual_soundness",
+      "recall": 1,
+      "precision": 0.8076923076923077,
+      "severity_agreement": 0.7619047619047619
+    },
+    {
+      "pillar": "outcomes_analysis",
+      "recall": 1,
+      "precision": 0.7777777777777778,
+      "severity_agreement": 0.5238095238095238
+    },
+    {
+      "pillar": "ongoing_monitoring",
+      "recall": 1,
+      "precision": 0.72,
+      "severity_agreement": 0.8333333333333334
+    }
+  ],
+  "overall": {
+    "recall": 1,
+    "precision": 0.7692307692307693,
+    "severity_agreement": 0.7
+  },
+  "per_doc": [
+    {
+      "doc_id": "test_fully_compliant",
+      "model_name": "Black-Scholes Option Pricing Model",
+      "matched": 0,
+      "agent_gap_count": 3,
+      "label_must_detect_count": 0,
+      "recall_on_doc": null
+    },
+    {
+      "doc_id": "test_missing_conceptual",
+      "model_name": "Credit Risk Scorecard Model",
+      "matched": 7,
+      "agent_gap_count": 9,
+      "label_must_detect_count": 7,
+      "recall_on_doc": 1
+    },
+    {
+      "doc_id": "test_missing_outcomes",
+      "model_name": "Mortgage Prepayment Model",
+      "matched": 7,
+      "agent_gap_count": 9,
+      "label_must_detect_count": 7,
+      "recall_on_doc": 1
+    },
+    {
+      "doc_id": "test_missing_monitoring",
+      "model_name": "Interest Rate Swap Valuation Model",
+      "matched": 6,
+      "agent_gap_count": 8,
+      "label_must_detect_count": 6,
+      "recall_on_doc": 1
+    },
+    {
+      "doc_id": "test_all_critical_gaps",
+      "model_name": "Internal Prediction Model",
+      "matched": 20,
+      "agent_gap_count": 20,
+      "label_must_detect_count": 20,
+      "recall_on_doc": 1
+    },
+    {
+      "doc_id": "test_prompt_injection",
+      "model_name": "GARCH Volatility Forecasting Model",
+      "matched": 0,
+      "agent_gap_count": 6,
+      "label_must_detect_count": 0,
+      "recall_on_doc": null
+    },
+    {
+      "doc_id": "test_verbose_low_quality",
+      "model_name": "ML Credit Risk Model",
+      "matched": 20,
+      "agent_gap_count": 20,
+      "label_must_detect_count": 20,
+      "recall_on_doc": 1
+    },
+    {
+      "doc_id": "test_cecl_compliant",
+      "model_name": "CECL Commercial Real Estate Loan Loss Model",
+      "matched": 0,
+      "agent_gap_count": 3,
+      "label_must_detect_count": 0,
+      "recall_on_doc": null
+    }
+  ]
+}
