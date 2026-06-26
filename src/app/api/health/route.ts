@@ -1,6 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
+import { type NextRequest } from "next/server";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret) {
+    const authHeader = request.headers.get("authorization");
+    if (authHeader !== `Bearer ${cronSecret}`) {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
   const timestamp = new Date().toISOString();
   let databaseOk = false;
 
