@@ -9,7 +9,8 @@ import Badge from "@/components/ui/Badge";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Toast from "@/components/ui/Toast";
-import { getScoreColor, getStatusFromScore } from "./utils";
+import { deriveStatus } from "@/lib/scoring/calculator";
+import { getScoreColor } from "./utils";
 
 interface ModelInventoryTableProps {
   submissions: SubmissionListItem[];
@@ -151,7 +152,7 @@ export default function ModelInventoryTable({
   const processed = useMemo(() => {
     let filtered = submissions.map((s) => ({
       ...s,
-      status: getStatusFromScore(s.final_score),
+      status: deriveStatus(s.final_score),
     }));
 
     // Status filter
@@ -452,7 +453,7 @@ export default function ModelInventoryTable({
           </thead>
           <tbody>
             {pageData.map((sub, i) => {
-              const status = getStatusFromScore(sub.final_score);
+              const status = deriveStatus(sub.final_score);
               return (
                 <motion.tr
                   key={sub.id}

@@ -4,7 +4,7 @@ import {
   ModelTypeEnum,
   type SubmissionListItem,
 } from "@/lib/validation/schemas";
-import { getStatusFromScore } from "@/components/dashboard/utils";
+import { deriveStatus } from "@/lib/scoring/calculator";
 import BenchmarksView from "@/components/dashboard/BenchmarksView";
 
 interface SubmissionJoinRow {
@@ -54,7 +54,7 @@ export default async function BenchmarksPage() {
         outcomes_score: Number(r.outcomes_score),
         monitoring_score: Number(r.monitoring_score),
         final_score: Number(r.final_score),
-        status: getStatusFromScore(Number(r.final_score)),
+        status: deriveStatus(Number(r.final_score)),
         assessment_confidence_label: r.assessment_confidence_label as
           | "High"
           | "Medium"

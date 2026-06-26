@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import type { SubmissionListItem } from "@/lib/validation/schemas";
 import Badge from "@/components/ui/Badge";
 import Card from "@/components/ui/Card";
-import { getScoreColor, getStatusFromScore, timeAgo } from "./utils";
+import { deriveStatus } from "@/lib/scoring/calculator";
+import { getScoreColor, timeAgo } from "./utils";
 
 interface RecentActivityFeedProps {
   submissions: SubmissionListItem[];
@@ -136,7 +137,7 @@ export default function RecentActivityFeed({
 
               {/* Status badge — hidden on small screens */}
               <div style={{ flexShrink: 0 }} className="hidden sm:block">
-                <Badge status={getStatusFromScore(sub.final_score)} />
+                <Badge status={deriveStatus(sub.final_score)} />
               </div>
 
               {/* Right: timestamp */}

@@ -10,7 +10,7 @@ import OverviewPanel from "@/components/dashboard/OverviewPanel";
 import ModelInventoryTable from "@/components/dashboard/ModelInventoryTable";
 import ScoreProgressionChart from "@/components/dashboard/ScoreProgressionChart";
 import RecentActivityFeed from "@/components/dashboard/RecentActivityFeed";
-import { getStatusFromScore } from "@/components/dashboard/utils";
+import { deriveStatus } from "@/lib/scoring/calculator";
 
 interface SubmissionJoinRow {
   id: string;
@@ -71,7 +71,7 @@ export default async function DashboardPage() {
       outcomes_score: r.outcomes_score,
       monitoring_score: r.monitoring_score,
       final_score: r.final_score,
-      status: getStatusFromScore(r.final_score),
+      status: deriveStatus(r.final_score),
       assessment_confidence_label: r.assessment_confidence_label as
         | "High"
         | "Medium"
@@ -90,7 +90,7 @@ export default async function DashboardPage() {
 
   const statusCounts = { compliant: 0, needsImprovement: 0, criticalGaps: 0 };
   for (const s of submissions) {
-    const status = getStatusFromScore(s.final_score);
+    const status = deriveStatus(s.final_score);
     if (status === "Compliant") statusCounts.compliant++;
     else if (status === "Needs Improvement") statusCounts.needsImprovement++;
     else statusCounts.criticalGaps++;

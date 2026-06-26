@@ -14,16 +14,6 @@ export function getScoreColor(score: number): string {
 }
 
 /**
- * Derives compliance status from a numeric score.
- * Thresholds: >=80 Compliant, >=60 Needs Improvement, <60 Critical Gaps.
- */
-export function getStatusFromScore(score: number): Status {
-  if (score >= 80) return "Compliant";
-  if (score >= 60) return "Needs Improvement";
-  return "Critical Gaps";
-}
-
-/**
  * Returns a human-readable relative timestamp string.
  * Uses simple math — no external dependency.
  */
