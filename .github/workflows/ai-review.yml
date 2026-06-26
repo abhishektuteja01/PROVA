@@ -1,8 +1,8 @@
 name: AI PR Review
 
+# Disabled: requires ANTHROPIC_API_KEY secret. Re-enable by restoring the pull_request trigger.
 on:
-  pull_request:
-    types: [opened, synchronize]
+  workflow_dispatch:
 
 permissions:
   contents: read

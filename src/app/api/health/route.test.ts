@@ -1,3 +1,4 @@
+import { type NextRequest } from 'next/server';
 import { GET } from './route';
 
 jest.mock('@supabase/supabase-js', () => ({
@@ -12,7 +13,7 @@ jest.mock('@supabase/supabase-js', () => ({
 
 describe('GET /api/health', () => {
   it('returns 200 with status ok when database is reachable', async () => {
-    const res = await GET();
+    const res = await GET(new Request('http://localhost/api/health') as NextRequest);
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.status).toBe('ok');

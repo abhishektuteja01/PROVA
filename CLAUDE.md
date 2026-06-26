@@ -2,12 +2,14 @@
 
 Flag conflicts before acting. Ask before writing code if uncertain.
 
+**Confirm before touching code.** When the user raises an issue: (1) state your understanding of the problem, (2) describe the exact fix you plan to make, (3) wait for explicit confirmation. Only after the user confirms — change the code. No exceptions, even for "obvious" fixes.
+
 ---
 
 ## What is Prova?
 SR 11-7 compliance checker. Users submit model docs → three parallel agents assess SR 11-7 pillars → judge validates → score (0–100) + PDF report.
 
-Spec: `docs/PRD.md` | Architecture: `docs/ARCHITECTURE.md`
+Architecture: `docs/ARCHITECTURE.md`
 
 ---
 
