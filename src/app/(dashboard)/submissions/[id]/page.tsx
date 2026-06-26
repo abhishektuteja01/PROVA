@@ -1,12 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type {
   GapWithId,
-  ReassessmentResponse,
   SubmissionDetail,
 } from "@/lib/validation/schemas";
 import Badge from "@/components/ui/Badge";
@@ -18,7 +17,6 @@ import { getScoreColor } from "@/components/dashboard/utils";
 import type { Status } from "@/components/dashboard/utils";
 import PillarScoreCard from "@/components/compliance/PillarScoreCard";
 import GapAnalysisTable from "@/components/compliance/GapAnalysisTable";
-import DisputeModal from "@/components/compliance/DisputeModal";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -181,7 +179,6 @@ function DetailLoadingSkeleton() {
 
 export default function SubmissionDetailPage() {
   const params = useParams<{ id: string }>();
-  const router = useRouter();
   const id = params.id;
 
   const [submission, setSubmission] = useState<SubmissionDetail | null>(null);
@@ -192,7 +189,6 @@ export default function SubmissionDetailPage() {
     type: "error";
   } | null>(null);
   const [downloadLoading, setDownloadLoading] = useState(false);
-  const [disputeGap, setDisputeGap] = useState<GapWithId | null>(null);
 
   const handleDownloadReport = async () => {
     setDownloadLoading(true);
@@ -576,7 +572,6 @@ export default function SubmissionDetailPage() {
               </div>
               <GapAnalysisTable
                 gaps={submission.gap_analysis}
-                onDispute={(g) => setDisputeGap(g)}
               />
             </div>
 
@@ -607,17 +602,6 @@ export default function SubmissionDetailPage() {
           />
         )}
 
-        {/* Dispute modal */}
-        <DisputeModal
-          open={!!disputeGap}
-          onClose={() => setDisputeGap(null)}
-          assessmentId={id ?? ""}
-          gap={disputeGap}
-          onSuccess={(res: ReassessmentResponse) => {
-            setDisputeGap(null);
-            router.push(`/submissions/${id}/compare/${res.reassessment_id}`);
-          }}
-        />
       </div>
     </main>
   );
