@@ -112,11 +112,11 @@ You must return ONLY valid JSON matching this exact structure. No preamble, no e
       "element_code": "<CS-01 through CS-07>",
       "element_name": "<full element name>",
       "severity": "<Critical|Major|Minor>",
-      "description": "<specific description of what is missing or incomplete>",
-      "recommendation": "<category-level remediation action>"
+      "description": "<specific description of what is missing or incomplete, max 200 characters>",
+      "recommendation": "<one-sentence remediation action, max 200 characters>"
     }
   ],
-  "summary": "<2-3 sentences summarizing the conceptual soundness assessment>"
+  "summary": "<2-3 sentences summarizing the conceptual soundness assessment, max 500 characters>"
 }
 
 If no gaps are found for an element, do not include it in the gaps array.
@@ -203,11 +203,11 @@ You must return ONLY valid JSON matching this exact structure. No preamble, no e
       "element_code": "<OA-01 through OA-07>",
       "element_name": "<full element name>",
       "severity": "<Critical|Major|Minor>",
-      "description": "<specific description of what is missing or incomplete>",
-      "recommendation": "<category-level remediation action>"
+      "description": "<specific description of what is missing or incomplete, max 200 characters>",
+      "recommendation": "<one-sentence remediation action, max 200 characters>"
     }
   ],
-  "summary": "<2-3 sentences summarizing the outcomes analysis assessment>"
+  "summary": "<2-3 sentences summarizing the outcomes analysis assessment, max 500 characters>"
 }
 
 If no gaps are found for an element, do not include it in the gaps array.
@@ -290,11 +290,11 @@ You must return ONLY valid JSON. No preamble, no explanation, no markdown. Only 
       "element_code": "<OM-01 through OM-06>",
       "element_name": "<full element name>",
       "severity": "<Critical|Major|Minor>",
-      "description": "<specific description of what is missing or incomplete>",
-      "recommendation": "<category-level remediation action>"
+      "description": "<specific description of what is missing or incomplete, max 200 characters>",
+      "recommendation": "<one-sentence remediation action, max 200 characters>"
     }
   ],
-  "summary": "<2-3 sentences summarizing the ongoing monitoring assessment>"
+  "summary": "<2-3 sentences summarizing the ongoing monitoring assessment, max 500 characters>"
 }
 
 If no gaps are found for an element, do not include it in the gaps array.
@@ -361,26 +361,26 @@ CONFIDENCE SCORING RULES:
 - Below 0.5: Significant issues, definitely retry
 
 OUTPUT FORMAT:
-Return ONLY valid JSON. No preamble, no explanation, no markdown.
+Return ONLY valid JSON. No preamble, no explanation, no markdown. Keep your response concise — each issues string must be under 100 characters, max 3 issues per agent.
 
 {
   "confidence": <number 0.0-1.0>,
   "confidence_label": "<High|Medium|Low>",
   "is_consistent": <boolean>,
   "anomaly_detected": <boolean>,
-  "anomaly_description": <string or null>,
+  "anomaly_description": <string max 200 characters, or null>,
   "agent_feedback": {
     "conceptual_soundness": {
       "complete": <boolean>,
-      "issues": [<string array of specific issues found, empty if none>]
+      "issues": [<max 3 strings, each max 100 characters>]
     },
     "outcomes_analysis": {
       "complete": <boolean>,
-      "issues": [<string array of specific issues found, empty if none>]
+      "issues": [<max 3 strings, each max 100 characters>]
     },
     "ongoing_monitoring": {
       "complete": <boolean>,
-      "issues": [<string array of specific issues found, empty if none>]
+      "issues": [<max 3 strings, each max 100 characters>]
     }
   },
   "retry_recommended": <boolean — true if confidence < 0.6>
@@ -418,33 +418,62 @@ The agents have been asked to re-assess with awareness of these issues.
 
 ## Implementation Notes
 
-### How to call agents in `orchestrator.ts`
+### How each agent calls Claude
+
+Each agent module (`src/lib/agents/<pillar>.ts`) builds its own prompt and
+makes its own call. The orchestrator only coordinates them — it does not
+build prompts.
+
 ```typescript
-// Wrap document in XML delimiters before passing to any agent
-const wrappedDocument = `<document>\n${sanitizedText}\n</document>`;
+// The <document> delimiters are already part of USER_PROMPT_TEMPLATE.
+// Do NOT wrap the text again here — that would nest the tags.
+let userPrompt = USER_PROMPT_TEMPLATE;
+userPrompt = userPrompt.split('{modelName}').join(modelName);
+userPrompt = userPrompt.split('{documentText}').join(documentText);
 
-// Build user prompt by replacing template variables
-const userPrompt = AGENT_1_USER_TEMPLATE
-  .replace('{modelName}', modelName)
-  .replace('{documentText}', wrappedDocument);
+if (retryContext) {
+  // appended to the prompt on retry iterations
+}
 
-// Call Claude
-const response = await anthropic.messages.create({
-  model: 'claude-haiku-3-5-20241022',
-  max_tokens: 3000,
-  system: AGENT_1_SYSTEM_PROMPT,
-  messages: [{ role: 'user', content: userPrompt }]
-});
+const response = await anthropic.messages.create(
+  {
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 3000,          // 5000 in judge.ts
+    temperature: 0,            // deterministic scoring
+    system: SYSTEM_PROMPT,
+    messages: [{ role: 'user', content: userPrompt }],
+  },
+  { timeout: 30000 }
+);
 
-// Parse JSON from response
-const output = JSON.parse(response.content[0].text);
+if (response.stop_reason === 'max_tokens') {
+  // truncated output is an error, never a partial assessment
+}
 ```
+
+Two details that are easy to get wrong:
+
+- **`split().join()`, not `.replace()`.** `String.prototype.replace` with a
+  string pattern substitutes only the *first* occurrence, and a `$` sequence
+  in the replacement is interpreted as a special pattern. Document text is
+  untrusted input and may contain `$&` or `$1`, so `.replace()` is both
+  incomplete and unsafe here.
+- **The document is wrapped exactly once**, inside the template. The API
+  route sanitizes the text and passes it through as-is
+  (`src/app/api/compliance/route.ts`); it does not add delimiters.
 
 ### Model string to use
 ```
-claude-haiku-3-5-20241022
+claude-haiku-4-5-20251001
 ```
 Always use this exact string. Do not use aliases.
+
+> **Known drift.** `src/lib/anthropic/CLAUDE.md` requires this string to be
+> defined once in `client.ts` and imported. It is not: `client.ts` exports
+> only `getAnthropicClient()`, and the literal is duplicated across all four
+> agent modules plus `MODEL_USED` in `src/app/api/compliance/route.ts`.
+> Five copies means five places to miss on the next model upgrade — which is
+> how the docs came to reference a model this project never used.
 
 ### Token budget per agent
 - Pillar agents (CS / OA / OM): max tokens 3000 — sufficient for full gap

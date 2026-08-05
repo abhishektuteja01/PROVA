@@ -1,7 +1,7 @@
 # Prova — Error States
 **Version:** 1.0 | **Date:** March 19, 2026
 
-<!-- SUMMARY: 16 error codes. Quick reference table (code, HTTP status, trigger): §1.
+<!-- SUMMARY: 15 error codes. Quick reference table (code, HTTP status, trigger): §1.
 Full detail per error (trigger, message, UI behavior, recovery): §2.
 Toast specs: §3 | API response format: §4 | errorResponse() pattern: §5 -->
 
@@ -25,7 +25,6 @@ Implement all error states exactly as defined here — do not invent error messa
 | `DOCUMENT_TOO_LONG` | 400 | Text exceeds 50,000 characters |
 | `AI_UNAVAILABLE` | 503 | Anthropic API call failed |
 | `AI_SCHEMA_INVALID` | 500 | Agent returned malformed JSON after max retries |
-| `ASSESSMENT_LOW_CONFIDENCE` | 200 | Check succeeded but judge confidence < 0.6 after retries |
 | `SUBMISSION_NOT_FOUND` | 404 | Submission ID does not exist or belongs to another user |
 | `REPORT_GENERATION_FAILED` | 500 | React-PDF failed to generate report |
 | `DATABASE_ERROR` | 500 | Supabase write/read failed |
@@ -45,6 +44,12 @@ Implement all error states exactly as defined here — do not invent error messa
 ---
 
 ### AUTH_INVALID
+> **Defined but unused.** `AUTH_INVALID` exists in `ErrorCode` and `ERRORS`,
+> but no route returns it — every API route returns `AUTH_REQUIRED` for a
+> failed server-side session check, and both codes carry the same 401 status
+> and the same message. Kept for the case where expired and absent sessions
+> need to be distinguished; today they are not.
+
 **Trigger:** Session token exists but is expired or invalid when verified server-side in an API route.
 **HTTP:** 401
 **API response:**
@@ -69,7 +74,7 @@ Implement all error states exactly as defined here — do not invent error messa
 {
   "error": "RATE_LIMIT_EXCEEDED",
   "error_code": "RATE_LIMIT_EXCEEDED",
-  "message": "You have reached the assessment limit. Try again in 23 minutes.",
+  "message": "Assessment limit reached. Try again in 23 minutes.",
   "retry_after_seconds": 1380
 }
 ```
@@ -226,45 +231,52 @@ All API errors return this structure (defined in `ErrorResponseSchema` in `/docs
 
 In every API route, use this error handler pattern:
 
+`errorResponse()` is defined once in `src/lib/errors/messages.ts` and imported
+by every route. Never redefine it locally.
+
 ```typescript
-// /src/app/api/compliance/route.ts
+export function errorResponse(
+  code: ErrorCode,
+  options?: { message?: string; extras?: Record<string, unknown> }
+)
+```
 
-import { NextResponse } from 'next/server';
+The HTTP status is **not** a parameter — it is looked up from the `ERRORS`
+table by `code`, so a given code can never return two different statuses from
+two different routes. `message` defaults to the canonical text and is
+overridden only where the message is dynamic (rate limits, Zod issues).
 
-function errorResponse(
-  error_code: string,
-  message: string,
-  status: number,
-  extras?: object
-) {
-  return NextResponse.json(
-    { error: error_code, error_code, message, ...extras },
-    { status }
-  );
-}
+```typescript
+// src/app/api/compliance/route.ts
+import { errorResponse } from '@/lib/errors/messages';
 
 export async function POST(request: Request) {
-  // Auth check
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return errorResponse('AUTH_INVALID', 'Your session has expired. Please log in again.', 401);
+    return errorResponse('AUTH_REQUIRED');
   }
 
-  // Rate limit check
-  const isRateLimited = await checkRateLimit(user.id);
-  if (isRateLimited.exceeded) {
-    return errorResponse(
-      'RATE_LIMIT_EXCEEDED',
-      `Assessment limit reached. Try again in ${Math.ceil(isRateLimited.retryAfter / 60)} minutes.`,
-      429,
-      { retry_after_seconds: isRateLimited.retryAfter }
+  const rateLimit = await checkRateLimit(user.id);
+  if (!rateLimit.allowed) {
+    const resetAt = rateLimit.resetAt!;
+    const retryAfterSeconds = Math.max(
+      0,
+      Math.ceil((resetAt.getTime() - Date.now()) / 1000)
     );
+    const retryAfterMinutes = Math.ceil(retryAfterSeconds / 60);
+    return errorResponse('RATE_LIMIT_EXCEEDED', {
+      message: `Assessment limit reached. Try again in ${retryAfterMinutes} minutes.`,
+      extras: { retry_after_seconds: retryAfterSeconds },
+    });
   }
 
   // ... rest of handler
 }
 ```
+
+`checkRateLimit` returns `{ allowed: boolean; resetAt?: Date }` — a reset
+timestamp, not a duration. The route derives the countdown from it.
 
 ---
 
