@@ -35,6 +35,12 @@ CREATE TABLE public.models (
 ```
 
 ### 2.2 submissions
+
+> `model_type` and `is_synthetic` are added by
+> `supabase/migrations/20260501000000_model_type_benchmarks.sql`, which also
+> creates the `public.model_type` enum this column depends on. Apply that
+> migration after creating the tables below — see §2.6.
+
 ```sql
 CREATE TABLE public.submissions (
   id                          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -104,10 +110,47 @@ CREATE TABLE public.evals (
   judge_output        JSONB NOT NULL,
   retry_count         INTEGER NOT NULL DEFAULT 0,
   total_latency_ms    INTEGER,
-  model_used          TEXT NOT NULL DEFAULT 'claude-haiku-3-5-20241022',
+  model_used          TEXT NOT NULL DEFAULT 'claude-haiku-4-5-20251001',
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
+
+### 2.6 Model-type tagging and benchmark functions (migration)
+
+Everything in this section is applied by
+`supabase/migrations/20260501000000_model_type_benchmarks.sql`. Run it **after**
+creating the tables above — it uses `ALTER TABLE`, so the tables must exist.
+Do not hand-copy it; apply the migration file so the repo stays the source of
+truth.
+
+It creates:
+
+| Object | Purpose |
+|---|---|
+| `public.model_type` enum | 8 values, from `credit_risk_pd_lgd_ead` to `other`. Must stay in lockstep with `ModelTypeEnum` in `src/lib/validation/schemas.ts`. |
+| `submissions.model_type` | `NOT NULL DEFAULT 'other'` — groups benchmarks by comparable model class. |
+| `submissions.is_synthetic` | `NOT NULL DEFAULT FALSE` — keeps synthetic test documents from inflating real-corpus statistics. |
+| `idx_submissions_model_type_is_synthetic` | Composite index backing the benchmark filter + count path. |
+| `get_benchmark_stats(model_type, boolean)` | Per-bucket corpus aggregates. |
+| `get_corpus_disclosure()` | Global counts for the disclosure banner. |
+
+**Both functions are `SECURITY DEFINER`, and that is the privacy boundary.**
+They read across all users' submissions without RLS being relaxed on the base
+tables. The guarantees are enforced inside the function bodies:
+
+- No `user_id`, `submission_id`, `document_text`, or raw gap description /
+  recommendation is ever returned — only aggregates.
+- `top_gaps` returns `element_code` + `element_name` + frequency only.
+- Execution is locked down. Both functions carry
+  `REVOKE ALL ... FROM PUBLIC, anon` and `GRANT EXECUTE ... TO authenticated`.
+  Without the REVOKE, anyone holding the publishable key could call a
+  `SECURITY DEFINER` function that reads every user's rows. **If you recreate
+  these functions by hand, you must reapply the REVOKE — a `CREATE OR REPLACE`
+  that omits it silently opens cross-user aggregate access.**
+- Small-N suppression is a *caller-side* responsibility: the API layer hides
+  the medians when `corpus_n < 5` (`BENCHMARK_MIN_CORPUS_N`) to prevent
+  single-row inference. The function still returns the true `corpus_n` so the
+  UI can render an honest "Insufficient corpus (N=X)" state.
 
 ---
 
@@ -137,6 +180,25 @@ CREATE INDEX idx_user_preferences_user_id ON public.user_preferences(user_id);
 CREATE INDEX idx_evals_submission_id ON public.evals(submission_id);
 CREATE INDEX idx_evals_created_at ON public.evals(created_at DESC);
 ```
+
+### Rate limiting has no table of its own
+
+`checkRateLimit` (`src/lib/security/rateLimit.ts`) does not read a counter
+table. It issues a `head: true, count: 'exact'` query against `submissions`
+filtered by `user_id` and `created_at >= now() - 1 hour`, using the **service
+client**, so the count is not narrowed by RLS.
+
+`idx_submissions_user_id_created_at` is what makes that query cheap — it is
+the covering index for the rate-limit path, not only for dashboard listing.
+Dropping it would silently degrade every compliance submission.
+
+Two consequences worth knowing:
+
+- The limit is a rolling one-hour window, not a fixed quota that resets on the
+  hour.
+- Only *successful* submissions count, because a row only exists once the
+  assessment has been written. A run that fails mid-way is not charged
+  against the user's limit.
 
 ---
 
@@ -329,23 +391,25 @@ import { createBrowserClient } from '@supabase/ssr';
 export function createClient() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!
   );
 }
 ```
 
 ### 7.2 Server client (`/src/lib/supabase/server.ts`)
 ```typescript
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient as createSupabaseServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 
-// Use this in API routes and Server Components
-export async function createClient() {
+// Use this in API routes and Server Components.
+// Exported as createServerClient — the @supabase/ssr import is aliased to
+// avoid a name collision.
+export async function createServerClient() {
   const cookieStore = await cookies();
 
-  return createServerClient(
+  return createSupabaseServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
     {
       cookies: {
         getAll() { return cookieStore.getAll(); },
@@ -363,9 +427,9 @@ export async function createClient() {
 
 // Use this for operations that need to bypass RLS (server-side only)
 export function createServiceClient() {
-  return createServerClient(
+  return createSupabaseServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    process.env.SUPABASE_SECRET_KEY!,
     { cookies: { getAll: () => [], setAll: () => {} } }
   );
 }
@@ -381,7 +445,7 @@ export async function updateSession(request: NextRequest) {
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY!,
     {
       cookies: {
         getAll() { return request.cookies.getAll(); },
@@ -422,15 +486,15 @@ export async function updateSession(request: NextRequest) {
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY=your-anon-key
+SUPABASE_SECRET_KEY=your-service-role-key
 ```
 
 The service role key is used ONLY in:
 - `createServiceClient()` in `/src/lib/supabase/server.ts`
 - Writing to the `evals` table (bypasses RLS)
 
-Never reference `SUPABASE_SERVICE_ROLE_KEY` anywhere else.
+Never reference `SUPABASE_SECRET_KEY` anywhere else.
 
 ---
 
