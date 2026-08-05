@@ -21,7 +21,7 @@ Rules for the Anthropic API client and all LLM call configuration.
 - Do not hardcode the model string in any other file
 
 **Token limits:**
-- Max tokens per agent call: 3000 — enforced at call site in this client
+- Max tokens: 3000 per pillar agent call, 5000 for the judge — enforced at each call site
 - Do not raise this limit without updating `docs/AGENT_ARCHITECTURE.md`
 
 **Error handling:**

@@ -15,7 +15,10 @@ Rules for all AI agent code in this folder.
 
 **Model configuration:**
 - Claude model string: `claude-haiku-4-5-20251001` — exact, no aliases
-- Max tokens per agent: 3000
+- Max tokens: 3000 per pillar agent, 5000 for the judge — the judge emits
+  per-agent feedback for all three pillars in one response, so it needs the
+  larger budget. Every agent errors on `stop_reason === 'max_tokens'` rather
+  than returning a truncated assessment.
 - API key only in `src/lib/anthropic/client.ts` — never import or reference it here
 
 **Bias mitigation (never remove from prompts):**

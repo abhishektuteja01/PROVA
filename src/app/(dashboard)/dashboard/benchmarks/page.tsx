@@ -37,7 +37,6 @@ export default async function BenchmarksPage() {
     .select(
       "id, version_number, conceptual_score, outcomes_score, monitoring_score, final_score, assessment_confidence_label, model_type, is_synthetic, created_at, models(model_name)"
     )
-    .is("parent_assessment_id", null)
     .order("created_at", { ascending: false })
     .limit(50);
 

@@ -447,8 +447,13 @@ claude-haiku-3-5-20241022
 Always use this exact string. Do not use aliases.
 
 ### Token budget per agent
-- Max tokens: 3000 (sufficient for full gap analysis with all 7 elements)
+- Pillar agents (CS / OA / OM): max tokens 3000 — sufficient for full gap
+  analysis across all 7 elements
+- Judge: max tokens 5000 — it returns per-agent feedback for all three pillars
+  in a single response, so it needs more headroom than any one pillar agent
 - Do not increase without testing cost impact
+- Every agent treats `stop_reason === 'max_tokens'` as an error rather than
+  returning a truncated assessment
 
 ---
 

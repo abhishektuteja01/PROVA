@@ -85,9 +85,6 @@ BEGIN
     FROM public.submissions s
     WHERE s.model_type = model_type_filter
       AND (include_synthetic OR s.is_synthetic = FALSE)
-      -- Re-assessments share their parent's pillar and are duplicate opinions
-      -- on the same document — exclude them from corpus stats.
-      AND s.parent_assessment_id IS NULL
   ),
   totals AS (
     SELECT
@@ -170,8 +167,7 @@ AS $$
     COUNT(*)::INTEGER                                       AS total_n,
     COUNT(*) FILTER (WHERE is_synthetic = TRUE)::INTEGER    AS synthetic_n,
     COUNT(*) FILTER (WHERE is_synthetic = FALSE)::INTEGER   AS real_n
-  FROM public.submissions
-  WHERE parent_assessment_id IS NULL;
+  FROM public.submissions;
 $$;
 
 REVOKE ALL ON FUNCTION public.get_corpus_disclosure() FROM PUBLIC, anon;
