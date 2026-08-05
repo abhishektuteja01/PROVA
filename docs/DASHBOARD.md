@@ -1,6 +1,6 @@
 # Dashboard & Versioning
 
-Extracted from PRD Sections 3.7–3.8, 14.4. This is the focused reference for dashboard work.
+Focused reference for dashboard work — sections, versioning, and settings toggles.
 
 ---
 
@@ -15,8 +15,10 @@ All users see same base dashboard. Users can hide/show sections in Settings > Da
 - Most recent submission with timestamp
 
 ### Model Inventory Table
-- Columns: Model Name, Version, Submission Date, CS Score, OA Score, OM Score, Final Score, Status, Actions
-- Sorting: by any column
+- Sortable columns (`COLUMNS` in `ModelInventoryTable.tsx`): Model Name,
+  Version, Submission Date, CS, OA, OM, Final
+- Status is rendered as a badge in its own cell, derived from the final score
+  rather than stored — it is not a sortable column
 - Filtering: by status, date range, score range
 - Pagination: 10 rows per page
 
@@ -41,7 +43,9 @@ All users see same base dashboard. Users can hide/show sections in Settings > Da
 
 ## Settings Page Toggles
 
-Four dashboard section toggles stored in user preferences (Supabase `user_preferences` table or localStorage fallback):
+Four dashboard section toggles stored in the Supabase `user_preferences`
+table. There is no localStorage fallback — preferences are read server-side
+during dashboard render, so a signed-in session is always required:
 
 ```typescript
 {
@@ -51,3 +55,26 @@ Four dashboard section toggles stored in user preferences (Supabase `user_prefer
   show_recent_activity: boolean       // default: true
 }
 ```
+
+---
+
+## Benchmarks View
+
+A separate page at `/dashboard/benchmarks`
+(`src/components/dashboard/BenchmarksView.tsx`), linked from the main nav.
+Unlike the four sections above it has **no settings toggle** — it is always
+available.
+
+- Compares one of the user's own assessments against corpus medians for the
+  same `model_type` (CS / OA / OM / final)
+- Cross-user aggregates come exclusively from the `get_benchmark_stats` RPC,
+  never a direct table read — the `SECURITY DEFINER` function is the only
+  path by which another user's data influences what is displayed, and it
+  returns aggregates only
+- Top gap elements are returned as `element_code` + `element_name` +
+  frequency, never gap descriptions or recommendations
+- When the bucket holds fewer than `BENCHMARK_MIN_CORPUS_N` (5) submissions,
+  medians are suppressed and the UI renders an explicit
+  "Insufficient corpus (N=X)" state rather than a misleading comparison
+- The model picker lists the signed-in user's own submissions only, scoped by
+  RLS on the base select

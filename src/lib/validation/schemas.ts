@@ -85,7 +85,8 @@ export const MODEL_TYPE_LABELS: Record<ModelType, string> = {
   other: "Other",
 };
 
-// SR 11-7 element codes — exactly the codes defined in PRD Section 14.5
+// SR 11-7 element codes — must match the reference tables in
+// docs/AGENT_ARCHITECTURE.md and the agent prompts in docs/AGENT_PROMPTS.md
 export const CSElementCodeEnum = z.enum([
   "CS-01",
   "CS-02",

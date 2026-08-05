@@ -1,12 +1,12 @@
 # Agent Architecture
 
-Extracted from PRD Sections 3.3–3.4, 4, 14.1–14.2, 14.5. This is the focused reference for agent work.
+Focused reference for agent work — agent design, schemas, element codes, and bias mitigation.
 
 ---
 
 ## Parallel Agent Architecture
 
-Three agents run in parallel via `Promise.all`, each owning one SR 11-7 validation pillar:
+Three agents run in parallel via `Promise.allSettled`, each owning one SR 11-7 validation pillar:
 
 | Agent | Pillar | Elements | Weight |
 |-------|--------|----------|--------|
@@ -32,8 +32,16 @@ Runs after three parallel agents complete. Reviews their outputs for:
 - Max 2 retries before accepting output regardless
 - After max retries with confidence still < 0.6 → surface "Low Confidence" warning
 
-**Judge output does NOT affect final compliance score** — separate quality indicator:
-- 0.9–1.0: "High" | 0.7–0.89: "Medium" | 0.5–0.69: "Low" | Below 0.5: "Low" (significant uncertainty)
+**Judge output does NOT affect final compliance score** — separate quality indicator.
+
+`confidence_label` is returned by the judge alongside the numeric `confidence`.
+Nothing derives the label from the number: the orchestrator branches on the
+numeric `confidence` only (`orchestrator.ts`), and the label is validated
+against `ConfidenceLabelEnum` (`High | Medium | Low`) but never cross-checked
+against the score. The bands below are the convention the judge prompt is
+written to, not an invariant the code enforces:
+
+- 0.9–1.0 → High | 0.7–0.89 → Medium | below 0.7 → Low
 
 ---
 

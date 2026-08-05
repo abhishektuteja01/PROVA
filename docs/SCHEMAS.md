@@ -13,10 +13,25 @@ npm install zod
 
 ---
 
-## Complete schemas.ts File
+## Reference: schemas.ts
+
+> **`src/lib/validation/schemas.ts` is the source of truth, not this file.**
+> What follows is an annotated reference covering the schemas you will touch
+> most often. It is not a complete transcription — the module also exports the
+> element-code enums, `PillarScoresSchema`, `ScoringInputSchema`,
+> `ModelRowSchema`, and the benchmark schemas documented in §Benchmarks below.
+> When the two disagree, the code wins; fix the doc.
 
 ```typescript
 import { z } from 'zod';
+
+// ─── File upload constants ───────────────────────────────────────────────
+export const ALLOWED_MIME_TYPES = [
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+] as const;
+export const ALLOWED_EXTENSIONS = ['.pdf', '.docx'] as const;
+export const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ENUMS
@@ -37,6 +52,24 @@ export const StatusEnum = z.enum([
 ]);
 
 export const ConfidenceLabelEnum = z.enum(['High', 'Medium', 'Low']);
+
+// Model type — must stay in lockstep with the public.model_type SQL enum
+// (see supabase/migrations/20260501000000_model_type_benchmarks.sql).
+// Adding a value here without the matching ALTER TYPE will fail at insert.
+export const ModelTypeEnum = z.enum([
+  'credit_risk_pd_lgd_ead',
+  'allowance_cecl_ifrs9',
+  'market_risk_var',
+  'alm_irrbb',
+  'stress_testing_ccar',
+  'aml_fraud',
+  'credit_decisioning',
+  'other'
+]);
+
+export type ModelType = z.infer<typeof ModelTypeEnum>;
+
+// MODEL_TYPE_LABELS maps each enum value to its display string — see code.
 
 // CS element codes
 export const CSElementCodeEnum = z.enum([
@@ -182,6 +215,12 @@ export const ComplianceRequestSchema = z.object({
     .min(1, 'Model name is required')
     .max(200, 'Model name must be under 200 characters')
     .regex(/^[a-zA-Z0-9 \-_().]+$/, 'Model name contains invalid characters'),
+  model_type: ModelTypeEnum.default('other'),
+  // is_synthetic must be settable at submission time so the test suite can tag
+  // synthetic-corpus runs without polluting real-corpus benchmark stats. The
+  // route handler is the trust boundary — clients may pass true, but only
+  // authenticated users can submit at all and synthetic-tagging is benign.
+  is_synthetic: z.boolean().default(false),
   document_text: z.string()
     .min(100, 'Document must be at least 100 characters')
     .max(50000, 'Document must be under 50,000 characters')
@@ -225,6 +264,8 @@ export type ComplianceResponse = z.infer<typeof ComplianceResponseSchema>;
 export const SubmissionListItemSchema = z.object({
   id: z.string().uuid(),
   model_name: z.string(),
+  model_type: ModelTypeEnum,
+  is_synthetic: z.boolean(),
   version_number: z.number().int().min(1),
   conceptual_score: z.number().min(0).max(100),
   outcomes_score: z.number().min(0).max(100),
@@ -238,9 +279,17 @@ export const SubmissionListItemSchema = z.object({
 export type SubmissionListItem = z.infer<typeof SubmissionListItemSchema>;
 
 // GET /api/submissions/[id] — full submission response
+// Detail view needs each gap's row id so the UI can key and link individual
+// gaps — the list view does not, so only this schema carries it.
+export const GapWithIdSchema = GapSchema.extend({
+  id: z.string().uuid()
+});
+
+export type GapWithId = z.infer<typeof GapWithIdSchema>;
+
 export const SubmissionDetailSchema = SubmissionListItemSchema.extend({
   document_text: z.string().min(100).max(50000),
-  gap_analysis: z.array(GapSchema),
+  gap_analysis: z.array(GapWithIdSchema),
   judge_confidence: z.number().min(0).max(1)
 });
 
@@ -265,12 +314,15 @@ export const SubmissionRowSchema = z.object({
   model_id: z.string().uuid(),
   user_id: z.string().uuid(),
   version_number: z.number().int().min(1),
+  model_type: ModelTypeEnum,
+  is_synthetic: z.boolean(),
   document_text: z.string().min(100).max(50000),
   conceptual_score: z.number(),
   outcomes_score: z.number(),
   monitoring_score: z.number(),
   final_score: z.number(),
   gap_analysis: z.array(GapSchema).nullable(),
+  retry_count: z.number().int().min(0).max(2),
   judge_confidence: z.number(),
   assessment_confidence_label: ConfidenceLabelEnum,
   created_at: z.string().datetime()
@@ -393,6 +445,62 @@ export async function POST(request: Request) {
   // proceed...
 }
 ```
+
+---
+
+## Benchmarks
+
+Backing `GET /api/benchmarks` and `GET /api/benchmarks/disclosure`.
+
+```typescript
+// Below this corpus size, medians are suppressed rather than shown.
+// A median over 1–4 rows can equal another user's exact score, so publishing
+// it would leak individual data through an aggregate endpoint.
+export const BENCHMARK_MIN_CORPUS_N = 5;
+
+export const TopGapEntrySchema = z.object({
+  element_code: ElementCodeEnum,
+  element_name: z.string(),
+  frequency: z.number().int().min(0)
+});
+
+export const BenchmarkStatsSchema = z.object({
+  model_type: ModelTypeEnum,
+  include_synthetic: z.boolean(),
+  corpus_n: z.number().int().min(0),
+  synthetic_n: z.number().int().min(0),
+  real_n: z.number().int().min(0),
+  // Medians are nullable: suppressed when corpus_n < BENCHMARK_MIN_CORPUS_N
+  // (server-side enforcement on top of any client-side guard).
+  cs_median: z.number().min(0).max(100).nullable(),
+  oa_median: z.number().min(0).max(100).nullable(),
+  om_median: z.number().min(0).max(100).nullable(),
+  final_median: z.number().min(0).max(100).nullable(),
+  top_gaps: z.array(TopGapEntrySchema)
+});
+
+export const CorpusDisclosureSchema = z.object({
+  total_n: z.number().int().min(0),
+  synthetic_n: z.number().int().min(0),
+  real_n: z.number().int().min(0)
+});
+
+export const BenchmarkQuerySchema = z.object({
+  model_type: ModelTypeEnum,
+  include_synthetic: z.coerce.boolean().default(true)
+});
+```
+
+Two things these schemas encode deliberately:
+
+- **The medians are `.nullable()`, not optional.** Suppression is a value the
+  API returns, not a field it omits, so a client cannot mistake "withheld for
+  privacy" for "not sent". `corpus_n` is always returned truthfully so the UI
+  can render "Insufficient corpus (N=X)".
+- **`top_gaps` carries `element_code`, `element_name` and a frequency — and
+  nothing else.** No description, no recommendation, no submission or user id.
+  The schema is the second line of defence behind the `SECURITY DEFINER`
+  function; both are written so per-row content cannot leave the database.
 
 ---
 

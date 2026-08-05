@@ -1,6 +1,6 @@
 # UI/UX Design
 
-Extracted from PRD Section 8. This is the focused reference for component work.
+Focused reference for component work — colours, typography, and UI principles.
 
 ---
 
@@ -22,6 +22,18 @@ Banking-appropriate refined minimalism. Data is the hero. Numbers and scores dom
 ```
 
 All colors defined as CSS variables in `globals.css` — **never hardcode hex values**.
+
+The ten above are the core tokens, exposed as Tailwind utilities via
+`tailwind.config.ts` (`bg-primary`, `text-critical`, `border`, …).
+`globals.css` defines 32 `--color-*` tokens in total: the ten core ones plus
+22 derived tints, borders and rules layered on top — `--color-accent-light`,
+`--color-compliant-bg`, `--color-compliant-border`,
+`--color-text-secondary-dim`, `--color-white-divider` and similar.
+
+Read `globals.css` before introducing a new colour; the derived token you
+need usually already exists. Note the set is not symmetrical — `compliant`
+has `-bg` and `-border` variants while `critical` and `warning` do not, so
+check rather than assume a variant exists.
 
 ## Typography
 - Display/headings: **Playfair Display** — authoritative, editorial
@@ -47,6 +59,7 @@ All colors defined as CSS variables in `globals.css` — **never hardcode hex va
 /signup              Signup
 /reset-password      Password reset
 /dashboard           Main dashboard (authenticated)
+/dashboard/benchmarks  Corpus benchmark comparison by model type
 /check               New compliance check
 /submissions         All submissions list
 /submissions/[id]    Single submission results
