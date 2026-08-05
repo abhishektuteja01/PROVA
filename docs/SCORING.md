@@ -1,6 +1,6 @@
 # Scoring System
 
-Extracted from PRD Sections 3.5–3.6, 14.3. This is the focused reference for scoring work.
+Focused reference for scoring work — formula, weights, deductions, and status thresholds.
 
 ---
 

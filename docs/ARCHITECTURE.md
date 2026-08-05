@@ -19,7 +19,8 @@ Prova is a well-architected Next.js 16 monolith deployed on Vercel. The frontend
 │              NEXT.JS API ROUTES (Vercel)             │
 │                                                      │
 │  /api/compliance  /api/submissions  /api/report      │
-│  /api/health                                         │
+│  /api/health      /api/benchmarks                    │
+│  /api/benchmarks/disclosure                          │
 └─────────────────────────────────────────────────────┘
           │                    │
           ▼                    ▼
@@ -27,7 +28,7 @@ Prova is a well-architected Next.js 16 monolith deployed on Vercel. The frontend
 │  ANTHROPIC API   │  │         SUPABASE              │
 │                  │  │                               │
 │  Claude Haiku    │  │  PostgreSQL + Auth + RLS      │
-│  3.5             │  │                               │
+│  4.5             │  │                               │
 └──────────────────┘  └──────────────────────────────┘
 ```
 
@@ -52,12 +53,13 @@ User submits document
 │     - DOCX → mammoth   → extracted text               │
 │     - File deleted from memory immediately             │
 │  5. Sanitize text (strip HTML, scripts)                │
-│  6. Wrap in XML delimiters                             │
+│     (<document> delimiters are added by each agent's    │
+│      prompt template, not here)                        │
 └───────────────────────────────────────────────────────┘
         │
         ▼
 ┌───────────────────────────────────────────────────────┐
-│  PARALLEL AGENT EXECUTION (Promise.all)                │
+│  PARALLEL AGENT EXECUTION (Promise.allSettled)         │
 │                                                        │
 │  ┌─────────────────┐  ┌─────────────────┐  ┌────────┐ │
 │  │ Conceptual      │  │ Outcomes        │  │Ongoing │ │
@@ -125,7 +127,7 @@ Return ComplianceResponse to client
 User visits /dashboard
         │
         ▼
-Next.js proxy.ts
+Next.js middleware.ts
         │
         ├── Has valid Supabase session? ──YES──► Render page
         │
@@ -168,6 +170,9 @@ users (Supabase Auth)
   │               gap_analysis    JSONB
   │               judge_confidence
   │               assessment_confidence_label
+  │               retry_count
+  │               model_type      ENUM
+  │               is_synthetic   BOOLEAN
   │               created_at
   │                   │
   │                   └── gaps
@@ -201,7 +206,7 @@ orchestrator.ts
       │
       ├── ATTEMPT (max 3 total: 1 initial + 2 retries)
       │
-      │   Promise.all([
+      │   Promise.allSettled([
       │     conceptualSoundness(document, context?)
       │     outcomesAnalysis(document, context?)
       │     ongoingMonitoring(document, context?)
@@ -232,7 +237,7 @@ orchestrator.ts
 User clicks "Download Report" on /submissions/[id]
         │
         ▼
-POST /api/report  { submissionId }
+POST /api/report  { submission_id }
         │
         ▼
 Fetch submission + gaps from Supabase (verify user_id match)
@@ -258,18 +263,25 @@ CLIENT
   │  HTTPS only (enforced by Vercel)
   │
   ▼
-NEXT.JS PROXY (proxy.ts)
-  │  - Supabase session verification
-  │  - Redirect unauthenticated requests
+NEXT.JS MIDDLEWARE (src/middleware.ts)
+  │  - CSRF: Origin header required and matched against
+  │    NEXT_PUBLIC_APP_URL on POST/PUT/DELETE/PATCH to /api/*
+  │  - Supabase session refresh + verification (getUser, not getSession)
+  │  - Unauthenticated: 401 JSON for /api/*, redirect for pages
   │
   ▼
 API ROUTES
-  │  - Server-side session re-verification (defense in depth)
+  │  - Server-side session re-verification (defense in depth —
+  │    middleware can be bypassed, RLS and this check cannot)
   │  - Rate limiting check (rateLimit.ts)
   │  - Input validation (Zod schemas)
-  │  - File type validation (sanitize.ts)
+  │  - File extension + MIME validation (validateFileType), then
+  │    magic-byte inspection of the buffer itself
+  │    (validateFileMagicBytes, sanitize.ts) — a .docx renamed to
+  │    .pdf is rejected on content, not on its declared type
+  │  - 10MB cap enforced server-side; buffer zeroed with
+  │    buffer.fill(0) in a finally block after text extraction
   │  - Text sanitization (sanitize.ts)
-  │  - XML delimiter wrapping (before Claude)
   │
   ▼
 ANTHROPIC API
@@ -301,7 +313,7 @@ Write to Supabase: evals table
   - judge_output (JSONB)
   - retry_count
   - total_latency_ms
-  - model_used (haiku-3-5)
+  - model_used (claude-haiku-4-5-20251001)
   - timestamp
         │
         ▼

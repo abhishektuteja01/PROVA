@@ -57,11 +57,13 @@ Upload / paste model documentation
 
 ## Features
 
-- **Parallel assessment** — three agents run concurrently via `Promise.all`, judge validates with retry logic (max 2 retries)
+- **Parallel assessment** — three agents run concurrently via `Promise.allSettled`, judge validates with retry logic (max 2 retries)
 - **Weighted scoring** — pillar scores combined into a 0–100 final score with a confidence label
 - **Gap analysis** — every identified gap includes element code, severity, description, and a specific recommendation
 - **PDF reports** — downloadable audit-ready reports generated server-side with `@react-pdf/renderer`
 - **Dashboard** — portfolio view showing score trends, model inventory, and recent submissions
+- **Corpus benchmarks** — compare an assessment against anonymised medians for the same model type, via `SECURITY DEFINER` functions that return aggregates only; suppressed below N=5
+- **Synthetic tagging** — documents can be flagged `is_synthetic` so test corpora never inflate real benchmark statistics
 - **Secure by default** — RLS on all tables, server-side session verification on every API route, files never written to disk
 
 ---
@@ -129,8 +131,15 @@ npm run build         # Type check + production build
 npm run lint          # ESLint
 npm run typecheck     # tsc --noEmit
 npm test              # Jest unit tests
+npm run test:coverage # Jest with coverage (70% threshold)
+npm run test:e2e      # Playwright end-to-end tests
 npm run test:ai       # AI regression suite — run after any agent or scoring change
+npm run test:ai:calibration  # Judge calibration check (real API, costs money)
 ```
+
+`test:ai` and `test:ai:calibration` call the real Claude API. They are not part
+of the PR gate — CI runs them from the `AI Regression` workflow on demand and
+weekly.
 
 ---
 
@@ -161,7 +170,8 @@ prova/
 │   ├── app/
 │   │   ├── (auth)/               # Login, signup pages
 │   │   ├── (dashboard)/          # Protected app pages
-│   │   └── api/                  # compliance · submissions · report · health
+│   │   ├── api/                  # compliance · submissions · report · health · benchmarks
+│   │   └── auth/callback/        # Supabase OAuth code exchange
 │   ├── components/
 │   │   ├── home/                 # Landing page animations
 │   │   └── ...                   # Shared React components
@@ -175,9 +185,8 @@ prova/
 │   │   ├── supabase/             # Browser, server, and middleware clients
 │   │   └── validation/           # All Zod schemas (schemas.ts only)
 │   ├── types/                    # Shared TypeScript types
-│   └── proxy.ts                  # Auth guard for all dashboard routes
+│   └── middleware.ts             # CSRF, session refresh, route guard
 ├── docs/
-│   ├── PRD.md                    # Full product requirements
 │   ├── ARCHITECTURE.md           # System architecture + data flow
 │   ├── DATABASE.md               # Schema, indexes, RLS policies + setup SQL
 │   ├── SCHEMAS.md                # API Zod schema reference
@@ -199,7 +208,6 @@ prova/
 
 | Doc | Contents |
 |---|---|
-| [`docs/PRD.md`](docs/PRD.md) | Full product spec, UI design system, scoring rules |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System architecture, data flow, agent orchestration |
 | [`docs/DATABASE.md`](docs/DATABASE.md) | Schema, indexes, RLS policies, setup SQL |
 | [`docs/SCHEMAS.md`](docs/SCHEMAS.md) | API request/response Zod schemas |
@@ -207,7 +215,7 @@ prova/
 | [`docs/ERROR_STATES.md`](docs/ERROR_STATES.md) | Error UI behavior and recovery actions |
 | [`src/lib/errors/messages.ts`](src/lib/errors/messages.ts) | Error codes, HTTP statuses, messages (code-level source of truth) |
 
-Focused reference docs (extracted from PRD for efficient lookup):
+Focused reference docs, one per domain:
 
 | Doc | Contents |
 |---|---|
