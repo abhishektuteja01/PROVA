@@ -6,36 +6,5 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
-    env:
-      NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co"
-      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY: "placeholder"
-      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
-      NEXT_PUBLIC_SENTRY_DSN: ""
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - name: Security audit
-        run: npm audit --audit-level=moderate
-        continue-on-error: true
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm test
-      - run: npm run test:ai
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-      - name: Run E2E tests
-        run: npm run test:e2e
-      - name: Gitleaks secret scan
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: npm run build
+    uses: ./.github/workflows/checks.yml
+    secrets: inherit
