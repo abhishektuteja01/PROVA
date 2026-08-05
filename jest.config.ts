@@ -17,7 +17,6 @@ const config: Config = {
     "src/lib/**/*.ts",
     "!src/lib/**/*.test.ts",
     "!src/lib/**/*.d.ts",
-    "!src/lib/**/CLAUDE.md",
   ],
   coverageProvider: "v8",
   coverageReporters: ["text", "text-summary", "lcov", "html"],
