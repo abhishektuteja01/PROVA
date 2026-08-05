@@ -60,7 +60,7 @@ export type Status = z.infer<typeof StatusEnum>;
 export const ConfidenceLabelEnum = z.enum(["High", "Medium", "Low"]);
 
 // Model type — must stay in lockstep with the public.model_type SQL enum
-// (see supabase/migrations/20260430_model_type_benchmarks.sql).
+// (see supabase/migrations/20260501000000_model_type_benchmarks.sql).
 export const ModelTypeEnum = z.enum([
   "credit_risk_pd_lgd_ead",
   "allowance_cecl_ifrs9",
