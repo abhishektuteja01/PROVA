@@ -277,18 +277,32 @@ export async function POST(request: Request) {
     let submission: { id: string; created_at: string; version_number: number } | null = null;
 
     for (let attempt = 0; attempt < MAX_VERSION_RETRIES; attempt++) {
-      const { count, error: countError } = await db
+      // Derive the next version from the highest existing version, not from a
+      // row count. Counting breaks permanently as soon as any submission is
+      // deleted: with v1, v2, v3 present, deleting v2 leaves count = 2, so the
+      // next version is computed as 3 and collides with the surviving v3.
+      // Retrying cannot help, because the count is unchanged — every future
+      // assessment of that model would fail with DATABASE_ERROR.
+      // Deletion is a supported operation, so gaps in the sequence are normal.
+      const { data: latest, error: versionError } = await db
         .from('submissions')
-        .select('id', { count: 'exact', head: true })
+        .select('version_number')
         .eq('model_id', modelId)
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .order('version_number', { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-      if (countError) {
-        Sentry.captureException(countError);
+      if (versionError) {
+        Sentry.captureException(versionError);
         return errorResponse('DATABASE_ERROR');
       }
 
-      const versionNumber = (count ?? 0) + 1;
+      const latestVersion =
+        latest && typeof latest.version_number === 'number'
+          ? latest.version_number
+          : 0;
+      const versionNumber = latestVersion + 1;
 
       const { data: insertedSubmission, error: submissionError } = await db
         .from('submissions')
