@@ -35,6 +35,80 @@ describe("sanitizeText", () => {
     expect(sanitizeText('<img src="x" onerror="alert(1)">')).toBe("");
   });
 
+  // The event-handler and URI-scheme filters were relaxed to stop them
+  // corrupting legitimate prose. These payloads pin down that nothing
+  // dangerous survives as a result — tag removal is what neutralises event
+  // handlers, since they are only meaningful inside a tag.
+  describe("adversarial payloads are neutralised", () => {
+    const payloads = [
+      '<img src=x onerror="alert(1)">',
+      "<img src=x onerror=alert(1)>",
+      "<svg/onload=alert(1)>",
+      '<body onload="alert(1)">',
+      '<a href="javascript:alert(1)">click</a>',
+      '<iframe src="data:text/html,<script>alert(1)</script>"></iframe>',
+      "<scr\x00ipt>alert(1)</scr\x00ipt>",
+      "<SCRIPT>alert(1)</SCRIPT>",
+      "<div onclick='alert(1)'>x</div>",
+      "javascript:alert(1)",
+      "vbscript:MsgBox(1)",
+      "data:text/html;base64,PHNjcmlwdD4=",
+      "<img\nsrc=x\nonerror=alert(1)>",
+    ];
+
+    it.each(payloads)("neutralises %j", (payload) => {
+      const out = sanitizeText(payload);
+      expect(out).not.toMatch(/<\s*script/i);
+      expect(out).not.toMatch(/on(error|load|click)\s*=/i);
+      expect(out).not.toMatch(/javascript\s*:/i);
+      expect(out).not.toMatch(/vbscript\s*:/i);
+      expect(out).not.toMatch(/data\s*:[a-z0-9.+-]*[/,;]/i);
+      expect(out).not.toMatch(/<[a-zA-Z!]/);
+    });
+  });
+
+  // Regression: the event-handler filter was /on\w+\s*=\s*[^\s>]*/gi with no
+  // word boundary, so any word containing "on" followed by word characters and
+  // "=" was destroyed. "monitoring_frequency = daily" sanitized to "m".
+  // Model documentation is largely key = value lines, so this silently
+  // corrupted the text the agents scored.
+  describe("preserves technical model documentation", () => {
+    const cases = [
+      "monitoring_frequency = daily",
+      "confidence_threshold = 0.6",
+      "conversion_rate = 0.05",
+      "long_run = TRUE",
+      "control_group = holdout",
+      "constant_maturity = 10Y",
+      "PD model uses long_run_average = 0.031",
+      "Data: Loan application records from 2019-2024",
+      "Metadata: version 3 of the scorecard",
+      "Data Inputs and Sources: internal origination system",
+    ];
+
+    it.each(cases)("leaves %j unchanged", (input) => {
+      expect(sanitizeText(input)).toBe(input);
+    });
+  });
+
+  // Regression: /<[^>]*>/ spans comparison operators, so a document containing
+  // both "<" and a later ">" lost everything between them.
+  it("preserves inequalities and comparison operators", () => {
+    const text =
+      "Escalate if score < 60 and PD > 0.05 within the monitoring window.";
+    expect(sanitizeText(text)).toBe(text);
+  });
+
+  it("still strips a real tag adjacent to an inequality", () => {
+    expect(sanitizeText("score < 60 <b>bold</b> PD > 0.05")).toBe(
+      "score < 60 bold PD > 0.05"
+    );
+  });
+
+  it("strips an unterminated tag at end of input", () => {
+    expect(sanitizeText("text <img src=x onerror=alert(1)")).toBe("text");
+  });
+
   it("preserves normal plain text prose", () => {
     const prose =
       "The model uses Black-Scholes for option pricing. Assumptions include constant volatility.";
