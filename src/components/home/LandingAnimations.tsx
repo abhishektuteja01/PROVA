@@ -394,7 +394,7 @@ export default function LandingAnimations() {
           For training and synthetic model documents only
         </span>
         <div className="flex gap-6">
-          {([["Sign in", "/login"], ["Get started", "/signup"]] as const).map(([label, href]) => (
+          {([["Sign in", "/login"], ["Get started", "/signup"], ["Privacy", "/privacy"]] as const).map(([label, href]) => (
             <Link
               key={href}
               href={href}
