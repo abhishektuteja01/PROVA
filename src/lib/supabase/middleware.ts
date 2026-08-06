@@ -79,6 +79,9 @@ export async function updateSession(request: NextRequest) {
     pathname.startsWith("/signup") ||
     pathname.startsWith("/reset-password") ||
     pathname.startsWith("/auth/callback") ||
+    // Linked from the Google OAuth consent screen, so it must be reachable
+    // without a session — Google fetches it while signed out.
+    pathname.startsWith("/privacy") ||
     pathname.startsWith("/api/health");
 
   if (!user && !isPublicPath) {
