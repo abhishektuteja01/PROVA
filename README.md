@@ -153,11 +153,11 @@ See `.env.local.example` for the full annotated list.
 | `NEXT_PUBLIC_SUPABASE_URL` | Public | Supabase browser + server clients |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | Public | `src/lib/supabase/client.ts` |
 | `SUPABASE_SECRET_KEY` | Server only | `src/lib/supabase/server.ts` |
-| `NEXT_PUBLIC_SENTRY_DSN` | Public | `sentry.client.config.ts` |
+| `NEXT_PUBLIC_SENTRY_DSN` | Public | `instrumentation-client.ts` |
 | `SENTRY_DSN` | Server only | `instrumentation.ts` |
 | `SENTRY_ORG` | Build-time | `next.config.ts` (source maps) |
 | `SENTRY_PROJECT` | Build-time | `next.config.ts` (source maps) |
-| `NEXT_PUBLIC_APP_URL` | Public | Canonical URL |
+| `NEXT_PUBLIC_APP_URL` | Public | Canonical origin — auth `redirectTo` + CSRF allowed origin in `src/lib/supabase/middleware.ts`. Prod: `https://prova.abhishektuteja.com` |
 | `RATE_LIMIT_REQUESTS_PER_HOUR` | Server only | Default: `10` |
 
 ---

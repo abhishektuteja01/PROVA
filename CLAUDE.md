@@ -48,7 +48,7 @@ NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
 SUPABASE_SECRET_KEY                        # src/lib/supabase/server.ts ONLY
 NEXT_PUBLIC_APP_URL
-NEXT_PUBLIC_SENTRY_DSN                     # sentry.client.config.ts ONLY
+NEXT_PUBLIC_SENTRY_DSN                     # instrumentation-client.ts ONLY
 SENTRY_DSN                                 # instrumentation.ts ONLY
 SENTRY_ORG / SENTRY_PROJECT               # next.config.ts ONLY
 RATE_LIMIT_REQUESTS_PER_HOUR              # default: 10
